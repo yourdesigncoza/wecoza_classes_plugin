@@ -10,8 +10,8 @@
  *   - $show_loading: Boolean indicating whether to show loading indicator
  *   - $total_count: Total number of classes found
  *
- * @package WeCozaClasses
- * @see \WeCozaClasses\Controllers\ClassController::displayClassesShortcode() For the controller method that renders this view
+ * @package WeCoza
+ * @see \WeCoza\Controllers\ClassController::displayClassesShortcode() For the controller method that renders this view
  */
 
 // Exit if accessed directly
@@ -36,6 +36,8 @@ $total_count = $total_count ?? 0;
 
     <!-- Classes Content -->
     <div id="classes-content" class="<?php echo $show_loading ? 'd-none' : ''; ?>">
+        <!-- Header Section -->
+
         <?php if (empty($classes)): ?>
             <!-- No Classes Found -->
             <div class="alert alert-info d-flex align-items-center">
@@ -182,12 +184,12 @@ $total_count = $total_count ?? 0;
                                     <td class="py-2 fs-8 white-space-nowrap">
                                         <?php if ($class['seta_funded']): ?>
                                         <span class="badge fs-10 badge-phoenix badge-phoenix-success">
-                                            <i class="bi bi-check ms-1"></i>
+                                            <svg class="svg-inline--fa fa-check ms-1" data-fa-transform="shrink-2" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="check" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" data-fa-i2svg="" style="transform-origin: 0.4375em 0.5em;"><g transform="translate(224 256)"><g transform="translate(0, 0)  scale(0.875, 0.875)  rotate(0 0 0)"><path fill="currentColor" d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z" transform="translate(-224 -256)"></path></g></g></svg>
                                             SETA Funded
                                         </span>
                                         <?php else: ?>
                                         <span class="badge fs-10 badge-phoenix badge-phoenix-secondary">
-                                            <i class="bi bi-x ms-1"></i>
+                                            <svg class="svg-inline--fa fa-ban ms-1" data-fa-transform="shrink-2" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="ban" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" data-fa-i2svg="" style="transform-origin: 0.5em 0.5em;"><g transform="translate(256 256)"><g transform="translate(0, 0)  scale(0.875, 0.875)  rotate(0 0 0)"><path fill="currentColor" d="M367.2 412.5L99.5 144.8C77.1 176.1 64 214.5 64 256c0 106 86 192 192 192c41.5 0 79.9-13.1 111.2-35.5zm45.3-45.3C434.9 335.9 448 297.5 448 256c0-106-86-192-192-192c-41.5 0-79.9 13.1-111.2 35.5L412.5 367.2zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256z" transform="translate(-256 -256)"></path></g></g></svg>
                                             Not SETA
                                         </span>
                                         <?php endif; ?>
@@ -205,14 +207,57 @@ $total_count = $total_count ?? 0;
                                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton<?php echo $class['class_id']; ?>">
                                                 <?php if (current_user_can('edit_posts') || current_user_can('manage_options')): ?>
                                                 <li>
-                                                    <a class="dropdown-item" href="#" onclick="editClass(<?php echo $class['class_id']; ?>)">
+<?php
+// 1. Find the page object for “app/new-class” (or just “new-class”, depending on where it lives)
+$page = get_page_by_path( 'app/new-class' ); 
+// If your “new-class” page lives directly under /app/, use exactly that path.
+// If it’s a top-level page called “new-class”, you can just do get_page_by_path('new-class').
+
+// 2. Grab its permalink (so WP will automatically use the correct domain/child-theme slug, etc.)
+if ( $page ) {
+    $base_url = get_permalink( $page->ID ); 
+} else {
+    // Fallback if page not found:
+    $base_url = home_url( '/app/new-class/' );
+}
+
+// 3. Append ?mode=update&class_id=… with add_query_arg()
+$edit_url = add_query_arg(
+    [
+        'mode'     => 'update',
+        'class_id' => $class['class_id'],
+    ],
+    $base_url
+);
+?>
+                                                    <a class="dropdown-item" href="<?php echo esc_url( $edit_url ); ?>">
                                                         <i class="bi bi-pencil me-2"></i>
                                                         Edit Class
                                                     </a>
                                                 </li>
                                                 <?php endif; ?>
                                                 <li>
-                                                    <a class="dropdown-item" href="#" onclick="viewClassDetails(<?php echo $class['class_id']; ?>)">
+<?php
+// 1. Find the page object for "app/display-single-class"
+$page = get_page_by_path( 'app/display-single-class' );
+
+// 2. Grab its permalink (so WP will automatically use the correct domain/child-theme slug, etc.)
+if ( $page ) {
+    $base_url = get_permalink( $page->ID );
+} else {
+    // Fallback if page not found:
+    $base_url = home_url( '/app/display-single-class/' );
+}
+
+// 3. Append ?class_id=… with add_query_arg()
+$view_url = add_query_arg(
+    [
+        'class_id' => $class['class_id'],
+    ],
+    $base_url
+);
+?>
+                                                    <a class="dropdown-item" href="<?php echo esc_url( $view_url ); ?>">
                                                         <i class="bi bi-eye me-2"></i>
                                                         View Details
                                                     </a>
@@ -304,6 +349,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('deleted') === 'success') {
         const message = `Class Deleted.`;
+
         showSuccessBanner(message);
 
         // Clean up URL parameters
@@ -324,17 +370,9 @@ function exportClasses() {
     alert('Export functionality will be implemented soon.');
 }
 
-function editClass(classId) {
-    // TODO: Navigate to edit page - this will need to be implemented based on how the plugin integrates with WordPress pages
-    alert('Edit functionality for class ID: ' + classId + ' will be implemented.');
-}
-
 function viewClassDetails(classId) {
-    // Navigate to class details page with class_id parameter
-    // Use the correct URL structure: /app/display-single-class/?class_id=32
-    const homeUrl = '<?php echo esc_url(home_url()); ?>';
-    const detailsUrl = homeUrl + '/app/display-single-class/?class_id=' + classId;
-    window.location.href = detailsUrl;
+    // Placeholder for view details functionality
+    alert('View details for class ID: ' + classId);
 }
 
 function deleteClass(classId) {
@@ -391,10 +429,12 @@ function deleteClass(classId) {
     }
 }
 
+
+
 function showSuccessBanner(message) {
     // Create success banner
     const banner = document.createElement('div');
-    banner.className = 'alert alert-success alert-dismissible fade show position-fixed';
+    banner.className = 'alert alert-subtle-success alert-dismissible fade show position-fixed';
     banner.style.cssText = 'top: 80px; right: 20px; z-index: 9999; min-width: 300px;';
     banner.innerHTML = `
         <i class="bi bi-check-circle-fill me-2"></i>
