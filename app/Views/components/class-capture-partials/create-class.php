@@ -206,7 +206,8 @@
          </div>
 
          <!-- Time Selection -->
-         <div class="row mb-3">
+         <!-- Single Time Controls (shown when 1 day selected or no days selected) -->
+         <div id="single-time-controls" class="row mb-3">
             <div class="col-md-4 mb-3">
                <div class="form-floating">
                   <select id="schedule_start_time" name="schedule_start_time" class="form-select" required>
@@ -256,6 +257,82 @@
                   <input type="text" id="schedule_duration" name="schedule_duration" class="form-control readonly-field" placeholder="Duration" readonly>
                   <label for="schedule_duration">Class Duration (Hours)</label>
                   <small class="text-muted">Automatically calculated</small>
+               </div>
+            </div>
+         </div>
+
+         <!-- Per-Day Time Controls (shown when multiple days selected) -->
+         <div id="per-day-time-controls" class="d-none">
+            <div class="mb-3">
+               <h6 class="mb-2">Set Times for Each Day</h6>
+               <p class="text-muted small mb-3">Configure individual start and end times for each selected day.</p>
+            </div>
+
+            <!-- Container for dynamically generated day sections -->
+            <div id="per-day-sections-container">
+               <!-- Day sections will be generated here by JavaScript -->
+            </div>
+
+            <!-- Hidden template for day time section -->
+            <div id="day-time-section-template" class="per-day-time-section mb-3 d-none" data-day="">
+               <div class="card">
+                  <div class="card-header day-time-header d-flex justify-content-between align-items-center">
+                     <strong class="day-name"></strong>
+                     <button type="button" class="btn btn-sm btn-outline-secondary copy-to-all-btn">
+                        <i class="bi bi-files me-1"></i>Copy to all days
+                     </button>
+                  </div>
+                  <div class="card-body">
+                     <div class="row">
+                        <div class="col-md-6 mb-3">
+                           <div class="form-floating">
+                              <select class="form-select day-start-time" data-day="" required>
+                                 <option value="">Select</option>
+                                 <?php
+                                 // Generate time options from 6:00 AM to 8:00 PM in 30-minute increments
+                                 $start = strtotime('06:00:00');
+                                 $end = strtotime('20:00:00');
+                                 $interval = 30 * 60; // 30 minutes in seconds
+
+                                 for ($time = $start; $time <= $end; $time += $interval) {
+                                    $timeStr = date('H:i', $time);
+                                    echo '<option value="' . $timeStr . '">' . date('g:i A', $time) . '</option>';
+                                 }
+                                 ?>
+                              </select>
+                              <label>Start Time <span class="text-danger">*</span></label>
+                              <div class="invalid-feedback">Please select a start time.</div>
+                              <div class="valid-feedback">Looks good!</div>
+                           </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                           <div class="form-floating">
+                              <select class="form-select day-end-time" data-day="" required>
+                                 <option value="">Select</option>
+                                 <?php
+                                 // Generate time options from 6:30 AM to 8:30 PM in 30-minute increments
+                                 $start = strtotime('06:30:00');
+                                 $end = strtotime('20:30:00');
+                                 $interval = 30 * 60; // 30 minutes in seconds
+
+                                 for ($time = $start; $time <= $end; $time += $interval) {
+                                    $timeStr = date('H:i', $time);
+                                    echo '<option value="' . $timeStr . '">' . date('g:i A', $time) . '</option>';
+                                 }
+                                 ?>
+                              </select>
+                              <label>End Time <span class="text-danger">*</span></label>
+                              <div class="invalid-feedback">Please select an end time.</div>
+                              <div class="valid-feedback">Looks good!</div>
+                           </div>
+                        </div>
+                     </div>
+                     <div class="row">
+                        <div class="col-md-6">
+                           <small class="text-muted day-duration-display">Duration: <span class="duration-value">-</span> hours</small>
+                        </div>
+                     </div>
+                  </div>
                </div>
             </div>
          </div>

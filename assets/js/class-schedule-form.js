@@ -4,8 +4,10 @@
  * Handles the client-side functionality for the class schedule form.
  * Extracted from WeCoza theme for standalone plugin
  */
+console.log('class-schedule-form.js: File loading started');
 (function($) {
     'use strict';
+    console.log('class-schedule-form.js: Inside IIFE, jQuery available:', typeof $ !== 'undefined');
 
     // Holiday override data
     var holidayOverrides = {};
@@ -14,20 +16,33 @@
      * Initialize the class schedule form
      */
     function initClassScheduleForm() {
+        console.log('class-schedule-form.js: initClassScheduleForm() called');
+
         // Initialize schedule pattern selection
+        console.log('class-schedule-form.js: Initializing schedule pattern selection...');
         initSchedulePatternSelection();
 
         // Initialize time selection and duration calculation
+        console.log('class-schedule-form.js: Initializing time selection...');
         initTimeSelection();
 
+        // Initialize per-day time controls based on current selection
+        console.log('class-schedule-form.js: Initializing per-day time controls...');
+        updatePerDayTimeControls();
+
         // Initialize exception dates
+        console.log('class-schedule-form.js: Initializing exception dates...');
         initExceptionDates();
 
         // Initialize holiday overrides
+        console.log('class-schedule-form.js: Initializing holiday overrides...');
         initHolidayOverrides();
 
         // Initialize schedule data updates
+        console.log('class-schedule-form.js: Initializing schedule data updates...');
         initScheduleDataUpdates();
+
+        console.log('class-schedule-form.js: Initialization complete');
     }
 
     /**
@@ -52,9 +67,19 @@
 
                 // Ensure at least one day is selected for validation
                 validateDaySelection();
+
+                // Update per-day time controls based on current day selection
+                updatePerDayTimeControls();
             } else if (pattern === 'monthly') {
                 $dayOfMonth.removeClass('d-none');
                 $('#schedule_day_of_month').attr('required', 'required');
+
+                // For monthly pattern, always show single time controls
+                // since monthly scheduling doesn't use multiple days
+                resetToSingleTimeControls();
+            } else {
+                // For custom or no pattern, reset to single time controls
+                resetToSingleTimeControls();
             }
 
             // Update schedule data
@@ -75,6 +100,7 @@
         $('#select-all-days').on('click', function() {
             $('.schedule-day-checkbox').prop('checked', true);
             validateDaySelection();
+            updatePerDayTimeControls(); // Add conditional display logic
             updateScheduleData();
             restrictStartDateBySelectedDays();
             recalculateEndDate();
@@ -83,12 +109,15 @@
         $('#clear-all-days').on('click', function() {
             $('.schedule-day-checkbox').prop('checked', false);
             validateDaySelection();
+            updatePerDayTimeControls(); // Add conditional display logic
             updateScheduleData();
         });
 
-        // Handle day checkbox changes
-        $('.schedule-day-checkbox').on('change', function() {
+        // Handle day checkbox changes - using event delegation in case checkboxes are loaded dynamically
+        $(document).on('change', '.schedule-day-checkbox', function() {
+            console.log('Day checkbox changed:', $(this).val(), 'checked:', $(this).is(':checked'));
             validateDaySelection();
+            updatePerDayTimeControls(); // Add conditional display logic
             updateScheduleData();
             restrictStartDateBySelectedDays();
 
@@ -147,6 +176,7 @@
         $('.schedule-day-checkbox:checked').each(function() {
             selectedDays.push($(this).val());
         });
+        console.log('getSelectedDays:', selectedDays);
         return selectedDays;
     }
 
@@ -156,6 +186,160 @@
     function getDayName(dayIndex) {
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         return days[dayIndex];
+    }
+
+    /**
+     * Update per-day time controls based on selected days
+     */
+    function updatePerDayTimeControls() {
+        console.log('updatePerDayTimeControls called');
+        const selectedDays = getSelectedDays();
+        const $singleTimeControls = $('#single-time-controls');
+        const $perDayTimeControls = $('#per-day-time-controls');
+        const $perDaySectionsContainer = $('#per-day-sections-container');
+
+        console.log('Selected days count:', selectedDays.length);
+        console.log('Single time controls element:', $singleTimeControls.length);
+        console.log('Per-day time controls element:', $perDayTimeControls.length);
+
+        // Show/hide controls based on number of selected days
+        if (selectedDays.length <= 1) {
+            console.log('Showing single time controls');
+            // Single day or no days: show single time controls
+            $singleTimeControls.removeClass('d-none');
+            $perDayTimeControls.addClass('d-none');
+
+            // Clear per-day sections
+            $perDaySectionsContainer.empty();
+        } else {
+            console.log('Showing per-day time controls');
+            // Multiple days: show per-day time controls
+            $singleTimeControls.addClass('d-none');
+            $perDayTimeControls.removeClass('d-none');
+
+            // Generate per-day sections
+            generatePerDaySections(selectedDays);
+        }
+    }
+
+    /**
+     * Generate per-day time sections for selected days
+     */
+    function generatePerDaySections(selectedDays) {
+        console.log('generatePerDaySections called with:', selectedDays);
+        const $container = $('#per-day-sections-container');
+        const $template = $('#day-time-section-template');
+
+        console.log('Container element:', $container.length);
+        console.log('Template element:', $template.length);
+
+        // Clear existing sections
+        $container.empty();
+
+        // Create section for each selected day
+        selectedDays.forEach(function(day, index) {
+            console.log('Creating section for day:', day);
+            const $section = $template.clone();
+            $section.removeClass('d-none').removeAttr('id');
+            $section.attr('data-day', day);
+
+            // Update day name in header
+            $section.find('.day-name').text(day);
+
+            // Update data-day attributes for form elements
+            $section.find('.day-start-time').attr('data-day', day).attr('name', 'day_start_time[' + day + ']');
+            $section.find('.day-end-time').attr('data-day', day).attr('name', 'day_end_time[' + day + ']');
+
+            // Show copy button only on first day
+            if (index === 0) {
+                $section.find('.copy-to-all-btn').show();
+            } else {
+                $section.find('.copy-to-all-btn').hide();
+            }
+
+            $container.append($section);
+            console.log('Section appended for day:', day);
+        });
+
+        console.log('Total sections created:', $container.children().length);
+
+        // Initialize event handlers for new sections
+        initPerDayTimeHandlers();
+    }
+
+    /**
+     * Initialize event handlers for per-day time controls
+     */
+    function initPerDayTimeHandlers() {
+        // Handle time changes for duration calculation
+        $('.day-start-time, .day-end-time').off('change.perday').on('change.perday', function() {
+            const day = $(this).attr('data-day');
+            calculatePerDayDuration(day);
+            updateScheduleData();
+        });
+
+        // Handle copy to all days functionality
+        $('.copy-to-all-btn').off('click.perday').on('click.perday', function() {
+            const $section = $(this).closest('.per-day-time-section');
+            const sourceDay = $section.attr('data-day');
+            const startTime = $section.find('.day-start-time').val();
+            const endTime = $section.find('.day-end-time').val();
+
+            if (startTime && endTime) {
+                // Copy times to all other day sections
+                $('.per-day-time-section').not($section).each(function() {
+                    $(this).find('.day-start-time').val(startTime).trigger('change');
+                    $(this).find('.day-end-time').val(endTime).trigger('change');
+                });
+            }
+        });
+    }
+
+    /**
+     * Calculate duration for a specific day
+     */
+    function calculatePerDayDuration(day) {
+        const $section = $('.per-day-time-section[data-day="' + day + '"]');
+        const startTime = $section.find('.day-start-time').val();
+        const endTime = $section.find('.day-end-time').val();
+        const $durationDisplay = $section.find('.duration-value');
+
+        if (startTime && endTime) {
+            // Parse times
+            const [startHour, startMinute] = startTime.split(':').map(Number);
+            const [endHour, endMinute] = endTime.split(':').map(Number);
+
+            // Calculate duration in hours
+            let durationHours = endHour - startHour;
+            let durationMinutes = endMinute - startMinute;
+
+            if (durationMinutes < 0) {
+                durationHours--;
+                durationMinutes += 60;
+            }
+
+            // Format duration
+            const duration = durationHours + (durationMinutes / 60);
+            $durationDisplay.text(duration.toFixed(1));
+        } else {
+            $durationDisplay.text('-');
+        }
+    }
+
+    /**
+     * Reset to single time controls (for monthly/custom patterns)
+     */
+    function resetToSingleTimeControls() {
+        const $singleTimeControls = $('#single-time-controls');
+        const $perDayTimeControls = $('#per-day-time-controls');
+        const $perDaySectionsContainer = $('#per-day-sections-container');
+
+        // Show single time controls, hide per-day controls
+        $singleTimeControls.removeClass('d-none');
+        $perDayTimeControls.addClass('d-none');
+
+        // Clear per-day sections
+        $perDaySectionsContainer.empty();
     }
 
     /**
@@ -332,10 +516,34 @@
     }
 
     // Initialize when document is ready
+    console.log('class-schedule-form.js: About to set up document ready handler');
     $(document).ready(function() {
+        console.log('class-schedule-form.js: Document ready, jQuery version:', $.fn.jquery);
+        console.log('class-schedule-form.js: Looking for schedule_pattern element...');
+
+        // Debug: Check all elements on page
+        console.log('class-schedule-form.js: Total elements on page:', $('*').length);
+        console.log('class-schedule-form.js: Schedule pattern element:', $('#schedule_pattern'));
+        console.log('class-schedule-form.js: Schedule pattern length:', $('#schedule_pattern').length);
+
         // Check if we're on a page with the class schedule form
         if ($('#schedule_pattern').length > 0) {
+            console.log('class-schedule-form.js: Schedule pattern element found, initializing form...');
+            console.log('class-schedule-form.js: Day checkboxes found:', $('.schedule-day-checkbox').length);
             initClassScheduleForm();
+        } else {
+            console.log('class-schedule-form.js: Schedule pattern element not found');
+
+            // Try again after a short delay in case of timing issues
+            setTimeout(function() {
+                console.log('class-schedule-form.js: Retrying after delay...');
+                if ($('#schedule_pattern').length > 0) {
+                    console.log('class-schedule-form.js: Schedule pattern found on retry, initializing...');
+                    initClassScheduleForm();
+                } else {
+                    console.log('class-schedule-form.js: Still not found after delay');
+                }
+            }, 1000);
         }
     });
 
