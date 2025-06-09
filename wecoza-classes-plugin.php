@@ -25,7 +25,8 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('WECOZA_CLASSES_VERSION', '1.0.0');
+// Use datetime for development to prevent caching issues
+define('WECOZA_CLASSES_VERSION', date('YmdHis')); // e.g., 20250609213656
 define('WECOZA_CLASSES_PLUGIN_FILE', __FILE__);
 define('WECOZA_CLASSES_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WECOZA_CLASSES_PLUGIN_URL', plugin_dir_url(__FILE__));

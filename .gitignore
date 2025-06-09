@@ -48,6 +48,9 @@ yarn-error.log*
 package-lock.json
 yarn.lock
 
+dev-tasks-pi/
+dev-tasks-mini-spec/
+
 # Compiled CSS and JS
 dist/
 build/
