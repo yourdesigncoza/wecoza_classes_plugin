@@ -50,8 +50,11 @@
         // Load existing schedule data for editing (backward compatibility)
         loadExistingScheduleData();
 
-        // Initial end date calculation and holiday check after all initialization is complete
+        // Initial auto-population and calculations after all initialization is complete
         setTimeout(function() {
+            // Auto-populate schedule start date if class start date exists but schedule start date is empty
+            initAutoPopulateScheduleStartDate();
+
             recalculateEndDate();
 
             // Check for holidays on initial load
@@ -61,6 +64,23 @@
                 checkForHolidays(startDate, endDate);
             }
         }, 100);
+    }
+
+    /**
+     * Initialize auto-population of schedule start date on page load
+     */
+    function initAutoPopulateScheduleStartDate() {
+        const $classStartDate = $('#class_start_date');
+        const $scheduleStartDate = $('#schedule_start_date');
+
+        const classStartDate = $classStartDate.val();
+        const scheduleStartDate = $scheduleStartDate.val();
+
+        // Auto-populate if class start date exists but schedule start date is empty
+        if (classStartDate && !scheduleStartDate) {
+            $scheduleStartDate.val(classStartDate);
+            console.log('Auto-populated schedule start date on page load:', classStartDate);
+        }
     }
 
     /**
@@ -293,6 +313,10 @@
             const day = $(this).attr('data-day');
             const $startTime = $(this).find('.day-start-time');
             const $endTime = $(this).find('.day-end-time');
+            const $durationContainer = $(this).find('.day-duration-display');
+
+            // Initially hide duration display
+            $durationContainer.addClass('d-none');
 
             // Calculate initial duration if times are already set
             if ($startTime.val() && $endTime.val()) {
@@ -364,18 +388,35 @@
 
     /**
      * Calculate duration for a specific day using unified calculation
+     * Only shows duration display when both time fields are valid
      */
     function calculatePerDayDuration(day) {
         const $section = $('.per-day-time-section[data-day="' + day + '"]');
         const startTime = $section.find('.day-start-time').val();
         const endTime = $section.find('.day-end-time').val();
         const $durationDisplay = $section.find('.duration-value');
+        const $durationContainer = $section.find('.day-duration-display');
+        const $startTimeElement = $section.find('.day-start-time');
+        const $endTimeElement = $section.find('.day-end-time');
 
         if (startTime && endTime) {
-            // Use unified duration calculation
-            const duration = calculateTimeDuration(startTime, endTime);
-            $durationDisplay.text(duration.toFixed(1));
+            // Validate the time selection first
+            const isValid = validateTimeSelection($startTimeElement, $endTimeElement);
+
+            if (isValid) {
+                // Use unified duration calculation
+                const duration = calculateTimeDuration(startTime, endTime);
+                $durationDisplay.text(duration.toFixed(1));
+
+                // Show duration display only when valid
+                $durationContainer.removeClass('d-none');
+            } else {
+                // Hide duration display when invalid
+                $durationContainer.addClass('d-none');
+            }
         } else {
+            // Hide duration display when fields are empty
+            $durationContainer.addClass('d-none');
             $durationDisplay.text('-');
         }
     }
@@ -850,6 +891,25 @@
         // Initialize date fields
         const $startDate = $('#schedule_start_date');
         const $classType = $('#class_type');
+        const $classStartDate = $('#class_start_date');
+
+        // Auto-populate schedule start date when class start date changes
+        $classStartDate.on('change', function() {
+            const classStartDate = $(this).val();
+            if (classStartDate) {
+                // Auto-populate schedule start date with the same value
+                $startDate.val(classStartDate);
+
+                // Clear any existing validation errors on schedule start date since it's now valid
+                $startDate.removeClass('is-invalid');
+                $startDate.siblings('.invalid-feedback').text('Please select a start date.');
+
+                // Trigger change event on schedule start date to update dependent calculations
+                $startDate.trigger('change');
+
+                console.log('Auto-populated schedule start date with class start date:', classStartDate);
+            }
+        });
 
         // Update end date when start date or class type changes
         $startDate.add($classType).on('change', function() {
