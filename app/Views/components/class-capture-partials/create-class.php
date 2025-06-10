@@ -206,59 +206,9 @@
          </div>
 
          <!-- Time Selection -->
-         <!-- Single Time Controls (shown when 1 day selected or no days selected) -->
-         <div id="single-time-controls" class="row mb-3">
-            <div class="col-md-4 mb-3">
-               <div class="form-floating">
-                  <select id="schedule_start_time" name="schedule_start_time" class="form-select" required>
-                     <option value="">Select</option>
-                     <?php
-                     // Generate time options from 6:00 AM to 8:00 PM in 30-minute increments
-                     $start = strtotime('06:00:00');
-                     $end = strtotime('20:00:00');
-                     $interval = 30 * 60; // 30 minutes in seconds
-
-                     for ($time = $start; $time <= $end; $time += $interval) {
-                        $timeStr = date('H:i', $time);
-                        echo '<option value="' . $timeStr . '">' . date('g:i A', $time) . '</option>';
-                     }
-                     ?>
-                  </select>
-                  <label for="schedule_start_time">Start Time <span class="text-danger">*</span></label>
-                  <div class="invalid-feedback">Please select a start time.</div>
-                  <div class="valid-feedback">Looks good!</div>
-               </div>
-            </div>
-
-            <div class="col-md-4 mb-3">
-               <div class="form-floating">
-                  <select id="schedule_end_time" name="schedule_end_time" class="form-select" required>
-                     <option value="">Select</option>
-                     <?php
-                     // Generate time options from 6:30 AM to 8:30 PM in 30-minute increments
-                     $start = strtotime('06:30:00');
-                     $end = strtotime('20:30:00');
-                     $interval = 30 * 60; // 30 minutes in seconds
-
-                     for ($time = $start; $time <= $end; $time += $interval) {
-                        $timeStr = date('H:i', $time);
-                        echo '<option value="' . $timeStr . '">' . date('g:i A', $time) . '</option>';
-                     }
-                     ?>
-                  </select>
-                  <label for="schedule_end_time">End Time <span class="text-danger">*</span></label>
-                  <div class="invalid-feedback">Please select an end time.</div>
-                  <div class="valid-feedback">Looks good!</div>
-               </div>
-            </div>
-
-            <div class="col-md-4 mb-3">
-               <div class="form-floating">
-                  <input type="text" id="schedule_duration" name="schedule_duration" class="form-control readonly-field" placeholder="Duration" readonly>
-                  <label for="schedule_duration">Class Duration (Hours)</label>
-                  <small class="text-muted">Automatically calculated</small>
-               </div>
-            </div>
+         <!-- Single Time Controls (shown when no days selected) -->
+         <div id="single-time-controls" class="row mb-3 d-none">
+            <!-- This section is now hidden and will be replaced by per-day controls when days are selected -->
          </div>
 
          <!-- Per-Day Time Controls (shown when multiple days selected) -->

@@ -164,8 +164,200 @@ function test_wecoza_classes_plugin() {
         }
     }
     
+    // Test 8: Calendar Event Generation Test (Task 4.2-4.5)
+    echo "<h3>8. Calendar Event Generation Test (v4.0 Tasks 4.2-4.5)</h3>";
+    test_calendar_event_generation();
+
     echo "<h3>Test Complete</h3>";
     echo "<p><strong>Note:</strong> This is a basic functionality test. For full testing, create a WordPress page with the shortcodes.</p>";
+}
+
+/**
+ * Test calendar event generation with per-day times (Tasks 4.2-4.5)
+ */
+function test_calendar_event_generation() {
+    try {
+        if (!class_exists('WeCozaClasses\\Controllers\\ClassController')) {
+            echo "❌ ClassController not available for testing<br>";
+            return;
+        }
+
+        // Test data: v2.0 format with per-day times
+        $testScheduleDataPerDay = [
+            'version' => '2.0',
+            'pattern' => 'weekly',
+            'startDate' => '2024-01-15',
+            'endDate' => '2024-01-29',
+            'timeData' => [
+                'mode' => 'per-day',
+                'perDay' => [
+                    'Monday' => [
+                        'startTime' => '09:00',
+                        'endTime' => '12:00',
+                        'duration' => 3.0
+                    ],
+                    'Wednesday' => [
+                        'startTime' => '13:00',
+                        'endTime' => '17:00',
+                        'duration' => 4.0
+                    ],
+                    'Friday' => [
+                        'startTime' => '10:00',
+                        'endTime' => '15:00',
+                        'duration' => 5.0
+                    ]
+                ]
+            ],
+            'selectedDays' => ['Monday', 'Wednesday', 'Friday'],
+            'exceptionDates' => [],
+            'holidayOverrides' => []
+        ];
+
+        // Test data: v2.0 format with single time
+        $testScheduleDataSingle = [
+            'version' => '2.0',
+            'pattern' => 'weekly',
+            'startDate' => '2024-01-15',
+            'endDate' => '2024-01-22',
+            'timeData' => [
+                'mode' => 'single',
+                'single' => [
+                    'startTime' => '09:00',
+                    'endTime' => '17:00',
+                    'duration' => 8.0
+                ]
+            ],
+            'selectedDays' => ['Monday', 'Wednesday', 'Friday'],
+            'exceptionDates' => [],
+            'holidayOverrides' => []
+        ];
+
+        // Test data: Legacy v1.0 format
+        $testScheduleDataLegacy = [
+            [
+                'date' => '2024-01-15',
+                'start_time' => '09:00',
+                'end_time' => '17:00',
+                'notes' => 'Legacy format test'
+            ],
+            [
+                'date' => '2024-01-17',
+                'start_time' => '09:00',
+                'end_time' => '17:00',
+                'notes' => 'Legacy format test'
+            ]
+        ];
+
+        $testClass = [
+            'class_id' => 'TEST001',
+            'class_code' => 'TEST-001',
+            'class_subject' => 'Test Class Subject',
+            'original_start_date' => '2024-01-15',
+            'delivery_date' => '2024-01-29'
+        ];
+
+        // Test 1: Per-day times (v2.0)
+        echo "<strong>Test 1: v2.0 Per-Day Times</strong><br>";
+        $events = test_generate_events($testScheduleDataPerDay, $testClass);
+        if ($events !== false) {
+            echo "✅ Generated " . count($events) . " events from per-day schedule<br>";
+
+            // Check if events have different times
+            $uniqueTimes = [];
+            foreach ($events as $event) {
+                $timeKey = substr($event['start'], 11, 5) . '-' . substr($event['end'], 11, 5);
+                $uniqueTimes[$timeKey] = true;
+            }
+
+            if (count($uniqueTimes) > 1) {
+                echo "✅ Events have different times per day: " . implode(', ', array_keys($uniqueTimes)) . "<br>";
+            } else {
+                echo "❌ All events have same time (per-day times not preserved)<br>";
+            }
+
+            // Check event titles for day names
+            $hasDayNames = false;
+            foreach ($events as $event) {
+                if (preg_match('/^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday):/', $event['title'])) {
+                    $hasDayNames = true;
+                    break;
+                }
+            }
+
+            if ($hasDayNames) {
+                echo "✅ Event titles include day names for per-day schedules<br>";
+            } else {
+                echo "❌ Event titles missing day names<br>";
+            }
+        }
+
+        // Test 2: Single time (v2.0)
+        echo "<strong>Test 2: v2.0 Single Time</strong><br>";
+        $events = test_generate_events($testScheduleDataSingle, $testClass);
+        if ($events !== false) {
+            echo "✅ Generated " . count($events) . " events from single-time schedule<br>";
+
+            // Check if all events have same time
+            $times = [];
+            foreach ($events as $event) {
+                $times[] = substr($event['start'], 11, 5) . '-' . substr($event['end'], 11, 5);
+            }
+
+            if (count(array_unique($times)) === 1) {
+                echo "✅ All events have consistent time: " . $times[0] . "<br>";
+            } else {
+                echo "❌ Events have inconsistent times<br>";
+            }
+        }
+
+        // Test 3: Legacy format (v1.0)
+        echo "<strong>Test 3: Legacy v1.0 Format</strong><br>";
+        $events = test_generate_events($testScheduleDataLegacy, $testClass);
+        if ($events !== false) {
+            echo "✅ Generated " . count($events) . " events from legacy schedule<br>";
+            echo "✅ Backward compatibility maintained<br>";
+        }
+
+    } catch (Exception $e) {
+        echo "❌ Calendar event generation test failed: " . $e->getMessage() . "<br>";
+    }
+}
+
+/**
+ * Helper function to test event generation
+ */
+function test_generate_events($scheduleData, $class) {
+    try {
+        // Use reflection to access private method for testing
+        $controller = new WeCozaClasses\Controllers\ClassController();
+        $reflection = new ReflectionClass($controller);
+        $method = $reflection->getMethod('generateEventsFromScheduleData');
+        $method->setAccessible(true);
+
+        $events = $method->invoke($controller, $scheduleData, $class);
+
+        if (is_array($events) && count($events) > 0) {
+            // Validate event structure
+            $firstEvent = $events[0];
+            $requiredFields = ['id', 'title', 'start', 'end', 'classNames', 'extendedProps'];
+
+            foreach ($requiredFields as $field) {
+                if (!isset($firstEvent[$field])) {
+                    echo "❌ Missing required field: {$field}<br>";
+                    return false;
+                }
+            }
+
+            return $events;
+        } else {
+            echo "❌ No events generated<br>";
+            return false;
+        }
+
+    } catch (Exception $e) {
+        echo "❌ Event generation failed: " . $e->getMessage() . "<br>";
+        return false;
+    }
 }
 
 // Add admin menu for testing (only for administrators)
