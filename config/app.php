@@ -125,6 +125,7 @@ return array(
             'public' => array(
                 'class-capture.js',
                 'class-schedule-form.js',
+                'learner-level-utils.js',
                 'class-types.js',
                 'wecoza-calendar.js',
             ),

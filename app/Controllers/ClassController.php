@@ -127,12 +127,12 @@ class ClassController {
         }
 
         // FullCalendar CDN - Latest version from Context7
-        \wp_enqueue_style(
-            'fullcalendar-css',
-            'https://cdn.jsdelivr.net/npm/fullcalendar/index.global.min.css',
-            [],
-            '6.1.15'
-        );
+        // \wp_enqueue_style(
+        //     'fullcalendar-css',
+        //     'https://cdn.jsdelivr.net/npm/fullcalendar/index.global.min.css',
+        //     [],
+        //     '6.1.15'
+        // );
 
         \wp_enqueue_script(
             'fullcalendar',
@@ -162,6 +162,14 @@ class ClassController {
         \wp_enqueue_script(
             'wecoza-class-schedule-form-js',
             WECOZA_CLASSES_JS_URL . 'class-schedule-form.js',
+            ['jquery', 'wecoza-learner-level-utils-js'],
+            WECOZA_CLASSES_VERSION,
+            true
+        );
+
+        \wp_enqueue_script(
+            'wecoza-learner-level-utils-js',
+            WECOZA_CLASSES_JS_URL . 'learner-level-utils.js',
             ['jquery'],
             WECOZA_CLASSES_VERSION,
             true
@@ -170,7 +178,7 @@ class ClassController {
         \wp_enqueue_script(
             'wecoza-class-types-js',
             WECOZA_CLASSES_JS_URL . 'class-types.js',
-            ['jquery', 'wecoza-class-js'],
+            ['jquery', 'wecoza-class-js', 'wecoza-learner-level-utils-js'],
             WECOZA_CLASSES_VERSION,
             true
         );

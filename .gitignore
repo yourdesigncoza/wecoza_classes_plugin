@@ -48,8 +48,10 @@ yarn-error.log*
 package-lock.json
 yarn.lock
 
+@wecoza-dev-flow/
 dev-tasks-pi/
 dev-tasks-mini-spec/
+tests/
 
 # Compiled CSS and JS
 dist/

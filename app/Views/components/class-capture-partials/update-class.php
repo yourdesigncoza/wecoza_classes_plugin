@@ -658,7 +658,7 @@
                         <tr>
                            <th>Learner</th>
                            <th>Level/Module</th>
-                           <th>Host/Walk-in Status</th>
+                           <th>Status</th>
                            <th>Actions</th>
                         </tr>
                      </thead>
@@ -1006,20 +1006,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 row.innerHTML = `
                     <td>${learner.name || 'Unknown Learner'}</td>
                     <td>
-                        <select class="form-select form-select-sm learner-level-select" data-learner-id="${learner.id}">
-                            <option value="">Select Level</option>
-                            <option value="Level 1" ${learner.level === 'Level 1' ? 'selected' : ''}>Level 1</option>
-                            <option value="Level 2" ${learner.level === 'Level 2' ? 'selected' : ''}>Level 2</option>
-                            <option value="Level 3" ${learner.level === 'Level 3' ? 'selected' : ''}>Level 3</option>
-                            <option value="Level 4" ${learner.level === 'Level 4' ? 'selected' : ''}>Level 4</option>
-                            <option value="Level 5" ${learner.level === 'Level 5' ? 'selected' : ''}>Level 5</option>
-                        </select>
+                        ${classes_generate_learner_level_select_html(learner.id, learner.level)}
                     </td>
                     <td>
                         <select class="form-select form-select-sm learner-status-select" data-learner-id="${learner.id}">
-                            <option value="Host Company Learner" ${learner.status === 'Host Company Learner' ? 'selected' : ''}>Host Company Learner</option>
-                            <option value="Walk-in Learner" ${learner.status === 'Walk-in Learner' ? 'selected' : ''}>Walk-in Learner</option>
-                            <option value="Transferred" ${learner.status === 'Transferred' ? 'selected' : ''}>Transferred</option>
+                            <option value="CIC - Currently in Class" ${learner.status === 'CIC - Currently in Class' ? 'selected' : ''}>CIC - Currently in Class</option>
+                            <option value="RBE - Removed by Employer" ${learner.status === 'RBE - Removed by Employer' ? 'selected' : ''}>RBE - Removed by Employer</option>
+                            <option value="DRO - Drop Out" ${learner.status === 'DRO - Drop Out' ? 'selected' : ''}>DRO - Drop Out</option>
                         </select>
                     </td>
                     <td>

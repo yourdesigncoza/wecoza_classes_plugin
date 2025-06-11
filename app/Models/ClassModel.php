@@ -435,7 +435,7 @@ class ClassModel {
                 return [
                     'id' => intval($id),
                     'name' => 'Legacy Learner',
-                    'status' => 'Host Company Learner',
+                    'status' => 'CIC - Currently in Class',
                     'level' => ''
                 ];
             }, $this->learnerIds);
