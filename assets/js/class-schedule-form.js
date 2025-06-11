@@ -79,7 +79,6 @@
         // Auto-populate if class start date exists but schedule start date is empty
         if (classStartDate && !scheduleStartDate) {
             $scheduleStartDate.val(classStartDate);
-            console.log('Auto-populated schedule start date on page load:', classStartDate);
         }
     }
 
@@ -906,8 +905,6 @@
 
                 // Trigger change event on schedule start date to update dependent calculations
                 $startDate.trigger('change');
-
-                console.log('Auto-populated schedule start date with class start date:', classStartDate);
             }
         });
 
@@ -1139,8 +1136,8 @@
                 const learnerData = {
                     id: learnerId,
                     name: learnerName,
-                    level: 'Level 1', // Default level
-                    status: 'Host Company Learner' // Default status
+                    level: '', // Default level (empty, will be auto-populated when subject is selected)
+                    status: 'CIC - Currently in Class' // Default status
                 };
 
                 classLearners.push(learnerData);
@@ -1177,19 +1174,13 @@
                 row.innerHTML = `
                     <td>${learner.name}</td>
                     <td>
-                        <select class="form-select form-select-sm learner-level-select" data-learner-id="${learner.id}">
-                            <option value="Level 1" ${learner.level === 'Level 1' ? 'selected' : ''}>Level 1</option>
-                            <option value="Level 2" ${learner.level === 'Level 2' ? 'selected' : ''}>Level 2</option>
-                            <option value="Level 3" ${learner.level === 'Level 3' ? 'selected' : ''}>Level 3</option>
-                            <option value="Level 4" ${learner.level === 'Level 4' ? 'selected' : ''}>Level 4</option>
-                            <option value="Level 5" ${learner.level === 'Level 5' ? 'selected' : ''}>Level 5</option>
-                        </select>
+                        ${classes_generate_learner_level_select_html(learner.id, learner.level)}
                     </td>
                     <td>
                         <select class="form-select form-select-sm learner-status-select" data-learner-id="${learner.id}">
-                            <option value="Host Company Learner" ${learner.status === 'Host Company Learner' ? 'selected' : ''}>Host Company Learner</option>
-                            <option value="Walk-in Learner" ${learner.status === 'Walk-in Learner' ? 'selected' : ''}>Walk-in Learner</option>
-                            <option value="Transferred" ${learner.status === 'Transferred' ? 'selected' : ''}>Transferred</option>
+                            <option value="CIC - Currently in Class" ${learner.status === 'CIC - Currently in Class' ? 'selected' : ''}>CIC - Currently in Class</option>
+                            <option value="RBE - Removed by Employer" ${learner.status === 'RBE - Removed by Employer' ? 'selected' : ''}>RBE - Removed by Employer</option>
+                            <option value="DRO - Drop Out" ${learner.status === 'DRO - Drop Out' ? 'selected' : ''}>DRO - Drop Out</option>
                         </select>
                     </td>
                     <td>
@@ -1200,6 +1191,19 @@
             });
 
             console.log('Updated learners display with', classLearners.length, 'learners');
+
+            // Auto-populate learner levels if a class subject is already selected
+            const classSubjectSelect = document.getElementById('class_subject');
+            if (classSubjectSelect && classSubjectSelect.value) {
+                // Use setTimeout to ensure DOM is fully updated
+                setTimeout(function() {
+                    if (typeof classes_populate_learner_levels === 'function') {
+                        classes_populate_learner_levels(classSubjectSelect.value);
+                    } else if (typeof window.wecoza_auto_populate_learner_levels === 'function') {
+                        window.wecoza_auto_populate_learner_levels(classSubjectSelect.value);
+                    }
+                }, 100); // Small delay to ensure DOM is ready
+            }
         }
 
         // Function to update the hidden field with learner data
@@ -1245,6 +1249,19 @@
                 classLearners = JSON.parse(existingData);
                 updateLearnersDisplay();
                 console.log('Loaded existing learners:', classLearners);
+
+                // Auto-populate learner levels if a class subject is already selected (for editing)
+                const classSubjectSelect = document.getElementById('class_subject');
+                if (classSubjectSelect && classSubjectSelect.value) {
+                    // Use setTimeout to ensure DOM is fully updated
+                    setTimeout(function() {
+                        if (typeof classes_populate_learner_levels === 'function') {
+                            classes_populate_learner_levels(classSubjectSelect.value);
+                        } else if (typeof window.wecoza_auto_populate_learner_levels === 'function') {
+                            window.wecoza_auto_populate_learner_levels(classSubjectSelect.value);
+                        }
+                    }, 100); // Small delay to ensure DOM is ready
+                }
             } catch (e) {
                 console.error('Error parsing existing learner data:', e);
             }

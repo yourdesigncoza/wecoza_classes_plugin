@@ -15,6 +15,54 @@ var wecozaClass = wecozaClass || {
     debug: true
 };
 
+/**
+ * Auto-populate learner level selects based on selected class subject
+ * This function is globally accessible for use by other scripts
+ *
+ * @param {string} subjectId The selected subject ID
+ */
+function classes_populate_learner_levels(subjectId) {
+    console.log('🎯 Auto-populating learner levels for subject:', subjectId);
+
+    // Find all learner level select elements in the class learners table
+    const learnerLevelSelects = document.querySelectorAll('#class-learners-table .learner-level-select');
+
+    console.log('🔍 Found', learnerLevelSelects.length, 'learner level select elements');
+
+    if (learnerLevelSelects.length === 0) {
+        console.log('❌ No learner level select elements found');
+        // Also try alternative selectors in case the table structure is different
+        const alternativeSelects = document.querySelectorAll('.learner-level-select');
+        console.log('🔍 Alternative search found', alternativeSelects.length, 'elements');
+        return;
+    }
+
+    // The subject ID is already the level ID we want to use
+    // (e.g., 'NS4', 'CL4', 'NL4', etc.)
+    if (subjectId && subjectId.trim() !== '') {
+        learnerLevelSelects.forEach(function(select, index) {
+            console.log(`📝 Setting select ${index + 1} to:`, subjectId);
+
+            // Set the value to the subject ID
+            select.value = subjectId;
+
+            // Trigger change event to update any dependent logic
+            select.dispatchEvent(new Event('change'));
+
+            console.log(`✅ Set learner level select ${index + 1} to:`, subjectId);
+        });
+        console.log('🎉 Successfully updated', learnerLevelSelects.length, 'learner level selects');
+    } else {
+        // If no subject selected, reset all selects
+        learnerLevelSelects.forEach(function(select, index) {
+            select.value = '';
+            select.dispatchEvent(new Event('change'));
+            console.log(`🔄 Reset learner level select ${index + 1}`);
+        });
+        console.log('🔄 Reset all learner level selects');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Get DOM elements
     const classTypeSelect = document.getElementById('class_type');
@@ -61,7 +109,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const selectedSubject = this.value;
             const selectedClientId = document.getElementById('client_id')?.value;
 
-            if (selectedClassType && selectedSubject && selectedClientId) {
+            // Note: Auto-population is now handled after learners are added to the table
+            // in class-schedule-form.js to fix timing issues
+
+            if (selectedClassType && selectedSubject) {
                 // Find the selected subject in the data
                 const subjectData = classSubjectsData[selectedClassType].find(
                     subject => subject.id === selectedSubject
@@ -71,8 +122,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Set duration
                     classDurationInput.value = subjectData.duration;
 
-                    // Generate class code with client ID
-                    classCodeInput.value = generateClassCode(selectedClientId, selectedClassType, selectedSubject);
+                    // Generate class code only if client ID is available
+                    if (selectedClientId) {
+                        classCodeInput.value = generateClassCode(selectedClientId, selectedClassType, selectedSubject);
+                    } else {
+                        classCodeInput.value = '';
+                    }
                 }
             } else {
                 // Reset duration and code
@@ -206,6 +261,8 @@ document.addEventListener('DOMContentLoaded', function() {
         return `${clientId}-${classType}-${subjectId}-${year}-${month}-${day}-${hour}-${minute}`;
     }
 
+
+
     // Initialize on page load if elements exist
     if (classTypeSelect && classSubjectSelect) {
         // Check if we have pre-selected values (for update mode)
@@ -221,7 +278,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 classSubjectSelect.value = preSelectedSubject;
                 // Trigger change event to update duration and code
                 classSubjectSelect.dispatchEvent(new Event('change'));
+                // Note: Auto-population for pre-selected subjects is handled in class-schedule-form.js
+                // when existing learners are loaded to fix timing issues
             }, 500);
         }
     }
+
+    // Note: Auto-population event listeners have been moved to class-schedule-form.js
+    // to trigger AFTER learners are added to the table, fixing timing issues
 });
+
+// Also add a global function that can be called manually if needed
+window.wecoza_auto_populate_learner_levels = classes_populate_learner_levels;

@@ -612,7 +612,7 @@ $error_message = $error_message ?? '';
                                             <?php
                                             $statusClass = 'secondary';
                                             $statusIcon = 'bi-person';
-                                            if ($learnerStatus === 'Host Company Learner') {
+                                            if ($learnerStatus === 'CIC - Currently in Class') {
                                                 $statusClass = 'success';
                                                 $statusIcon = 'bi-check';
                                             } elseif (strpos(strtolower($learnerStatus), 'walk') !== false) {
