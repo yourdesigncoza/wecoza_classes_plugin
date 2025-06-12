@@ -6,9 +6,21 @@
  * Used by the [wecoza_display_classes] shortcode.
  *
  * Available Variables:
- *   - $classes: Array of class data from the database
+ *   - $classes: Array of class data from the database (enriched with agent names)
  *   - $show_loading: Boolean indicating whether to show loading indicator
  *   - $total_count: Total number of classes found
+ *   - $active_count: Number of classes that are currently active (not stopped)
+ *   - $controller: ClassController instance for accessing helper methods
+ *
+ * Class Data Fields (enriched):
+ *   - agent_name: Current agent name (from class_agent ID lookup)
+ *   - initial_agent_name: Initial agent name (from initial_class_agent ID lookup)
+ *
+ * Agent Display Logic:
+ *   - Same agent (current == initial): Shows "[ID] : [Name]" with person-circle icon
+ *   - Different agents: Shows both "Current:" and "Initial:" with respective icons
+ *   - Single agent: Shows the available agent without comparison labels
+ *   - No agents: Shows "No Agent Assigned" warning badge
  *
  * @package WeCoza
  * @see \WeCoza\Controllers\ClassController::displayClassesShortcode() For the controller method that renders this view
@@ -21,6 +33,8 @@ defined('ABSPATH') || exit;
 $classes = $classes ?? [];
 $show_loading = $show_loading ?? true;
 $total_count = $total_count ?? 0;
+$active_count = $active_count ?? 0;
+$controller = $controller ?? null;
 ?>
 
 <div class="wecoza-classes-display">
@@ -50,30 +64,51 @@ $total_count = $total_count ?? 0;
         <?php else: ?>
             <!-- Classes Table -->
             <div class="card shadow-none border my-3" data-component-card="data-component-card">
-                <div class="card-header p-3 border-bottom bg-body">
-                    <div class="row g-3 justify-content-between align-items-center">
+                <div class="card-header p-3 border-bottom">
+                    <div class="row g-3 justify-content-between align-items-center mb-3">
                         <div class="col-12 col-md">
                             <h4 class="text-body mb-0" data-anchor="data-anchor" id="classes-table-header">
-                                <i class="bi bi-calendar-event me-2"></i>
                                 All Classes
+                                <i class="bi bi-calendar-event ms-2"></i>
                             </h4>
-                            <p class="text-muted fs-9 mb-0 mt-1">
-                                Displaying <?php echo $total_count; ?> classes from the database
-                            </p>
                         </div>
                         <div class="col-auto">
                             <div class="d-flex gap-2">
                                 <button type="button" class="btn btn-outline-secondary btn-sm" onclick="refreshClasses()">
-                                    <i class="bi bi-arrow-clockwise me-1"></i>
                                     Refresh
+                                    <i class="bi bi-arrow-clockwise ms-1"></i>
                                 </button>
                                 <button type="button" class="btn btn-outline-primary btn-sm" onclick="exportClasses()">
-                                    <i class="bi bi-download me-1"></i>
                                     Export
+                                    <i class="bi bi-download ms-1"></i>
                                 </button>
                             </div>
                         </div>
                     </div>
+<!-- Summary strip -->
+<div class="col-12">
+                    <div class="scrollbar">
+                      <div class="row g-0 flex-nowrap">
+                        <div class="col-auto border-end pe-4">
+                          <h6 class="text-body-tertiary">Total Classes : <?php echo $total_count; ?> <div class="badge badge-phoenix fs-10 badge-phoenix-success">+ 11</div></h6>
+                        </div>
+                        <div class="col-auto px-4 border-end">
+                          <h6 class="text-body-tertiary">Active Classes : <?php echo $active_count; ?></h6>
+                        </div>
+                        <div class="col-auto px-4 border-end">
+                          <h6 class="text-body-tertiary">SETA Funded : <?php echo count(array_filter($classes, function($c) { return $c['seta_funded']; })); ?> <div class="badge badge-phoenix fs-10 badge-phoenix-success">+ 5</div></h6>
+                        </div>
+                        <div class="col-auto px-4 border-end">
+                          <h6 class="text-body-tertiary">Exam Classes : <?php echo count(array_filter($classes, function($c) { return $c['exam_class']; })); ?> <div class="badge badge-phoenix fs-10 badge-phoenix-danger">+ 8</div></h6>
+                        </div>
+                        <div class="col-auto px-4">
+                          <h6 class="text-body-tertiary">Unique Clients : <?php echo count(array_unique(array_column($classes, 'client_id'))); ?> <div class="badge badge-phoenix fs-10 badge-phoenix-success">- 2</div></h6>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+
                 </div>
                 <div class="card-body p-4">
                     <div class="table-responsive">
@@ -81,40 +116,44 @@ $total_count = $total_count ?? 0;
                             <thead class="border-bottom">
                                 <tr>
                                     <th scope="col" class="border-0 ps-4">
-                                        <i class="bi bi-hash me-1"></i>
                                         ID
+                                        <i class="bi bi-hash ms-1"></i>
                                     </th>
                                     <th scope="col" class="border-0">
-                                        <i class="bi bi-building me-1"></i>
                                         Client ID & Name
+                                        <i class="bi bi-building ms-1"></i>
                                     </th>
                                     <th scope="col" class="border-0">
-                                        <i class="bi bi-tag me-1"></i>
                                         Type
+                                        <i class="bi bi-tag ms-1"></i>
                                     </th>
                                     <th scope="col" class="border-0">
-                                        <i class="bi bi-book me-1"></i>
                                         Subject
+                                        <i class="bi bi-book ms-1"></i>
                                     </th>
                                     <th scope="col" class="border-0">
-                                        <i class="bi bi-calendar-date me-1"></i>
                                         Start Date
+                                        <i class="bi bi-calendar-date ms-1"></i>
                                     </th>
                                     <th scope="col" class="border-0">
-                                        <i class="bi bi-truck me-1"></i>
-                                        Delivery Date
-                                    </th>
-                                    <th scope="col" class="border-0">
-                                        <i class="bi bi-person me-1"></i>
                                         Agent ID & Name
+                                        <i class="bi bi-person ms-1"></i>
                                     </th>
                                     <th scope="col" class="border-0">
-                                        <i class="bi bi-award me-1"></i>
+                                        Exam Class
+                                        <i class="bi bi-mortarboard ms-1"></i>
+                                    </th>
+                                    <th scope="col" class="border-0">
+                                        Status
+                                        <i class="bi bi-activity ms-1"></i>
+                                    </th>
+                                    <th scope="col" class="border-0">
                                         SETA
+                                        <i class="bi bi-award ms-1"></i>
                                     </th>
                                     <th scope="col" class="border-0 pe-4">
-                                        <i class="bi bi-gear me-1"></i>
                                         Actions
+                                        <i class="bi bi-gear ms-1"></i>
                                     </th>
                                 </tr>
                             </thead>
@@ -159,38 +198,100 @@ $total_count = $total_count ?? 0;
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <?php if (!empty($class['delivery_date'])): ?>
-                                        <span class="text-nowrap">
-                                            <?php echo esc_html(date('M j, Y', strtotime($class['delivery_date']))); ?>
-                                        </span>
+                                        <?php
+                                        $hasCurrentAgent = !empty($class['agent_name']) && !empty($class['class_agent']);
+                                        $hasInitialAgent = !empty($class['initial_agent_name']) && !empty($class['initial_class_agent']);
+                                        $sameAgent = $hasCurrentAgent && $hasInitialAgent && ($class['class_agent'] == $class['initial_class_agent']);
+                                        ?>
+
+                                        <?php if ($hasCurrentAgent || $hasInitialAgent): ?>
+                                        <div class="text-nowrap">
+                                            <?php if ($sameAgent): ?>
+                                            <!-- Same agent for both current and initial - show simplified format -->
+                                            <div>
+                                                <?php
+                                                $agent_id = $class['class_agent'];
+                                                $agent_name = $class['agent_name'];
+                                                echo esc_html($agent_id . ' : ' . $agent_name);
+                                                ?>
+                                                <i class="bi bi-person-circle ms-1"></i>
+                                            </div>
+                                            <?php else: ?>
+                                            <!-- Different agents or only one agent - show detailed format -->
+                                            <?php if ($hasCurrentAgent): ?>
+                                            <div class="mb-1">
+                                                <strong>Current:</strong>
+                                                <?php
+                                                $agent_id = $class['class_agent'];
+                                                $agent_name = $class['agent_name'];
+                                                echo esc_html($agent_id . ' : ' . $agent_name);
+                                                ?>
+                                                <i class="bi bi-person-circle ms-1"></i>
+                                            </div>
+                                            <?php endif; ?>
+
+                                            <?php if ($hasInitialAgent): ?>
+                                            <div class="text-muted small">
+                                                <strong>Initial:</strong>
+                                                <?php
+                                                $initial_agent_id = $class['initial_class_agent'];
+                                                $initial_agent_name = $class['initial_agent_name'];
+                                                echo esc_html($initial_agent_id . ' : ' . $initial_agent_name);
+                                                ?>
+                                                <i class="bi bi-person-badge ms-1"></i>
+                                            </div>
+                                            <?php endif; ?>
+                                            <?php endif; ?>
+                                        </div>
                                         <?php else: ?>
-                                        <span class="text-muted">-</span>
+                                        <span class="badge fs-10 badge-phoenix badge-phoenix-warning">
+                                            No Agent Assigned
+                                            <i class="bi bi-exclamation-triangle ms-1"></i>
+                                        </span>
                                         <?php endif; ?>
                                     </td>
-                                    <td>
-                                        <?php if (!empty($class['agent_name']) && !empty($class['class_agent'])): ?>
-                                        <span class="text-nowrap">
-                                            <i class="bi bi-person-circle me-1"></i>
-                                            <?php
-                                            $agent_id = $class['class_agent'] ?? 'Unknown';
-                                            $agent_name = $class['agent_name'] ?? 'Unassigned';
-                                            echo esc_html($agent_id . ' : ' . $agent_name);
-                                            ?>
+                                    <td class="py-2 fs-8 white-space-nowrap">
+                                        <?php if ($class['exam_class']): ?>
+                                        <span class="badge fs-10 badge-phoenix badge-phoenix-success">
+                                            Exam Class
+                                            <svg class="svg-inline--fa fa-check ms-1" data-fa-transform="shrink-2" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="check" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" data-fa-i2svg="" style="transform-origin: 0.4375em 0.5em;"><g transform="translate(224 256)"><g transform="translate(0, 0)  scale(0.875, 0.875)  rotate(0 0 0)"><path fill="currentColor" d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z" transform="translate(-224 -256)"></path></g></g></svg>
                                         </span>
                                         <?php else: ?>
-                                        <span class="text-muted">-</span>
+                                        <span class="badge fs-10 badge-phoenix badge-phoenix-secondary">
+                                            Not Exam
+                                            <svg class="svg-inline--fa fa-ban ms-1" data-fa-transform="shrink-2" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="ban" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" data-fa-i2svg="" style="transform-origin: 0.5em 0.5em;"><g transform="translate(256 256)"><g transform="translate(0, 0)  scale(0.875, 0.875)  rotate(0 0 0)"><path fill="currentColor" d="M367.2 412.5L99.5 144.8C77.1 176.1 64 214.5 64 256c0 106 86 192 192 192c41.5 0 79.9-13.1 111.2-35.5zm45.3-45.3C434.9 335.9 448 297.5 448 256c0-106-86-192-192-192c-41.5 0-79.9 13.1-111.2 35.5L412.5 367.2zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256z" transform="translate(-256 -256)"></path></g></g></svg>
+                                        </span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="py-2 fs-8 white-space-nowrap">
+                                        <?php if ($controller && $controller->isClassCurrentlyStopped($class)): ?>
+                                        <span class="badge badge-phoenix fs-10 badge-phoenix-warning">
+                                            <span class="badge-label">Stopped</span>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-alert-octagon ms-1" style="height:12.8px;width:12.8px;">
+                                                <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
+                                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                            </svg>
+                                        </span>
+                                        <?php else: ?>
+                                        <span class="badge badge-phoenix fs-10 badge-phoenix-success">
+                                            <span class="badge-label">Active</span>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check ms-1" style="height:12.8px;width:12.8px;">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                        </span>
                                         <?php endif; ?>
                                     </td>
                                     <td class="py-2 fs-8 white-space-nowrap">
                                         <?php if ($class['seta_funded']): ?>
                                         <span class="badge fs-10 badge-phoenix badge-phoenix-success">
-                                            <svg class="svg-inline--fa fa-check ms-1" data-fa-transform="shrink-2" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="check" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" data-fa-i2svg="" style="transform-origin: 0.4375em 0.5em;"><g transform="translate(224 256)"><g transform="translate(0, 0)  scale(0.875, 0.875)  rotate(0 0 0)"><path fill="currentColor" d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z" transform="translate(-224 -256)"></path></g></g></svg>
                                             SETA Funded
+                                            <svg class="svg-inline--fa fa-check ms-1" data-fa-transform="shrink-2" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="check" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" data-fa-i2svg="" style="transform-origin: 0.4375em 0.5em;"><g transform="translate(224 256)"><g transform="translate(0, 0)  scale(0.875, 0.875)  rotate(0 0 0)"><path fill="currentColor" d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z" transform="translate(-224 -256)"></path></g></g></svg>
                                         </span>
                                         <?php else: ?>
                                         <span class="badge fs-10 badge-phoenix badge-phoenix-secondary">
-                                            <svg class="svg-inline--fa fa-ban ms-1" data-fa-transform="shrink-2" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="ban" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" data-fa-i2svg="" style="transform-origin: 0.5em 0.5em;"><g transform="translate(256 256)"><g transform="translate(0, 0)  scale(0.875, 0.875)  rotate(0 0 0)"><path fill="currentColor" d="M367.2 412.5L99.5 144.8C77.1 176.1 64 214.5 64 256c0 106 86 192 192 192c41.5 0 79.9-13.1 111.2-35.5zm45.3-45.3C434.9 335.9 448 297.5 448 256c0-106-86-192-192-192c-41.5 0-79.9 13.1-111.2 35.5L412.5 367.2zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256z" transform="translate(-256 -256)"></path></g></g></svg>
                                             Not SETA
+                                            <svg class="svg-inline--fa fa-ban ms-1" data-fa-transform="shrink-2" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="ban" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" data-fa-i2svg="" style="transform-origin: 0.5em 0.5em;"><g transform="translate(256 256)"><g transform="translate(0, 0)  scale(0.875, 0.875)  rotate(0 0 0)"><path fill="currentColor" d="M367.2 412.5L99.5 144.8C77.1 176.1 64 214.5 64 256c0 106 86 192 192 192c41.5 0 79.9-13.1 111.2-35.5zm45.3-45.3C434.9 335.9 448 297.5 448 256c0-106-86-192-192-192c-41.5 0-79.9 13.1-111.2-35.5L412.5 367.2zM0 256a256 256 0 1 1 512 0A256 256 0 1 1 0 256z" transform="translate(-256 -256)"></path></g></g></svg>
                                         </span>
                                         <?php endif; ?>
                                     </td>
@@ -231,8 +332,8 @@ $edit_url = add_query_arg(
 );
 ?>
                                                     <a class="dropdown-item" href="<?php echo esc_url( $edit_url ); ?>">
-                                                        <i class="bi bi-pencil me-2"></i>
                                                         Edit Class
+                                                        <i class="bi bi-pencil ms-2"></i>
                                                     </a>
                                                 </li>
                                                 <?php endif; ?>
@@ -258,16 +359,16 @@ $view_url = add_query_arg(
 );
 ?>
                                                     <a class="dropdown-item" href="<?php echo esc_url( $view_url ); ?>">
-                                                        <i class="bi bi-eye me-2"></i>
                                                         View Details
+                                                        <i class="bi bi-eye ms-2"></i>
                                                     </a>
                                                 </li>
                                                 <?php if (current_user_can('manage_options')): ?>
                                                 <li><hr class="dropdown-divider"></li>
                                                 <li>
                                                     <a class="dropdown-item text-danger" href="#" onclick="deleteClass(<?php echo $class['class_id']; ?>)">
-                                                        <i class="bi bi-trash me-2"></i>
                                                         Delete Class
+                                                        <i class="bi bi-trash ms-2"></i>
                                                     </a>
                                                 </li>
                                                 <?php endif; ?>
@@ -282,51 +383,6 @@ $view_url = add_query_arg(
                 </div>
             </div>
 
-            <!-- Summary Cards -->
-            <div class="row mt-4">
-                <div class="col-md-3">
-                    <div class="card border-0 bg-primary bg-opacity-10">
-                        <div class="card-body text-center">
-                            <i class="bi bi-calendar-event fs-1 text-primary mb-2"></i>
-                            <h5 class="card-title text-primary"><?php echo $total_count; ?></h5>
-                            <p class="card-text text-muted small mb-0">Total Classes</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card border-0 bg-success bg-opacity-10">
-                        <div class="card-body text-center">
-                            <i class="bi bi-check-circle fs-1 text-success mb-2"></i>
-                            <h5 class="card-title text-success">
-                                <?php echo count(array_filter($classes, function($c) { return $c['seta_funded']; })); ?>
-                            </h5>
-                            <p class="card-text text-muted small mb-0">SETA Funded</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card border-0 bg-warning bg-opacity-10">
-                        <div class="card-body text-center">
-                            <i class="bi bi-award fs-1 text-warning mb-2"></i>
-                            <h5 class="card-title text-warning">
-                                <?php echo count(array_filter($classes, function($c) { return $c['exam_class']; })); ?>
-                            </h5>
-                            <p class="card-text text-muted small mb-0">Exam Classes</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card border-0 bg-info bg-opacity-10">
-                        <div class="card-body text-center">
-                            <i class="bi bi-people fs-1 text-info mb-2"></i>
-                            <h5 class="card-title text-info">
-                                <?php echo count(array_unique(array_column($classes, 'client_id'))); ?>
-                            </h5>
-                            <p class="card-text text-muted small mb-0">Unique Clients</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
         <?php endif; ?>
     </div>
 </div>
@@ -387,7 +443,7 @@ function deleteClass(classId) {
         // Show loading state
         const deleteButton = document.querySelector(`[onclick="deleteClass(${classId})"]`);
         const originalText = deleteButton.innerHTML;
-        deleteButton.innerHTML = '<i class="bi bi-spinner-border me-2"></i>Deleting...';
+        deleteButton.innerHTML = 'Deleting...<i class="bi bi-spinner-border ms-2"></i>';
         deleteButton.disabled = true;
 
         // Make AJAX request to delete class
@@ -437,8 +493,8 @@ function showSuccessBanner(message) {
     banner.className = 'alert alert-subtle-success alert-dismissible fade show position-fixed';
     banner.style.cssText = 'top: 80px; right: 20px; z-index: 9999; min-width: 300px;';
     banner.innerHTML = `
-        <i class="bi bi-check-circle-fill me-2"></i>
         <strong>Success!</strong> ${message}
+        <i class="bi bi-check-circle-fill ms-2"></i>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     `;
 
