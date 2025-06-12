@@ -1430,11 +1430,24 @@ class ClassController {
             // Get all classes from database
             $classes = $this->getAllClasses($atts);
 
+            // Enrich classes with agent names
+            $classes = $this->enrichClassesWithAgentNames($classes);
+
+            // Calculate active classes count (excluding currently stopped classes)
+            $activeClassesCount = 0;
+            foreach ($classes as $class) {
+                if (!$this->isClassCurrentlyStopped($class)) {
+                    $activeClassesCount++;
+                }
+            }
+
             // Prepare view data
             $viewData = [
                 'classes' => $classes,
                 'show_loading' => $atts['show_loading'],
-                'total_count' => count($classes)
+                'total_count' => count($classes),
+                'active_count' => $activeClassesCount,
+                'controller' => $this
             ];
 
             // Render the view
@@ -1492,6 +1505,79 @@ class ClassController {
     }
 
     /**
+     * Check if a class is currently stopped based on stop_restart_dates
+     *
+     * @param array $class Class data
+     * @return bool True if class is currently stopped, false otherwise
+     */
+    public function isClassCurrentlyStopped($class) {
+        // Check if stop_restart_dates field exists and has data
+        if (empty($class['stop_restart_dates'])) {
+            return false;
+        }
+
+        // Parse JSON if it's a string
+        $stopRestartDates = is_string($class['stop_restart_dates'])
+            ? json_decode($class['stop_restart_dates'], true)
+            : $class['stop_restart_dates'];
+
+        // If parsing failed or no data, class is not stopped
+        if (!is_array($stopRestartDates) || empty($stopRestartDates)) {
+            return false;
+        }
+
+        $currentDate = date('Y-m-d');
+
+        // Check each stop/restart period
+        foreach ($stopRestartDates as $period) {
+            if (!isset($period['stop_date']) || !isset($period['restart_date'])) {
+                continue;
+            }
+
+            $stopDate = $period['stop_date'];
+            $restartDate = $period['restart_date'];
+
+            // Check if current date falls between stop and restart dates (inclusive)
+            if ($currentDate >= $stopDate && $currentDate <= $restartDate) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Enrich classes array with agent names
+     *
+     * @param array $classes Array of class data
+     * @return array Array of class data with agent names added
+     */
+    private function enrichClassesWithAgentNames($classes) {
+        $agents = $this->getAgents();
+        $agentLookup = [];
+
+        // Create lookup array for faster access
+        foreach ($agents as $agent) {
+            $agentLookup[$agent['id']] = $agent['name'];
+        }
+
+        // Enrich each class with agent names
+        foreach ($classes as &$class) {
+            // Add current agent name
+            if (!empty($class['class_agent'])) {
+                $class['agent_name'] = $agentLookup[$class['class_agent']] ?? 'Unknown Agent';
+            }
+
+            // Add initial agent name
+            if (!empty($class['initial_class_agent'])) {
+                $class['initial_agent_name'] = $agentLookup[$class['initial_class_agent']] ?? 'Unknown Agent';
+            }
+        }
+
+        return $classes;
+    }
+
+    /**
      * Get all classes from database with optional filtering
      *
      * @param array $options Query options (limit, order_by, order)
@@ -1536,7 +1622,9 @@ class ClassController {
                 c.exam_class,
                 c.exam_type,
                 c.class_agent,
+                c.initial_class_agent,
                 c.project_supervisor_id,
+                c.stop_restart_dates,
                 c.created_at,
                 c.updated_at
             FROM public.classes c
