@@ -114,7 +114,7 @@ $controller = $controller ?? null;
                   </div>
                 </div>
                 
-                <div class="card-body p-4">
+                <div class="card-body p-4 py-2">
                     <div class="table-responsive">
                         <table id="classes-table" class="table table-hover table-sm fs-9 mb-0 overflow-hidden">
                             <thead class="border-bottom">
