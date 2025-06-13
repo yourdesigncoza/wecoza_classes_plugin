@@ -4,15 +4,18 @@ A comprehensive class management system for WeCoza training programs. This WordP
 
 ## Features
 
-- **Class Management**: Create, edit, and delete training classes
-- **Scheduling System**: Advanced scheduling with calendar integration
-- **Learner Management**: Assign and manage learners for classes
-- **Calendar Integration**: FullCalendar integration with public holidays
-- **Agent Assignment**: Assign agents and supervisors to classes
+- **Class Management**: Create, edit, and delete training classes with comprehensive form validation
+- **Advanced Search & Filtering**: Real-time client-side search functionality with pagination
+- **Scheduling System**: Advanced scheduling with calendar integration and per-day time management
+- **Learner Management**: Assign and manage learners with status tracking and level assignment
+- **Calendar Integration**: FullCalendar integration with public holidays detection
+- **Agent Assignment**: Assign agents and supervisors with backup agent support
 - **QA Management**: Quality assurance visit tracking and reporting
 - **SETA Integration**: SETA funding and compliance tracking
 - **Exam Management**: Exam class designation and learner selection
-- **Responsive Design**: Bootstrap 5 compatible interface
+- **Database Integration**: PostgreSQL integration with comprehensive schema support
+- **Responsive Design**: Bootstrap 5 compatible interface with mobile optimization
+- **Auto-Population**: Intelligent learner level auto-population based on class subjects
 
 ## Requirements
 
@@ -84,7 +87,13 @@ Displays the class capture form for creating and editing classes.
 ```
 
 ### [wecoza_display_classes]
-Displays all classes in a responsive table format.
+Displays all classes in a responsive table format with search and pagination functionality.
+
+**Features:**
+- Real-time client-side search (searches Client ID & Name)
+- Pagination with 5 items per page default
+- Responsive Bootstrap table design
+- Loading indicators and status messages
 
 **Parameters:**
 - `limit`: Number of classes to display (default: 50)
@@ -123,11 +132,20 @@ The plugin uses a configuration file at `config/app.php` for various settings:
 ## Database Integration
 
 The plugin integrates with an existing PostgreSQL database containing:
-- Classes table
-- Clients table
-- Agents table
-- Sites table
-- Users table
+- **Classes table**: Main class data with JSONB fields for flexible data storage
+- **Clients table**: Client information and contact details
+- **Agents table**: Agent assignments and backup agent management
+- **Sites table**: Training site locations and details
+- **Users table**: User management and permissions
+- **Learners table**: Learner information with status and level tracking
+
+**Database Schema**: Complete schema documentation available in `classes_schema_3.sql`
+
+**Key Features:**
+- JSONB support for flexible data structures
+- Backward compatibility with legacy data formats
+- Comprehensive table relationships and constraints
+- Support for both single-time and per-day scheduling formats
 
 ## MVC Architecture
 
@@ -146,14 +164,17 @@ app/
 
 ### JavaScript Files
 - `class-capture.js`: Form functionality and validation
-- `class-schedule-form.js`: Scheduling interface
-- `class-types.js`: Class type and subject selection
-- `wecoza-calendar.js`: Calendar integration
+- `class-schedule-form.js`: Scheduling interface with per-day time management
+- `class-types.js`: Class type and subject selection with auto-population
+- `classes-table-search.js`: Real-time search and pagination functionality
+- `learner-level-utils.js`: Learner level management and auto-population utilities
+- `wecoza-calendar.js`: Calendar integration with public holidays
+- `wecoza-classes-admin.js`: Admin interface enhancements
 
 ### CSS Files
-- `wecoza-classes-public.css`: Public-facing styles
-- `wecoza-classes-admin.css`: Admin interface styles
-- `wecoza-classes-calendar.css`: Calendar-specific styles
+- Styles are managed through the main theme's stylesheet
+- Bootstrap 5 compatible responsive design
+- Custom styling for search, pagination, and form components
 
 ## Development
 
@@ -161,11 +182,19 @@ app/
 ```
 wecoza-classes-plugin/
 ├── wecoza-classes-plugin.php    # Main plugin file
-├── includes/                    # Core plugin classes
+├── includes/                    # Core plugin classes and migrations
 ├── app/                        # MVC application structure
+│   ├── Controllers/            # Business logic and request handling
+│   ├── Models/                # Data models and database interaction
+│   ├── Views/                 # Presentation layer (templates)
+│   ├── Services/              # Shared services (database, file upload, etc.)
+│   └── Helpers/               # View helpers and utility functions
 ├── assets/                     # CSS, JS, and images
+│   └── js/                    # JavaScript files for functionality
 ├── config/                     # Configuration files
-├── docs/                       # Documentation
+├── tests/                      # Unit tests and test files
+├── daily-updates/              # Development reports and documentation
+├── classes_schema_3.sql        # Database schema reference
 └── README.md                   # This file
 ```
 
@@ -183,6 +212,37 @@ The plugin provides several hooks for customization:
 - `wecoza_classes_form_data`: Filter form data before processing
 - `wecoza_classes_calendar_events`: Filter calendar events
 
+## Testing
+
+The plugin includes a comprehensive testing framework located in the `tests/` directory:
+
+### Available Tests
+- **ClassesTableSearchTest.php**: Tests for search functionality
+- **ActiveClassesCalculationTest.php**: Tests for class status calculations
+- **AgentDataEnrichmentTest.php**: Tests for agent data processing
+- **search-demo.html**: Interactive demo for search functionality
+
+### Running Tests
+Tests are designed for manual frontend testing rather than automated command-line execution. To test functionality:
+
+1. Use the WordPress admin interface to test plugin features
+2. Open test HTML files in browser for JavaScript functionality
+3. Monitor browser console for debugging information
+4. Verify database operations through the admin interface
+
+## Development Workflow
+
+### Daily Reports
+The plugin includes a development reporting system in `daily-updates/`:
+- **end-of-day-report.md**: Template for generating daily development reports
+- **WEC-DAILY-WORK-REPORT-*.md**: Generated daily reports with commit analysis
+
+### Code Standards
+- **Function Prefixing**: All functions prefixed with `classes_` or `wecoza_classes_`
+- **WordPress Standards**: Follows WordPress coding standards and best practices
+- **MVC Architecture**: Strict separation of concerns with MVC pattern
+- **Backward Compatibility**: Maintains compatibility with existing data structures
+
 ## Support
 
 For support and documentation, contact:
@@ -193,6 +253,26 @@ For support and documentation, contact:
 
 This plugin is licensed under the GPL v2 or later.
 
+## Recent Updates
+
+### Search & Pagination System (June 2025)
+- **Real-time Search**: Client-side search functionality for classes table
+- **Pagination**: 5 items per page with Bootstrap navigation controls
+- **Performance**: Debounced search with optimized filtering
+- **User Experience**: Search status indicators and responsive design
+
+### Learner Management Enhancement (June 2025)
+- **Auto-Population**: Intelligent learner level assignment based on class subjects
+- **Level Management**: Comprehensive learner level utilities (50+ level types)
+- **Status Tracking**: Enhanced learner status options (CIC, RBE, DRO)
+- **Backward Compatibility**: Support for legacy data formats
+
+### Database & Architecture (June 2025)
+- **Schema Documentation**: Complete database schema reference
+- **JSONB Integration**: Flexible data storage for complex structures
+- **Migration System**: Database migration support for updates
+- **Testing Framework**: Unit tests for core functionality
+
 ## Changelog
 
 ### Version 1.0.0
@@ -201,3 +281,7 @@ This plugin is licensed under the GPL v2 or later.
 - Calendar integration
 - Shortcode system
 - MVC architecture implementation
+- PostgreSQL database integration
+- Search and pagination functionality
+- Learner management system
+- Agent assignment features
