@@ -128,6 +128,7 @@ return array(
                 'learner-level-utils.js',
                 'class-types.js',
                 'wecoza-calendar.js',
+                'classes-table-search.js',
             ),
             'admin' => array(
                 'wecoza-classes-admin.js',

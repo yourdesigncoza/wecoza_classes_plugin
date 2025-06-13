@@ -183,6 +183,14 @@ class ClassController {
             true
         );
 
+        \wp_enqueue_script(
+            'wecoza-classes-table-search-js',
+            WECOZA_CLASSES_JS_URL . 'classes-table-search.js',
+            ['jquery'],
+            WECOZA_CLASSES_VERSION,
+            true
+        );
+
         // Localize script with AJAX URL and nonce
         \wp_localize_script('wecoza-class-js', 'wecozaClass', [
             'ajaxUrl' => \admin_url('admin-ajax.php'),
@@ -1606,11 +1614,12 @@ class ClassController {
             $order = 'DESC';
         }
 
-        // Build the query
+        // Build the query with client name JOIN
         $sql = "
             SELECT
                 c.class_id,
                 c.client_id,
+                cl.client_name,
                 c.class_type,
                 c.class_subject,
                 c.class_code,
@@ -1628,6 +1637,7 @@ class ClassController {
                 c.created_at,
                 c.updated_at
             FROM public.classes c
+            LEFT JOIN public.clients cl ON c.client_id = cl.client_id
             ORDER BY c." . $order_by . " " . $order . "
             LIMIT " . $limit;
 
@@ -1652,8 +1662,10 @@ class ClassController {
 
         $sql = "
             SELECT
-                c.*
+                c.*,
+                cl.client_name
             FROM public.classes c
+            LEFT JOIN public.clients cl ON c.client_id = cl.client_id
             WHERE c.class_id = :class_id
             LIMIT 1";
 

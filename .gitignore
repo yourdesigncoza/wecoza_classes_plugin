@@ -102,7 +102,7 @@ local-config.php
 
 # Database Files
 # --------------
-*.sql
+# *.sql
 *.sqlite
 *.db
 
