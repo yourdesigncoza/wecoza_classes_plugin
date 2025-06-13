@@ -9,7 +9,7 @@ From the commits I want you to generate a daily development report using the tem
 **Date:** `2025-06-11`
 **Developer:** **John**
 **Project:** *WeCoza Classes Plugin Development*
-**Title:** `WEC-DAILY-WORK-REPORT-2025-06-11`
+**Title:** WEC-DAILY-WORK-REPORT-2025-06-11
 
 ---
 
