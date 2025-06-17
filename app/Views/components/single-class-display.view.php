@@ -492,47 +492,128 @@ $error_message = $error_message ?? '';
                     </h4>
                 </div>
                 <div class="card-body">
-                    <!-- Calendar Container -->
-                    <div id="classCalendar" class="mb-4">
-                        <!-- FullCalendar will be rendered here -->
+                    <!-- View Toggle Navigation -->
+                    <div class="mb-3">
+                        <ul class="nav nav-tabs" id="scheduleViewTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="calendar-view-tab" data-bs-toggle="tab" data-bs-target="#calendar-view" type="button" role="tab" aria-controls="calendar-view" aria-selected="true">
+                                    <i class="bi bi-calendar3 me-2"></i>Calendar View
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="list-view-tab" data-bs-toggle="tab" data-bs-target="#list-view" type="button" role="tab" aria-controls="list-view" aria-selected="false">
+                                    <i class="bi bi-list-ul me-2"></i>List View
+                                </button>
+                            </li>
+                        </ul>
                     </div>
 
-                    <!-- Calendar Loading State -->
-                    <div id="calendar-loading" class="text-center py-4">
-                        <div class="spinner-border text-primary me-2" role="status">
-                            <span class="visually-hidden">Loading calendar...</span>
-                        </div>
-                        <span class="text-muted">Loading class schedule...</span>
-                    </div>
+                    <!-- Tab Content Container -->
+                    <div class="tab-content" id="scheduleViewContent">
+                        <!-- Calendar View Tab Pane -->
+                        <div class="tab-pane fade show active" id="calendar-view" role="tabpanel" aria-labelledby="calendar-view-tab">
+                            <!-- Calendar Container -->
+                            <div id="classCalendar" class="mb-4">
+                                <!-- FullCalendar will be rendered here -->
+                            </div>
 
-                    <!-- Calendar Error State -->
-                    <div id="calendar-error" class="alert alert-warning d-none">
-                        <i class="bi bi-exclamation-triangle me-2"></i>
-                        <strong>Calendar Unavailable:</strong>
-                        <span id="calendar-error-message">Unable to load class schedule data.</span>
-                    </div>
+                            <!-- Calendar Loading State -->
+                            <div id="calendar-loading" class="text-center py-4">
+                                <div class="spinner-border text-primary me-2" role="status">
+                                    <span class="visually-hidden">Loading calendar...</span>
+                                </div>
+                                <span class="text-muted">Loading class schedule...</span>
+                            </div>
 
-                    <!-- Calendar Legend -->
-                    <div class="calendar-legend">
-                        <div class="legend-item">
-                            <div class="legend-color class-event"></div>
-                            <span>Class Sessions</span>
+                            <!-- Calendar Error State -->
+                            <div id="calendar-error" class="alert alert-warning d-none">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                <strong>Calendar Unavailable:</strong>
+                                <span id="calendar-error-message">Unable to load class schedule data.</span>
+                            </div>
+
+                            <!-- Calendar Legend -->
+                            <div class="calendar-legend">
+                                <div class="legend-item">
+                                    <div class="legend-color class-event"></div>
+                                    <span>Class Sessions</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color public-holiday"></div>
+                                    <span>Public Holidays</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color exception"></div>
+                                    <span>Exception Dates</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color stop-restart"></div>
+                                    <span>Stop/Restart Dates</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color stop-period"></div>
+                                    <span>Stop Period Days</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="legend-item">
-                            <div class="legend-color public-holiday"></div>
-                            <span>Public Holidays</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color exception"></div>
-                            <span>Exception Dates</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color stop-restart"></div>
-                            <span>Stop/Restart Dates</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color stop-period"></div>
-                            <span>Stop Period Days</span>
+
+                        <!-- List View Tab Pane -->
+                        <div class="tab-pane fade" id="list-view" role="tabpanel" aria-labelledby="list-view-tab">
+                            <!-- List View Filters -->
+                            <div id="listViewFilters" class="mb-3 d-none">
+                                <div class="row g-2 align-items-end">
+                                    <div class="col-md-4">
+                                        <label for="eventTypeFilter" class="form-label text-muted small">Filter by Event Type</label>
+                                        <select id="eventTypeFilter" class="form-select form-select-sm">
+                                            <option value="">All Event Types</option>
+                                            <option value="class_session">Class Sessions</option>
+                                            <option value="public_holiday">Public Holidays</option>
+                                            <option value="exception">Exception Dates</option>
+                                            <option value="stop_date">Stop/Restart Dates</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="dateFromFilter" class="form-label text-muted small">From Date</label>
+                                        <input type="date" id="dateFromFilter" class="form-control form-control-sm">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="dateToFilter" class="form-label text-muted small">To Date</label>
+                                        <input type="date" id="dateToFilter" class="form-control form-control-sm">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" id="clearFilters" class="btn btn-outline-secondary btn-sm w-100">
+                                            <i class="bi bi-x-circle me-1"></i>Clear
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- List View Container -->
+                            <div id="classScheduleList">
+                                <!-- List view content will be rendered here -->
+                            </div>
+
+                            <!-- List View Loading State -->
+                            <div id="list-loading" class="text-center py-4 d-none">
+                                <div class="spinner-border text-primary me-2" role="status">
+                                    <span class="visually-hidden">Loading schedule list...</span>
+                                </div>
+                                <span class="text-muted">Loading class schedule list...</span>
+                            </div>
+
+                            <!-- List View Error State -->
+                            <div id="list-error" class="alert alert-warning d-none">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                <strong>List View Unavailable:</strong>
+                                <span id="list-error-message">Unable to load class schedule data.</span>
+                            </div>
+
+                            <!-- List View Empty State -->
+                            <div id="list-empty" class="text-center py-5 d-none">
+                                <i class="bi bi-calendar-x text-muted" style="font-size: 3rem;"></i>
+                                <h5 class="text-muted mt-3">No Schedule Events Found</h5>
+                                <p class="text-muted">There are no scheduled events to display for this class.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -685,6 +766,9 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         console.log('Calendar container not found');
     }
+
+    // Initialize view toggle functionality
+    initializeViewToggle();
 });
 
 /**
@@ -735,6 +819,452 @@ function showCalendarError(message) {
     if (errorEl) {
         errorEl.classList.remove('d-none');
         if (messageEl) messageEl.textContent = message;
+    }
+}
+
+/**
+ * Initialize view toggle functionality
+ * Handles switching between calendar and list views with state persistence
+ */
+function initializeViewToggle() {
+    console.log('Initializing view toggle functionality...');
+
+    // Get tab elements
+    const calendarTab = document.getElementById('calendar-view-tab');
+    const listTab = document.getElementById('list-view-tab');
+
+    if (!calendarTab || !listTab) {
+        console.warn('View toggle tabs not found');
+        return;
+    }
+
+    // Load saved view preference from localStorage
+    const savedView = localStorage.getItem('wecoza_schedule_view_preference');
+    if (savedView === 'list') {
+        // Switch to list view if it was the last selected view
+        setTimeout(() => {
+            listTab.click();
+        }, 100);
+    }
+
+    // Add event listeners for tab switching
+    calendarTab.addEventListener('shown.bs.tab', function(e) {
+        console.log('Switched to calendar view');
+        localStorage.setItem('wecoza_schedule_view_preference', 'calendar');
+
+        // Refresh calendar when switching to calendar view
+        if (typeof window.WeCozaCalendar !== 'undefined' && window.WeCozaCalendar.refreshEvents) {
+            window.WeCozaCalendar.refreshEvents();
+        }
+    });
+
+    listTab.addEventListener('shown.bs.tab', function(e) {
+        console.log('Switched to list view');
+        localStorage.setItem('wecoza_schedule_view_preference', 'list');
+
+        // Load list view data when switching to list view
+        loadListViewData();
+    });
+}
+
+/**
+ * Load and display data for list view
+ * Fetches the same event data used by the calendar
+ */
+function loadListViewData() {
+    console.log('Loading list view data...');
+
+    const listContainer = document.getElementById('classScheduleList');
+    const listLoading = document.getElementById('list-loading');
+    const listError = document.getElementById('list-error');
+    const listEmpty = document.getElementById('list-empty');
+
+    if (!listContainer) {
+        console.error('List container not found');
+        return;
+    }
+
+    // Show loading state
+    listLoading.classList.remove('d-none');
+    listError.classList.add('d-none');
+    listEmpty.classList.add('d-none');
+    listContainer.innerHTML = '';
+
+    // Get class data (same as used for calendar)
+    const classData = {
+        id: <?php echo json_encode($class['class_id'] ?? null); ?>,
+        code: <?php echo json_encode($class['class_code'] ?? ''); ?>,
+        subject: <?php echo json_encode($class['class_subject'] ?? ''); ?>,
+        ajaxUrl: <?php echo json_encode(admin_url('admin-ajax.php')); ?>,
+        nonce: <?php echo json_encode(wp_create_nonce('wecoza_calendar_nonce')); ?>
+    };
+
+    // Fetch calendar events data
+    Promise.all([
+        // Fetch class events
+        fetch(classData.ajaxUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                action: 'get_calendar_events',
+                class_id: classData.id,
+                nonce: classData.nonce
+            })
+        }),
+        // Fetch public holidays
+        fetch(classData.ajaxUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                action: 'get_public_holidays',
+                year: new Date().getFullYear(),
+                nonce: classData.nonce
+            })
+        })
+    ])
+    .then(responses => Promise.all(responses.map(r => r.json())))
+    .then(([classEvents, holidays]) => {
+        // Combine and process events
+        const allEvents = [...(classEvents || []), ...(holidays || [])];
+
+        // Hide loading state
+        listLoading.classList.add('d-none');
+
+        if (allEvents.length === 0) {
+            listEmpty.classList.remove('d-none');
+        } else {
+            // Store events globally for filtering
+            window.currentListViewEvents = allEvents;
+            renderListView(allEvents, classData);
+            initializeListViewFilters();
+        }
+    })
+    .catch(error => {
+        console.error('Error loading list view data:', error);
+        listLoading.classList.add('d-none');
+        listError.classList.remove('d-none');
+
+        const errorMessage = document.getElementById('list-error-message');
+        if (errorMessage) {
+            errorMessage.textContent = 'Failed to load schedule data: ' + error.message;
+        }
+    });
+}
+
+/**
+ * Render list view with event data
+ * Creates a responsive table/card layout for displaying schedule events
+ */
+function renderListView(events, classData) {
+    console.log('Rendering list view with', events.length, 'events');
+
+    const listContainer = document.getElementById('classScheduleList');
+    if (!listContainer) return;
+
+    // Sort events chronologically
+    const sortedEvents = events.sort((a, b) => {
+        const dateA = new Date(a.start || a.date);
+        const dateB = new Date(b.start || b.date);
+        return dateA - dateB;
+    });
+
+    // Group events by type for better organization
+    const groupedEvents = {
+        class_session: [],
+        public_holiday: [],
+        exception: [],
+        stop_date: [],
+        restart_date: [],
+        stop_period: []
+    };
+
+    sortedEvents.forEach(event => {
+        const eventType = event.extendedProps?.type || 'class_session';
+        if (groupedEvents[eventType]) {
+            groupedEvents[eventType].push(event);
+        } else {
+            groupedEvents.class_session.push(event);
+        }
+    });
+
+    // Create list view HTML
+    let listHTML = '<div class="row g-3">';
+
+    // Render each event group
+    Object.keys(groupedEvents).forEach(eventType => {
+        const events = groupedEvents[eventType];
+        if (events.length === 0) return;
+
+        const groupInfo = getEventGroupInfo(eventType);
+
+        listHTML += `
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light border-0 py-2">
+                        <h6 class="mb-0 d-flex align-items-center">
+                            <i class="${groupInfo.icon} me-2 text-${groupInfo.color}"></i>
+                            ${groupInfo.title}
+                            <span class="badge bg-${groupInfo.color} ms-2">${events.length}</span>
+                        </h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="border-0 ps-3">Date & Time</th>
+                                        <th class="border-0">Details</th>
+                                        <th class="border-0 text-end pe-3">Duration</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+
+        events.forEach(event => {
+            listHTML += renderEventRow(event, eventType);
+        });
+
+        listHTML += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+    });
+
+    listHTML += '</div>';
+
+    listContainer.innerHTML = listHTML;
+}
+
+/**
+ * Get event group information for styling and display
+ */
+function getEventGroupInfo(eventType) {
+    const groupInfo = {
+        class_session: {
+            title: 'Class Sessions',
+            icon: 'bi-calendar-event',
+            color: 'primary'
+        },
+        public_holiday: {
+            title: 'Public Holidays',
+            icon: 'bi-calendar-x',
+            color: 'danger'
+        },
+        exception: {
+            title: 'Exception Dates',
+            icon: 'bi-exclamation-triangle',
+            color: 'warning'
+        },
+        stop_date: {
+            title: 'Stop Dates',
+            icon: 'bi-stop-circle',
+            color: 'danger'
+        },
+        restart_date: {
+            title: 'Restart Dates',
+            icon: 'bi-play-circle',
+            color: 'success'
+        },
+        stop_period: {
+            title: 'Stop Period Days',
+            icon: 'bi-pause-circle',
+            color: 'secondary'
+        }
+    };
+
+    return groupInfo[eventType] || groupInfo.class_session;
+}
+
+/**
+ * Render individual event row for list view
+ */
+function renderEventRow(event, eventType) {
+    const startDate = new Date(event.start || event.date);
+    const endDate = event.end ? new Date(event.end) : null;
+
+    // Format date and time
+    const dateStr = startDate.toLocaleDateString('en-ZA', {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+
+    const timeStr = event.allDay ? 'All Day' :
+        startDate.toLocaleTimeString('en-ZA', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        }) + (endDate ? ' - ' + endDate.toLocaleTimeString('en-ZA', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        }) : '');
+
+    // Get event details
+    const title = event.title || 'Untitled Event';
+    const subject = event.extendedProps?.classSubject || '';
+    const notes = event.extendedProps?.notes || '';
+    const reason = event.extendedProps?.reason || '';
+
+    // Calculate duration
+    let durationStr = '-';
+    if (endDate && !event.allDay) {
+        const durationMs = endDate - startDate;
+        const hours = Math.floor(durationMs / (1000 * 60 * 60));
+        const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
+        durationStr = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+    }
+
+    // Get event type styling
+    const groupInfo = getEventGroupInfo(eventType);
+
+    return `
+        <tr>
+            <td class="align-middle ps-3">
+                <div class="d-flex flex-column">
+                    <span class="fw-medium">${dateStr}</span>
+                    <small class="text-muted">${timeStr}</small>
+                </div>
+            </td>
+            <td class="align-middle">
+                <div class="d-flex flex-column">
+                    <span class="fw-medium">${title}</span>
+                    ${subject ? `<small class="text-muted">${subject}</small>` : ''}
+                    ${notes ? `<small class="text-body-secondary">${notes}</small>` : ''}
+                    ${reason ? `<small class="text-warning">Reason: ${reason}</small>` : ''}
+                </div>
+            </td>
+            <td class="align-middle text-end pe-3">
+                <span class="badge bg-light text-dark">${durationStr}</span>
+            </td>
+        </tr>`;
+}
+
+/**
+ * Initialize list view filtering functionality
+ */
+function initializeListViewFilters() {
+    console.log('Initializing list view filters...');
+
+    const filtersContainer = document.getElementById('listViewFilters');
+    const eventTypeFilter = document.getElementById('eventTypeFilter');
+    const dateFromFilter = document.getElementById('dateFromFilter');
+    const dateToFilter = document.getElementById('dateToFilter');
+    const clearFiltersBtn = document.getElementById('clearFilters');
+
+    if (!filtersContainer || !eventTypeFilter || !dateFromFilter || !dateToFilter || !clearFiltersBtn) {
+        console.warn('Filter elements not found');
+        return;
+    }
+
+    // Show filters if we have events
+    if (window.currentListViewEvents && window.currentListViewEvents.length > 0) {
+        filtersContainer.classList.remove('d-none');
+    }
+
+    // Add event listeners
+    eventTypeFilter.addEventListener('change', applyListViewFilters);
+    dateFromFilter.addEventListener('change', applyListViewFilters);
+    dateToFilter.addEventListener('change', applyListViewFilters);
+    clearFiltersBtn.addEventListener('click', clearListViewFilters);
+}
+
+/**
+ * Apply filters to list view
+ */
+function applyListViewFilters() {
+    if (!window.currentListViewEvents) return;
+
+    const eventTypeFilter = document.getElementById('eventTypeFilter').value;
+    const dateFromFilter = document.getElementById('dateFromFilter').value;
+    const dateToFilter = document.getElementById('dateToFilter').value;
+
+    let filteredEvents = [...window.currentListViewEvents];
+
+    // Filter by event type
+    if (eventTypeFilter) {
+        filteredEvents = filteredEvents.filter(event => {
+            const eventType = event.extendedProps?.type || 'class_session';
+            return eventType === eventTypeFilter;
+        });
+    }
+
+    // Filter by date range
+    if (dateFromFilter) {
+        const fromDate = new Date(dateFromFilter);
+        filteredEvents = filteredEvents.filter(event => {
+            const eventDate = new Date(event.start || event.date);
+            return eventDate >= fromDate;
+        });
+    }
+
+    if (dateToFilter) {
+        const toDate = new Date(dateToFilter);
+        toDate.setHours(23, 59, 59, 999); // Include the entire day
+        filteredEvents = filteredEvents.filter(event => {
+            const eventDate = new Date(event.start || event.date);
+            return eventDate <= toDate;
+        });
+    }
+
+    console.log(`Filtered ${filteredEvents.length} events from ${window.currentListViewEvents.length} total`);
+
+    // Re-render list view with filtered events
+    const listContainer = document.getElementById('classScheduleList');
+    const listEmpty = document.getElementById('list-empty');
+
+    if (filteredEvents.length === 0) {
+        listContainer.innerHTML = '';
+        listEmpty.classList.remove('d-none');
+
+        // Update empty state message for filtered results
+        const emptyTitle = listEmpty.querySelector('h5');
+        const emptyText = listEmpty.querySelector('p');
+        if (emptyTitle && emptyText) {
+            emptyTitle.textContent = 'No Events Match Your Filters';
+            emptyText.textContent = 'Try adjusting your filter criteria to see more events.';
+        }
+    } else {
+        listEmpty.classList.add('d-none');
+        renderListView(filteredEvents, {
+            id: <?php echo json_encode($class['class_id'] ?? null); ?>,
+            code: <?php echo json_encode($class['class_code'] ?? ''); ?>,
+            subject: <?php echo json_encode($class['class_subject'] ?? ''); ?>
+        });
+    }
+}
+
+/**
+ * Clear all list view filters
+ */
+function clearListViewFilters() {
+    document.getElementById('eventTypeFilter').value = '';
+    document.getElementById('dateFromFilter').value = '';
+    document.getElementById('dateToFilter').value = '';
+
+    // Reset empty state message
+    const listEmpty = document.getElementById('list-empty');
+    const emptyTitle = listEmpty.querySelector('h5');
+    const emptyText = listEmpty.querySelector('p');
+    if (emptyTitle && emptyText) {
+        emptyTitle.textContent = 'No Schedule Events Found';
+        emptyText.textContent = 'There are no scheduled events to display for this class.';
+    }
+
+    // Re-render with all events
+    if (window.currentListViewEvents) {
+        renderListView(window.currentListViewEvents, {
+            id: <?php echo json_encode($class['class_id'] ?? null); ?>,
+            code: <?php echo json_encode($class['class_code'] ?? ''); ?>,
+            subject: <?php echo json_encode($class['class_subject'] ?? ''); ?>
+        });
     }
 }
 
