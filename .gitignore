@@ -48,7 +48,6 @@ yarn-error.log*
 package-lock.json
 yarn.lock
 
-daily-updates/
 dev-tasks-pi/
 dev-tasks-mini-spec/
 tests/
