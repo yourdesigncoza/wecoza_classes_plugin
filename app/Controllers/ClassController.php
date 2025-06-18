@@ -741,210 +741,15 @@ class ClassController {
             // In production, you might want to throw an exception or return an error
         }
 
-        // Detect format version
-        $format = self::detectScheduleDataFormat($scheduleData);
-
-        switch ($format) {
-            case 'v2.0':
-                // Already in v2.0 format, validate and return
-                return self::validateScheduleDataV2($scheduleData);
-
-            case 'v1.0':
-                // Convert legacy format to v2.0
-                return self::convertLegacyToV2($scheduleData);
-
-            default:
-                error_log("Unknown schedule data format detected, treating as legacy");
-                return self::convertLegacyToV2($scheduleData);
-        }
+        // Expect V2.0 format only
+        return self::validateScheduleDataV2($scheduleData);
     }
 
-    /**
-     * Detect schedule data format version
-     *
-     * @param array $data Schedule data
-     * @return string Format version ('v1.0', 'v2.0', 'unknown')
-     */
-    private static function detectScheduleDataFormat($data) {
-        if (!is_array($data)) {
-            return 'unknown';
-        }
+    // V1 format detection functions removed - V2.0 format only
 
-        // Check for v2.0 format indicators
-        if (isset($data['version']) && $data['version'] === '2.0') {
-            return 'v2.0';
-        }
+    // V1 to V2 conversion function removed - V2.0 format only
 
-        if (isset($data['timeData']) || isset($data['pattern'])) {
-            return 'v2.0';
-        }
-
-        // Check for v1.0 format (array of schedule entries)
-        if (self::isLegacyScheduleArray($data)) {
-            return 'v1.0';
-        }
-
-        return 'unknown';
-    }
-
-    /**
-     * Check if data is legacy schedule array format
-     *
-     * @param array $data Data to check
-     * @return bool True if legacy format
-     */
-    private static function isLegacyScheduleArray($data) {
-        // Must be indexed array
-        if (!array_key_exists(0, $data)) {
-            return false;
-        }
-
-        // Check first entry for legacy format indicators
-        $firstEntry = $data[0];
-        return is_array($firstEntry) &&
-               (isset($firstEntry['date']) || isset($firstEntry['start_time']) || isset($firstEntry['end_time']));
-    }
-
-    /**
-     * Convert legacy v1.0 schedule data to v2.0 format
-     *
-     * @param array $legacyData Legacy schedule data
-     * @return array v2.0 format schedule data
-     */
-    private static function convertLegacyToV2($legacyData) {
-        $converted = [
-            'version' => '2.0',
-            'pattern' => 'custom',
-            'startDate' => '',
-            'endDate' => '',
-            'timeData' => [
-                'mode' => 'single',
-                'single' => [
-                    'startTime' => '',
-                    'endTime' => '',
-                    'duration' => 0
-                ]
-            ],
-            'selectedDays' => [],
-            'exceptionDates' => [],
-            'holidayOverrides' => [],
-            'generatedSchedule' => $legacyData, // Preserve original for calendar
-            'metadata' => [
-                'convertedFrom' => 'v1.0',
-                'convertedAt' => date('c'),
-                'originalFormat' => 'legacy_array'
-            ]
-        ];
-
-        // Extract common information from legacy data
-        if (!empty($legacyData) && is_array($legacyData)) {
-            // Get date range
-            $dates = array_column($legacyData, 'date');
-            $dates = array_filter($dates);
-            if (!empty($dates)) {
-                sort($dates);
-                $converted['startDate'] = reset($dates);
-                $converted['endDate'] = end($dates);
-            }
-
-            // Extract common time pattern
-            $times = self::extractCommonTimes($legacyData);
-            if ($times) {
-                $converted['timeData']['single'] = $times;
-            }
-
-            // Extract days of week
-            $converted['selectedDays'] = self::extractDaysFromLegacyData($legacyData);
-        }
-
-        return $converted;
-    }
-
-    /**
-     * Extract common start/end times from legacy data
-     *
-     * @param array $legacyData Legacy schedule entries
-     * @return array|null Common times or null if inconsistent
-     */
-    private static function extractCommonTimes($legacyData) {
-        if (empty($legacyData)) {
-            return null;
-        }
-
-        $startTimes = [];
-        $endTimes = [];
-
-        foreach ($legacyData as $entry) {
-            if (isset($entry['start_time'])) {
-                $startTimes[] = $entry['start_time'];
-            }
-            if (isset($entry['end_time'])) {
-                $endTimes[] = $entry['end_time'];
-            }
-        }
-
-        // Check if times are consistent
-        $uniqueStartTimes = array_unique($startTimes);
-        $uniqueEndTimes = array_unique($endTimes);
-
-        if (count($uniqueStartTimes) === 1 && count($uniqueEndTimes) === 1) {
-            $startTime = reset($uniqueStartTimes);
-            $endTime = reset($uniqueEndTimes);
-
-            return [
-                'startTime' => $startTime,
-                'endTime' => $endTime,
-                'duration' => self::calculateDuration($startTime, $endTime)
-            ];
-        }
-
-        // If times are inconsistent, use the most common ones
-        $startTime = self::getMostCommonValue($startTimes) ?: '09:00';
-        $endTime = self::getMostCommonValue($endTimes) ?: '17:00';
-
-        return [
-            'startTime' => $startTime,
-            'endTime' => $endTime,
-            'duration' => self::calculateDuration($startTime, $endTime)
-        ];
-    }
-
-    /**
-     * Extract days of week from legacy schedule data
-     *
-     * @param array $legacyData Legacy schedule entries
-     * @return array Array of day names
-     */
-    private static function extractDaysFromLegacyData($legacyData) {
-        $days = [];
-
-        foreach ($legacyData as $entry) {
-            if (isset($entry['date'])) {
-                $dayOfWeek = date('l', strtotime($entry['date']));
-                if (!in_array($dayOfWeek, $days)) {
-                    $days[] = $dayOfWeek;
-                }
-            }
-        }
-
-        return $days;
-    }
-
-    /**
-     * Get most common value from array
-     *
-     * @param array $values Array of values
-     * @return mixed Most common value
-     */
-    private static function getMostCommonValue($values) {
-        if (empty($values)) {
-            return null;
-        }
-
-        $counts = array_count_values($values);
-        arsort($counts);
-        return key($counts);
-    }
+    // Legacy helper functions removed - V2.0 format only
 
     /**
      * Calculate duration in hours from start and end time
@@ -1706,10 +1511,7 @@ class ClassController {
                 }
             }
 
-            // Ensure backward compatibility for schedule_data
-            if (isset($result['schedule_data']) && !empty($result['schedule_data'])) {
-                $result['schedule_data'] = self::ensureScheduleDataCompatibility($result['schedule_data']);
-            }
+            // Schedule data expected to be in V2.0 format only
 
             return $result;
         } catch (\Exception $e) {
@@ -2048,30 +1850,15 @@ class ClassController {
     }
 
     /**
-     * Generate events from schedule data (handles both v1.0 and v2.0 formats)
-     * Enhanced to properly support per-day times in v2.0 format
+     * Generate events from V2.0 schedule data only
      *
-     * @param array $scheduleData Schedule data
+     * @param array $scheduleData V2.0 schedule data
      * @param array $class Class information
      * @return array Calendar events
      */
     private function generateEventsFromScheduleData($scheduleData, $class) {
-        $events = [];
-        $classCode = $class['class_code'] ?? 'Unknown';
-        $classSubject = $class['class_subject'] ?? 'Unknown Subject';
-
-        // Detect format
-        $format = self::detectScheduleDataFormat($scheduleData);
-
-        if ($format === 'v2.0') {
-            // Handle v2.0 format directly to preserve per-day time information
-            $events = $this->generateEventsFromV2Data($scheduleData, $class);
-        } else {
-            // Handle legacy v1.0 format
-            $events = $this->generateEventsFromLegacyData($scheduleData, $class, $format);
-        }
-
-        return $events;
+        // Only handle V2.0 format
+        return $this->generateEventsFromV2Data($scheduleData, $class);
     }
 
     /**
@@ -2090,14 +1877,8 @@ class ClassController {
         $timeData = $scheduleData['timeData'] ?? [];
         $hasPerDayTimes = isset($timeData['mode']) && $timeData['mode'] === 'per-day' && !empty($timeData['perDay']);
 
-        if ($hasPerDayTimes) {
-            // Generate events directly from v2.0 pattern data to preserve per-day times
-            $events = $this->generateEventsFromV2Pattern($scheduleData, $class);
-        } else {
-            // For single-time mode or when no per-day data, use legacy conversion
-            $legacySchedule = self::convertV2ToLegacy($scheduleData);
-            $events = $this->generateEventsFromLegacyData($legacySchedule, $class, 'v2.0');
-        }
+        // Generate events directly from v2.0 pattern data
+        $events = $this->generateEventsFromV2Pattern($scheduleData, $class);
 
         // Add exception date events
         if (isset($scheduleData['exceptionDates'])) {
@@ -2107,42 +1888,7 @@ class ClassController {
         return $events;
     }
 
-    /**
-     * Generate events from legacy v1.0 schedule data
-     *
-     * @param array $scheduleData Legacy schedule data
-     * @param array $class Class information
-     * @param string $format Original format for metadata
-     * @return array Calendar events
-     */
-    private function generateEventsFromLegacyData($scheduleData, $class, $format) {
-        $events = [];
-        $classCode = $class['class_code'] ?? 'Unknown';
-        $classSubject = $class['class_subject'] ?? 'Unknown Subject';
-
-        // Generate events from legacy format schedule entries
-        foreach ($scheduleData as $schedule) {
-            if (isset($schedule['date']) && isset($schedule['start_time']) && isset($schedule['end_time'])) {
-                $events[] = [
-                    'id' => 'class_' . $class['class_id'] . '_' . $schedule['date'],
-                    'title' => $this->formatEventTitle($schedule, $format),
-                    'start' => $schedule['date'] . 'T' . $schedule['start_time'],
-                    'end' => $schedule['date'] . 'T' . $schedule['end_time'],
-                    'classNames' => ['wecoza-class-event', 'text-primary'],
-                    'extendedProps' => [
-                        'type' => 'class_session',
-                        'classCode' => $classCode,
-                        'classSubject' => $classSubject,
-                        'notes' => $schedule['notes'] ?? '',
-                        'scheduleFormat' => $format,
-                        'duration' => $this->calculateEventDuration($schedule['start_time'], $schedule['end_time'])
-                    ]
-                ];
-            }
-        }
-
-        return $events;
-    }
+    // Legacy event generation function removed - V2.0 format only
 
     /**
      * Format event title based on schedule format
@@ -2166,9 +1912,9 @@ class ClassController {
     }
 
     /**
-     * Generate events directly from v2.0 pattern data preserving per-day times
+     * Generate events from V2.0 schedule data (handles both pattern-based and direct entries)
      *
-     * @param array $scheduleData v2.0 schedule data
+     * @param array $scheduleData V2.0 schedule data
      * @param array $class Class information
      * @return array Calendar events
      */
@@ -2177,67 +1923,102 @@ class ClassController {
         $classCode = $class['class_code'] ?? 'Unknown';
         $classSubject = $class['class_subject'] ?? 'Unknown Subject';
 
-        // Extract pattern information
-        $pattern = $scheduleData['pattern'] ?? 'weekly';
-        $startDate = isset($scheduleData['startDate']) ? new \DateTime($scheduleData['startDate']) : null;
-        $endDate = isset($scheduleData['endDate']) ? new \DateTime($scheduleData['endDate']) : null;
-        $timeData = $scheduleData['timeData'] ?? [];
-        $selectedDays = $scheduleData['selectedDays'] ?? [];
-
-        if (!$startDate || !$endDate) {
-            return $events;
+        // Check if we have direct schedule entries (numbered keys format)
+        $hasDirectEntries = false;
+        foreach ($scheduleData as $key => $value) {
+            if (is_numeric($key) && is_array($value) && isset($value['date']) && isset($value['start_time']) && isset($value['end_time'])) {
+                $hasDirectEntries = true;
+                break;
+            }
         }
 
-        // Generate schedule entries using existing pattern generation methods
-        $scheduleEntries = [];
-        switch ($pattern) {
-            case 'weekly':
-                $scheduleEntries = self::generateWeeklyEntries($startDate, $endDate, $timeData, $selectedDays);
-                break;
-            case 'biweekly':
-                $scheduleEntries = self::generateBiweeklyEntries($startDate, $endDate, $timeData, $selectedDays);
-                break;
-            case 'monthly':
-                $scheduleEntries = self::generateMonthlyEntries($startDate, $endDate, $timeData, $scheduleData['dayOfMonth'] ?? 1);
-                break;
-            case 'custom':
-            default:
-                // For custom pattern, create a single entry if we have time data
-                if (isset($timeData['single'])) {
-                    $scheduleEntries[] = [
-                        'date' => $scheduleData['startDate'],
-                        'start_time' => $timeData['single']['startTime'] ?? '09:00',
-                        'end_time' => $timeData['single']['endTime'] ?? '17:00'
+        if ($hasDirectEntries) {
+            // Handle direct schedule entries (numbered keys format)
+            foreach ($scheduleData as $key => $schedule) {
+                if (is_numeric($key) && is_array($schedule) && isset($schedule['date']) && isset($schedule['start_time']) && isset($schedule['end_time'])) {
+                    // Calculate duration for display
+                    $duration = $this->calculateEventDuration($schedule['start_time'], $schedule['end_time']);
+                    $dayName = $schedule['day'] ?? date('l', strtotime($schedule['date']));
+
+                    $events[] = [
+                        'id' => 'class_' . $class['class_id'] . '_' . $schedule['date'],
+                        'title' => $dayName . ': ' . $schedule['start_time'] . ' - ' . $schedule['end_time'] . ' (' . $duration . 'h)',
+                        'start' => $schedule['date'] . 'T' . $schedule['start_time'],
+                        'end' => $schedule['date'] . 'T' . $schedule['end_time'],
+                        'classNames' => ['wecoza-class-event', 'text-primary'],
+                        'extendedProps' => [
+                            'type' => 'class_session',
+                            'classCode' => $classCode,
+                            'classSubject' => $classSubject,
+                            'notes' => $schedule['notes'] ?? '',
+                            'scheduleFormat' => 'v2.0',
+                            'dayOfWeek' => $dayName,
+                            'duration' => $duration
+                        ]
                     ];
                 }
-                break;
-        }
+            }
+        } else {
+            // Handle pattern-based generation
+            $pattern = $scheduleData['pattern'] ?? 'weekly';
+            $startDate = isset($scheduleData['startDate']) ? new \DateTime($scheduleData['startDate']) : null;
+            $endDate = isset($scheduleData['endDate']) ? new \DateTime($scheduleData['endDate']) : null;
+            $timeData = $scheduleData['timeData'] ?? [];
+            $selectedDays = $scheduleData['selectedDays'] ?? [];
 
-        // Convert schedule entries to calendar events
-        foreach ($scheduleEntries as $schedule) {
-            if (isset($schedule['date']) && isset($schedule['start_time']) && isset($schedule['end_time'])) {
-                // Get day of week for enhanced title
-                $date = new \DateTime($schedule['date']);
-                $dayName = $date->format('l');
+            if ($startDate && $endDate) {
+                // Generate schedule entries using existing pattern generation methods
+                $scheduleEntries = [];
+                switch ($pattern) {
+                    case 'weekly':
+                        $scheduleEntries = self::generateWeeklyEntries($startDate, $endDate, $timeData, $selectedDays);
+                        break;
+                    case 'biweekly':
+                        $scheduleEntries = self::generateBiweeklyEntries($startDate, $endDate, $timeData, $selectedDays);
+                        break;
+                    case 'monthly':
+                        $scheduleEntries = self::generateMonthlyEntries($startDate, $endDate, $timeData, $scheduleData['dayOfMonth'] ?? 1);
+                        break;
+                    case 'custom':
+                    default:
+                        // For custom pattern, create a single entry if we have time data
+                        if (isset($timeData['single'])) {
+                            $scheduleEntries[] = [
+                                'date' => $scheduleData['startDate'],
+                                'start_time' => $timeData['single']['startTime'] ?? '09:00',
+                                'end_time' => $timeData['single']['endTime'] ?? '17:00'
+                            ];
+                        }
+                        break;
+                }
 
-                $events[] = [
-                    'id' => 'class_' . $class['class_id'] . '_' . $schedule['date'],
-                    'title' => $this->formatV2EventTitle($schedule, $dayName, $timeData),
-                    'start' => $schedule['date'] . 'T' . $schedule['start_time'],
-                    'end' => $schedule['date'] . 'T' . $schedule['end_time'],
-                    'classNames' => ['wecoza-class-event', 'text-primary'],
-                    'extendedProps' => [
-                        'type' => 'class_session',
-                        'classCode' => $classCode,
-                        'classSubject' => $classSubject,
-                        'notes' => $schedule['notes'] ?? '',
-                        'scheduleFormat' => 'v2.0',
-                        'dayOfWeek' => $dayName,
-                        'pattern' => $pattern,
-                        'timeMode' => $timeData['mode'] ?? 'single',
-                        'duration' => $this->calculateEventDuration($schedule['start_time'], $schedule['end_time'])
-                    ]
-                ];
+                // Convert schedule entries to calendar events
+                foreach ($scheduleEntries as $schedule) {
+                    if (isset($schedule['date']) && isset($schedule['start_time']) && isset($schedule['end_time'])) {
+                        // Get day of week for enhanced title
+                        $date = new \DateTime($schedule['date']);
+                        $dayName = $date->format('l');
+
+                        $events[] = [
+                            'id' => 'class_' . $class['class_id'] . '_' . $schedule['date'],
+                            'title' => $this->formatV2EventTitle($schedule, $dayName, $timeData),
+                            'start' => $schedule['date'] . 'T' . $schedule['start_time'],
+                            'end' => $schedule['date'] . 'T' . $schedule['end_time'],
+                            'classNames' => ['wecoza-class-event', 'text-primary'],
+                            'extendedProps' => [
+                                'type' => 'class_session',
+                                'classCode' => $classCode,
+                                'classSubject' => $classSubject,
+                                'notes' => $schedule['notes'] ?? '',
+                                'scheduleFormat' => 'v2.0',
+                                'dayOfWeek' => $dayName,
+                                'pattern' => $pattern,
+                                'timeMode' => $timeData['mode'] ?? 'single',
+                                'duration' => $this->calculateEventDuration($schedule['start_time'], $schedule['end_time'])
+                            ]
+                        ];
+                    }
+                }
             }
         }
 
@@ -2335,18 +2116,6 @@ class ClassController {
      */
     public static function getSupportedScheduleFormats() {
         return [
-            'v1.0' => [
-                'name' => 'Legacy Format v1.0',
-                'description' => 'Array of individual schedule entries with date, start_time, end_time',
-                'example' => [
-                    [
-                        'date' => '2024-01-15',
-                        'start_time' => '09:00',
-                        'end_time' => '17:00',
-                        'notes' => 'Optional notes'
-                    ]
-                ]
-            ],
             'v2.0' => [
                 'name' => 'Enhanced Format v2.0',
                 'description' => 'Structured format with patterns, per-day times, and metadata',
@@ -2368,135 +2137,7 @@ class ClassController {
         ];
     }
 
-    /**
-     * Ensure schedule data backward compatibility
-     * Automatically converts legacy data when loaded from database
-     *
-     * @param array $scheduleData Raw schedule data from database
-     * @return array Compatible schedule data
-     */
-    private static function ensureScheduleDataCompatibility($scheduleData) {
-        if (empty($scheduleData) || !is_array($scheduleData)) {
-            return $scheduleData;
-        }
+    // Backward compatibility function removed - V2.0 format only
 
-        // Check if already in v2.0 format
-        if (isset($scheduleData['version']) && $scheduleData['version'] === '2.0') {
-            return $scheduleData; // Already compatible
-        }
-
-        // Check if it's legacy format that needs conversion
-        $format = self::detectScheduleDataFormat($scheduleData);
-
-        if ($format === 'v1.0') {
-            // Convert legacy format to v2.0 for internal use
-            // This ensures all internal processing uses the new format
-            $converted = self::convertLegacyToV2($scheduleData);
-
-            // Log the automatic conversion for monitoring
-            error_log("Automatically converted legacy schedule data to v2.0 format");
-
-            return $converted;
-        }
-
-        return $scheduleData; // Return as-is if format is unknown
-    }
-
-    /**
-     * Create a migration utility instance
-     *
-     * @return \WeCozaClasses\Services\ScheduleDataMigrator
-     */
-    public static function createMigrator() {
-        return new \WeCozaClasses\Services\ScheduleDataMigrator();
-    }
-
-    /**
-     * Perform batch migration of schedule data (admin utility)
-     *
-     * @param bool $dryRun If true, only analyze without making changes
-     * @return array Migration results
-     */
-    public static function migrateAllScheduleData($dryRun = true) {
-        $migrator = self::createMigrator();
-        return $migrator->migrateAllScheduleData($dryRun);
-    }
-
-    /**
-     * Check schedule data integrity across all classes
-     *
-     * @return array Integrity check results
-     */
-    public static function checkScheduleDataIntegrity() {
-        $results = [
-            'total_classes' => 0,
-            'v1_format' => 0,
-            'v2_format' => 0,
-            'invalid_format' => 0,
-            'empty_data' => 0,
-            'validation_errors' => [],
-            'recommendations' => []
-        ];
-
-        try {
-            $db = \WeCozaClasses\Services\Database\DatabaseService::getInstance();
-            $sql = "SELECT class_id, schedule_data FROM public.classes WHERE schedule_data IS NOT NULL";
-            $stmt = $db->getPdo()->prepare($sql);
-            $stmt->execute();
-            $classes = $stmt->fetchAll();
-
-            $results['total_classes'] = count($classes);
-
-            foreach ($classes as $class) {
-                $scheduleData = is_string($class['schedule_data'])
-                    ? json_decode($class['schedule_data'], true)
-                    : $class['schedule_data'];
-
-                if (empty($scheduleData)) {
-                    $results['empty_data']++;
-                    continue;
-                }
-
-                $format = self::detectScheduleDataFormat($scheduleData);
-
-                switch ($format) {
-                    case 'v1.0':
-                        $results['v1_format']++;
-                        break;
-                    case 'v2.0':
-                        $results['v2_format']++;
-                        break;
-                    default:
-                        $results['invalid_format']++;
-                        $results['validation_errors'][] = "Class {$class['class_id']}: Unknown format";
-                        break;
-                }
-
-                // Validate the data
-                $validationResult = self::validateScheduleData($scheduleData);
-                if (!$validationResult['isValid']) {
-                    $results['validation_errors'][] = "Class {$class['class_id']}: " .
-                        implode(', ', $validationResult['errors']);
-                }
-            }
-
-            // Generate recommendations
-            if ($results['v1_format'] > 0) {
-                $results['recommendations'][] = "Consider migrating {$results['v1_format']} classes from legacy v1.0 format to v2.0";
-            }
-
-            if ($results['invalid_format'] > 0) {
-                $results['recommendations'][] = "Fix {$results['invalid_format']} classes with invalid schedule data format";
-            }
-
-            if (count($results['validation_errors']) > 0) {
-                $results['recommendations'][] = "Address " . count($results['validation_errors']) . " validation errors";
-            }
-
-        } catch (\Exception $e) {
-            $results['validation_errors'][] = 'Integrity check failed: ' . $e->getMessage();
-        }
-
-        return $results;
-    }
+    // Migration and integrity check functions removed - V2.0 format only
 }

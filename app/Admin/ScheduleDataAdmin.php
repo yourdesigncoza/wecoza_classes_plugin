@@ -267,29 +267,5 @@ class ScheduleDataAdmin {
         }
     }
     
-    /**
-     * Handle migration AJAX request
-     */
-    public static function handleMigrationAjax() {
-        // Verify nonce
-        if (!wp_verify_nonce($_POST['nonce'], 'wecoza_schedule_admin')) {
-            wp_send_json_error('Security check failed');
-            return;
-        }
-        
-        // Check permissions
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error('Insufficient permissions');
-            return;
-        }
-        
-        $dryRun = isset($_POST['dry_run']) && $_POST['dry_run'] == '1';
-        
-        try {
-            $results = ClassController::migrateAllScheduleData($dryRun);
-            wp_send_json_success($results);
-        } catch (\Exception $e) {
-            wp_send_json_error('Migration failed: ' . $e->getMessage());
-        }
-    }
+    // Migration functions removed - V2.0 format only
 }
