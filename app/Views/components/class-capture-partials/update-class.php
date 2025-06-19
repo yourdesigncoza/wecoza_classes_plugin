@@ -79,14 +79,14 @@
          <div class="row">
             <!-- Client Name (ID) -->
             <div class="col-md-3 mb-3">
-               <div class="form-floating">
+               <div class="mb-3">
+                  <label for="client_id" class="form-label">Client Name (ID) <span class="text-danger">*</span></label>
                   <select id="client_id" name="client_id" class="form-select" required>
                      <option value="">Select</option>
                      <?php foreach ($data['clients'] as $client): ?>
                         <option value="<?php echo esc_attr($client['id']); ?>" <?php echo (isset($data['class_data']['client_id']) && $data['class_data']['client_id'] == $client['id']) ? 'selected' : ''; ?>><?php echo esc_html($client['name']); ?></option>
                      <?php endforeach; ?>
                   </select>
-                  <label for="client_id">Client Name (ID) <span class="text-danger">*</span></label>
                   <div class="invalid-feedback">Please select a client.</div>
                   <div class="valid-feedback">Looks good!</div>
                </div>
@@ -94,7 +94,8 @@
 
             <!-- Class/Site Name -->
             <div class="col-md-3 mb-3">
-               <div class="form-floating">
+               <div class="mb-3">
+                  <label for="site_id" class="form-label">Class/Site Name <span class="text-danger">*</span></label>
                   <select id="site_id" name="site_id" class="form-select" required>
                      <option value="">Select Site</option>
                      <?php foreach ($data['clients'] as $client): ?>
@@ -107,7 +108,6 @@
                         </optgroup>
                      <?php endforeach; ?>
                   </select>
-                  <label for="site_id">Class/Site Name <span class="text-danger">*</span></label>
                   <div class="invalid-feedback">Please select a class/site name.</div>
                   <div class="valid-feedback">Looks good!</div>
                </div>
@@ -115,7 +115,8 @@
 
             <!-- Single Address Field -->
             <div class="col-md-6 mb-3" id="address-wrapper">
-               <div class="form-floating">
+               <div class="mb-3">
+                  <label for="site_address" class="form-label">Address</label>
                   <input
                      type="text"
                      id="site_address"
@@ -125,7 +126,6 @@
                      value="<?php echo esc_attr($data['class_data']['class_address_line'] ?? ''); ?>"
                      readonly
                      />
-                  <label for="site_address">Address</label>
                </div>
             </div>
          </div>
@@ -136,14 +136,14 @@
       <div class="row mt-3">
          <!-- Class Type (Main Category) -->
          <div class="col-md-4 mb-3">
-            <div class="form-floating">
+            <div class="mb-3">
+               <label for="class_type" class="form-label">Class Type <span class="text-danger">*</span></label>
                <select id="class_type" name="class_type" class="form-select" required>
                   <option value="">Select</option>
                   <?php foreach ($data['class_types'] as $class_type): ?>
                      <option value="<?php echo esc_attr($class_type['id']); ?>" <?php echo (isset($data['class_data']['class_type']) && $data['class_data']['class_type'] == $class_type['id']) ? 'selected' : ''; ?>><?php echo esc_html($class_type['name']); ?></option>
                   <?php endforeach; ?>
                </select>
-               <label for="class_type">Class Type <span class="text-danger">*</span></label>
                <div class="invalid-feedback">Please select the class type.</div>
                <div class="valid-feedback">Looks good!</div>
             </div>
@@ -151,7 +151,8 @@
 
          <!-- Class Subject (Specific Subject/Level/Module) -->
          <div class="col-md-4 mb-3">
-            <div class="form-floating">
+            <div class="mb-3">
+               <label for="class_subject" class="form-label">Class Subject <span class="text-danger">*</span></label>
                <select id="class_subject" name="class_subject" class="form-select" required>
                   <option value="">Select Class Type First</option>
                   <!-- Will be populated dynamically based on class type, but pre-populate current value -->
@@ -159,7 +160,6 @@
                      <option value="<?php echo esc_attr($data['class_data']['class_subject']); ?>" selected><?php echo esc_html($data['class_data']['class_subject']); ?></option>
                   <?php endif; ?>
                </select>
-               <label for="class_subject">Class Subject <span class="text-danger">*</span></label>
                <div class="invalid-feedback">Please select the class subject.</div>
                <div class="valid-feedback">Looks good!</div>
             </div>
@@ -167,9 +167,9 @@
 
          <!-- Class Duration (Auto-calculated) -->
          <div class="col-md-4 mb-3">
-            <div class="form-floating">
+            <div class="mb-3">
+               <label for="class_duration" class="form-label">Duration (Hours)</label>
                <input type="number" id="class_duration" name="class_duration" class="form-control" placeholder="Duration" value="<?php echo esc_attr($data['class_data']['class_duration'] ?? ''); ?>" readonly>
-               <label for="class_duration">Duration (Hours)</label>
                <div class="form-text">Automatically calculated based on class type and subject.</div>
             </div>
          </div>
@@ -178,18 +178,18 @@
       <div class="row">
          <!-- Class Code (Auto-generated) -->
          <div class="col-md-4 mb-3">
-            <div class="form-floating">
+            <div class="mb-3">
+               <label for="class_code" class="form-label">Class Code</label>
                <input type="text" id="class_code" name="class_code" class="form-control" placeholder="Class Code" value="<?php echo esc_attr($data['class_data']['class_code'] ?? ''); ?>" readonly>
-               <label for="class_code">Class Code</label>
                <div class="form-text">Auto generated [ClientID]-[ClassType]-[SubjectID]-[YYYY]-[MM]-[DD]-[HH]-[MM] </div>
             </div>
          </div>
 
          <!-- Class Original Start Date -->
          <div class="col-md-4 mb-3">
-            <div class="form-floating">
+            <div class="mb-3">
+               <label for="class_start_date" class="form-label">Class Original Start Date <span class="text-danger">*</span></label>
                <input type="date" id="class_start_date" name="class_start_date" class="form-control" placeholder="YYYY-MM-DD" value="<?php echo esc_attr($data['class_data']['original_start_date'] ?? ''); ?>" required>
-               <label for="class_start_date">Class Original Start Date <span class="text-danger">*</span></label>
                <div class="invalid-feedback">Please select the start date.</div>
                <div class="valid-feedback">Looks good!</div>
             </div>
@@ -220,7 +220,8 @@
          <!-- Schedule Pattern Selection -->
          <div class="row mb-3">
             <div class="col-md-4 mb-3">
-               <div class="form-floating">
+               <div class="mb-3">
+                  <label for="schedule_pattern" class="form-label">Schedule Pattern <span class="text-danger">*</span></label>
                   <select id="schedule_pattern" name="schedule_pattern" class="form-select" required>
                      <option value="">Select</option>
                      <option value="weekly" <?php echo ($schedulePattern == 'weekly') ? 'selected' : ''; ?>>Weekly (Every Week)</option>
@@ -228,7 +229,6 @@
                      <option value="monthly" <?php echo ($schedulePattern == 'monthly') ? 'selected' : ''; ?>>Monthly</option>
                      <option value="custom" <?php echo ($schedulePattern == 'custom') ? 'selected' : ''; ?>>Custom</option>
                   </select>
-                  <label for="schedule_pattern">Schedule Pattern <span class="text-danger">*</span></label>
                   <div class="invalid-feedback">Please select a schedule pattern.</div>
                   <div class="valid-feedback">Looks good!</div>
                </div>
@@ -240,11 +240,12 @@
                <div class="days-checkbox-group">
                   <?php
                   $weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-                  foreach ($weekDays as $day):
+                  foreach ($weekDays as $index => $day):
                      $isChecked = is_array($scheduleDays) && in_array($day, $scheduleDays);
+                     $isFirst = ($index === 0);
                   ?>
                   <div class="form-check form-check-inline">
-                     <input class="form-check-input schedule-day-checkbox" type="checkbox" id="schedule_day_<?php echo strtolower($day); ?>" name="schedule_days[]" value="<?php echo $day; ?>" <?php echo $isChecked ? 'checked' : ''; ?>>
+                     <input class="form-check-input schedule-day-checkbox" type="checkbox" id="schedule_day_<?php echo strtolower($day); ?>" name="schedule_days[]" value="<?php echo $day; ?>" <?php echo $isChecked ? 'checked' : ''; ?> <?php echo $isFirst ? 'required' : ''; ?>>
                      <label class="form-check-label" for="schedule_day_<?php echo strtolower($day); ?>"><?php echo $day; ?></label>
                   </div>
                   <?php endforeach; ?>
@@ -253,13 +254,14 @@
                   <button type="button" class="btn btn-sm btn-outline-primary" id="select-all-days">Select All</button>
                   <button type="button" class="btn btn-sm btn-outline-secondary" id="clear-all-days">Clear All</button>
                </div>
-               <div class="invalid-feedback">Please select at least one day.</div>
-               <div class="valid-feedback">Looks good!</div>
+               <div class="invalid-feedback d-none">Please select at least one day.</div>
+               <div class="valid-feedback d-none">Looks good!</div>
             </div>
 
             <!-- Day of Month (for monthly) -->
             <div class="col-md-4 mb-3 d-none" id="day-of-month-container">
-               <div class="form-floating">
+               <div class="mb-3">
+                  <label for="schedule_day_of_month" class="form-label">Day of Month <span class="text-danger">*</span></label>
                   <select id="schedule_day_of_month" name="schedule_day_of_month" class="form-select">
                      <option value="">Select</option>
                      <?php for ($i = 1; $i <= 31; $i++): ?>
@@ -267,7 +269,6 @@
                      <?php endfor; ?>
                      <option value="last">Last Day</option>
                   </select>
-                  <label for="schedule_day_of_month">Day of Month <span class="text-danger">*</span></label>
                   <div class="invalid-feedback">Please select a day of the month.</div>
                   <div class="valid-feedback">Looks good!</div>
                </div>
@@ -283,26 +284,26 @@
          <!-- Date Range -->
          <div class="row mb-3">
             <div class="col-md-4 mb-3">
-               <div class="form-floating">
+               <div class="mb-3">
+                  <label for="schedule_start_date" class="form-label">Start Date <span class="text-danger">*</span></label>
                   <input type="date" id="schedule_start_date" name="schedule_start_date" class="form-control" placeholder="YYYY-MM-DD" value="<?php echo esc_attr($scheduleStartDate); ?>" required>
-                  <label for="schedule_start_date">Start Date <span class="text-danger">*</span></label>
                   <div class="invalid-feedback">Please select a start date.</div>
                   <div class="valid-feedback">Looks good!</div>
                </div>
             </div>
 
             <div class="col-md-4 mb-3">
-               <div class="form-floating">
+               <div class="mb-3">
+                  <label for="schedule_end_date" class="form-label">End Date</label>
                   <input type="date" id="schedule_end_date" name="schedule_end_date" class="form-control readonly-field" placeholder="YYYY-MM-DD" value="<?php echo esc_attr($scheduleEndDate); ?>" readonly>
-                  <label for="schedule_end_date">End Date</label>
                   <small class="text-muted">Automatically calculated based on class duration</small>
                </div>
             </div>
 
             <div class="col-md-4 d-none">
-               <div class="form-floating">
+               <div class="mb-3">
+                  <label for="schedule_total_hours" class="form-label">Total Hours</label>
                   <input type="text" id="schedule_total_hours" name="schedule_total_hours" class="form-control readonly-field" placeholder="Total Hours" readonly>
-                  <label for="schedule_total_hours">Total Hours</label>
                   <small class="text-muted">Based on class type</small>
                </div>
             </div>
@@ -320,9 +321,9 @@
             <div class="row exception-date-row align-items-center d-none" id="exception-date-row-template">
                <!-- Exception Date -->
                <div class="col-md-4 mb-2">
-                  <div class="form-floating">
+                  <div class="mb-3">
+                     <label class="form-label">Date</label>
                      <input type="date" name="exception_dates[]" class="form-control" placeholder="YYYY-MM-DD">
-                     <label>Date</label>
                      <div class="invalid-feedback">Please select a valid date.</div>
                      <div class="valid-feedback">Looks good!</div>
                   </div>
@@ -330,7 +331,8 @@
 
                <!-- Reason -->
                <div class="col-md-6 mb-2">
-                  <div class="form-floating">
+                  <div class="mb-3">
+                     <label class="form-label">Reason</label>
                      <select name="exception_reasons[]" class="form-select">
                         <option value="">Select</option>
                         <option value="Client Cancelled">Client Cancelled</option>
@@ -338,7 +340,6 @@
                         <option value="Public Holiday">Public Holiday</option>
                         <option value="Other">Other</option>
                      </select>
-                     <label>Reason</label>
                      <div class="invalid-feedback">Please select a reason.</div>
                      <div class="valid-feedback">Looks good!</div>
                   </div>
@@ -559,14 +560,14 @@
       <div class="row">
          <!-- SETA Funded -->
          <div class="col-md-3 mb-3">
-            <div class="form-floating">
+            <div class="mb-3">
+               <label for="seta_funded" class="form-label">SETA Funded? <span class="text-danger">*</span></label>
                <select id="seta_funded" name="seta_funded" class="form-select" required>
                   <option value="">Select</option>
                   <?php foreach ($data['yes_no_options'] as $option): ?>
                      <option value="<?php echo $option['id']; ?>" <?php echo (isset($data['class_data']['seta_funded']) && $data['class_data']['seta_funded'] == $option['id']) ? 'selected' : ''; ?>><?php echo $option['name']; ?></option>
                   <?php endforeach; ?>
                </select>
-               <label for="seta_funded">SETA Funded? <span class="text-danger">*</span></label>
                <div class="invalid-feedback">Please select if the class is SETA funded.</div>
                <div class="valid-feedback">Looks good!</div>
             </div>
@@ -578,14 +579,14 @@
          $showSeta = ($setaFunded == 'Yes' || $setaFunded == '1');
          ?>
          <div class="col-md-3 mb-3" id="seta_container" style="display: <?php echo $showSeta ? 'block' : 'none'; ?>;">
-            <div class="form-floating">
+            <div class="mb-3">
+               <label for="seta_id" class="form-label">SETA <span class="text-danger">*</span></label>
                <select id="seta_id" name="seta_id" class="form-select">
                   <option value="">Select</option>
                   <?php foreach ($data['setas'] as $seta): ?>
                      <option value="<?php echo $seta['id']; ?>" <?php echo (isset($data['class_data']['seta']) && $data['class_data']['seta'] == $seta['id']) ? 'selected' : ''; ?>><?php echo $seta['name']; ?></option>
                   <?php endforeach; ?>
                </select>
-               <label for="seta_id">SETA <span class="text-danger">*</span></label>
                <div class="invalid-feedback">Please select a SETA.</div>
                <div class="valid-feedback">Looks good!</div>
             </div>
@@ -593,14 +594,14 @@
 
          <!-- Exam Class -->
          <div class="col-md-3 mb-3">
-            <div class="form-floating">
+            <div class="mb-3">
+               <label for="exam_class" class="form-label">Exam Class <span class="text-danger">*</span></label>
                <select id="exam_class" name="exam_class" class="form-select" required>
                   <option value="">Select</option>
                   <?php foreach ($data['yes_no_options'] as $option): ?>
                      <option value="<?php echo $option['id']; ?>" <?php echo (isset($data['class_data']['exam_class']) && $data['class_data']['exam_class'] == $option['id']) ? 'selected' : ''; ?>><?php echo $option['name']; ?></option>
                   <?php endforeach; ?>
                </select>
-               <label for="exam_class">Exam Class <span class="text-danger">*</span></label>
                <div class="invalid-feedback">Please select if this is an exam class.</div>
                <div class="valid-feedback">Looks good!</div>
             </div>
@@ -613,9 +614,9 @@
          ?>
          <div class="col-md-3 mb-3">
             <div id="exam_type_container" style="display: <?php echo $showExamType ? 'block' : 'none'; ?>;">
-               <div class="form-floating">
+               <div class="mb-3">
+                  <label for="exam_type" class="form-label">Exam Type</label>
                   <input type="text" id="exam_type" name="exam_type" class="form-control" placeholder="Enter exam type" value="<?php echo esc_attr($data['class_data']['exam_type'] ?? ''); ?>">
-                  <label for="exam_type">Exam Type</label>
                   <div class="invalid-feedback">Please provide the exam type.</div>
                   <div class="valid-feedback">Looks good!</div>
                </div>
@@ -776,9 +777,9 @@
          <div class="row qa-visit-row align-items-center d-none" id="qa-visit-row-template">
             <!-- Visit Date -->
             <div class="col-md-4 mb-2">
-               <div class="form-floating">
+               <div class="mb-3">
+                  <label class="form-label">Visit Date</label>
                   <input type="date" name="qa_visit_dates[]" class="form-control" placeholder="YYYY-MM-DD">
-                  <label>Visit Date</label>
                   <div class="invalid-feedback">Please select a valid date.</div>
                   <div class="valid-feedback">Looks good!</div>
                </div>
@@ -786,9 +787,9 @@
 
             <!-- Report Upload -->
             <div class="col-md-6 mb-2">
-               <div class="form-floating ydcoza-upload">
+               <div class="mb-3 ydcoza-upload">
+                  <label class="form-label">QA Report</label>
                   <input type="file" name="qa_reports[]" class="form-control" accept="application/pdf">
-                  <label>QA Report</label>
                   <div class="invalid-feedback">Please upload a report for this visit.</div>
                   <div class="valid-feedback">Looks good!</div>
                </div>
@@ -821,22 +822,22 @@
          <!-- Initial Class Agent -->
          <div class="row mb-3">
             <div class="col-md-5 mb-3">
-               <div class="form-floating">
+               <div class="mb-3">
+                  <label for="initial_class_agent" class="form-label">Initial Class Agent <span class="text-danger">*</span></label>
                   <select id="initial_class_agent" name="initial_class_agent" class="form-select" required>
                      <option value="">Select</option>
                      <?php foreach ($data['agents'] as $agent): ?>
                         <option value="<?php echo $agent['id']; ?>" <?php echo (isset($data['class_data']['class_agent']) && $data['class_data']['class_agent'] == $agent['id']) ? 'selected' : ''; ?>><?php echo $agent['name']; ?></option>
                      <?php endforeach; ?>
                   </select>
-                  <label for="initial_class_agent">Initial Class Agent <span class="text-danger">*</span></label>
                   <div class="invalid-feedback">Please select the initial class agent.</div>
                   <div class="valid-feedback">Looks good!</div>
                </div>
             </div>
             <div class="col-md-5 mb-3">
-               <div class="form-floating">
+               <div class="mb-3">
+                  <label for="initial_agent_start_date" class="form-label">Start Date <span class="text-danger">*</span></label>
                   <input type="date" id="initial_agent_start_date" name="initial_agent_start_date" class="form-control" placeholder="YYYY-MM-DD" value="<?php echo esc_attr($data['class_data']['initial_agent_start_date'] ?? ''); ?>" required>
-                  <label for="initial_agent_start_date">Start Date <span class="text-danger">*</span></label>
                   <div class="invalid-feedback">Please select the start date.</div>
                   <div class="valid-feedback">Looks good!</div>
                </div>
@@ -854,14 +855,14 @@
          <div class="row agent-replacement-row d-none" id="agent-replacement-row-template">
             <!-- Replacement Agent -->
             <div class="col-md-5 mb-2">
-               <div class="form-floating">
+               <div class="mb-3">
+                  <label class="form-label">Replacement Agent</label>
                   <select name="replacement_agent_ids[]" class="form-select replacement-agent-select">
                      <option value="">Select</option>
                      <?php foreach ($data['agents'] as $agent): ?>
                         <option value="<?php echo $agent['id']; ?>"><?php echo $agent['name']; ?></option>
                      <?php endforeach; ?>
                   </select>
-                  <label>Replacement Agent</label>
                   <div class="invalid-feedback">Please select a replacement agent.</div>
                   <div class="valid-feedback">Looks good!</div>
                </div>
@@ -869,9 +870,9 @@
 
             <!-- Takeover Date -->
             <div class="col-md-5 mb-2">
-               <div class="form-floating">
+               <div class="mb-3">
+                  <label class="form-label">Takeover Date</label>
                   <input type="date" name="replacement_agent_dates[]" class="form-control" placeholder="YYYY-MM-DD">
-                  <label>Takeover Date</label>
                   <div class="invalid-feedback">Please select a valid takeover date.</div>
                   <div class="valid-feedback">Looks good!</div>
                </div>
@@ -894,23 +895,23 @@
       <!-- Project Supervisor and Delivery Date -->
       <div class="row mb-4">
          <div class="col-md-5 mb-3">
-            <div class="form-floating">
+            <div class="mb-3">
+               <label for="project_supervisor" class="form-label">Project Supervisor <span class="text-danger">*</span></label>
                <select id="project_supervisor" name="project_supervisor" class="form-select" required>
                   <option value="">Select</option>
                   <?php foreach ($data['supervisors'] as $supervisor): ?>
                      <option value="<?php echo $supervisor['id']; ?>" <?php echo (isset($data['class_data']['project_supervisor_id']) && $data['class_data']['project_supervisor_id'] == $supervisor['id']) ? 'selected' : ''; ?>><?php echo $supervisor['name']; ?></option>
                   <?php endforeach; ?>
                </select>
-               <label for="project_supervisor">Project Supervisor <span class="text-danger">*</span></label>
                <div class="invalid-feedback">Please select a project supervisor.</div>
                <div class="valid-feedback">Looks good!</div>
             </div>
          </div>
 
          <div class="col-md-5 mb-3">
-            <div class="form-floating">
+            <div class="mb-3">
+               <label for="delivery_date" class="form-label">Delivery Date <span class="text-danger">*</span></label>
                <input type="date" id="delivery_date" name="delivery_date" class="form-control" placeholder="YYYY-MM-DD" value="<?php echo esc_attr($data['class_data']['delivery_date'] ?? ''); ?>" required>
-               <label for="delivery_date">Delivery Date <span class="text-danger">*</span></label>
                <div class="invalid-feedback">Please select the delivery date.</div>
                <div class="valid-feedback">Looks good!</div>
             </div>
@@ -929,14 +930,14 @@
          <div class="row backup-agent-row align-items-center d-none" id="backup-agent-row-template">
             <!-- Backup Agent -->
             <div class="col-md-5 mb-2">
-               <div class="form-floating">
+               <div class="mb-3">
+                  <label class="form-label">Backup Agent</label>
                   <select name="backup_agent_ids[]" class="form-select backup-agent-select">
                      <option value="">Select</option>
                      <?php foreach ($data['agents'] as $agent): ?>
                         <option value="<?php echo $agent['id']; ?>"><?php echo $agent['name']; ?></option>
                      <?php endforeach; ?>
                   </select>
-                  <label>Backup Agent</label>
                   <div class="invalid-feedback">Please select a backup agent.</div>
                   <div class="valid-feedback">Looks good!</div>
                </div>
@@ -944,9 +945,9 @@
 
             <!-- Backup Date -->
             <div class="col-md-5 mb-2">
-               <div class="form-floating">
+               <div class="mb-3">
+                  <label class="form-label">Backup Date</label>
                   <input type="date" name="backup_agent_dates[]" class="form-control" placeholder="YYYY-MM-DD">
-                  <label>Backup Date</label>
                   <div class="invalid-feedback">Please select a valid date.</div>
                   <div class="valid-feedback">Looks good!</div>
                </div>

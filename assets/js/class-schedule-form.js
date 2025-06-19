@@ -102,9 +102,6 @@
                 $daySelection.removeClass('d-none');
                 $('#schedule_day_of_month').removeAttr('required');
 
-                // Ensure at least one day is selected for validation
-                validateDaySelection();
-
                 // Update per-day time controls based on current day selection
                 updatePerDayTimeControls();
             } else if (pattern === 'monthly') {
@@ -136,7 +133,7 @@
         // Initialize day selection buttons
         $('#select-all-days').on('click', function() {
             $('.schedule-day-checkbox').prop('checked', true);
-            validateDaySelection();
+            validateDaySelection(); // Update required attribute only
             updatePerDayTimeControls(); // Add conditional display logic
             updateScheduleData();
             restrictStartDateBySelectedDays();
@@ -145,14 +142,14 @@
 
         $('#clear-all-days').on('click', function() {
             $('.schedule-day-checkbox').prop('checked', false);
-            validateDaySelection();
+            validateDaySelection(); // Update required attribute only
             updatePerDayTimeControls(); // Add conditional display logic
             updateScheduleData();
         });
 
         // Handle day checkbox changes - using event delegation in case checkboxes are loaded dynamically
         $(document).on('change', '.schedule-day-checkbox', function() {
-            validateDaySelection();
+            validateDaySelection(); // Update required attribute only
             updatePerDayTimeControls(); // Add conditional display logic
             updateScheduleData();
             restrictStartDateBySelectedDays();
@@ -186,22 +183,52 @@
 
     /**
      * Validate that at least one day is selected
+     * Returns validation result without showing immediate feedback
      */
     function validateDaySelection() {
         const anyDaySelected = $('.schedule-day-checkbox:checked').length > 0;
         const $daySelectionContainer = $('#day-selection-container');
 
+        // Manage required attribute on first checkbox for Bootstrap validation
         if (!$daySelectionContainer.hasClass('d-none')) {
-            if (anyDaySelected) {
-                $daySelectionContainer.find('.invalid-feedback').hide();
-                $daySelectionContainer.find('.valid-feedback').show();
-            } else {
-                $daySelectionContainer.find('.invalid-feedback').show();
-                $daySelectionContainer.find('.valid-feedback').hide();
+            const $firstCheckbox = $('.schedule-day-checkbox').first();
+            if ($firstCheckbox.length > 0) {
+                if (anyDaySelected) {
+                    // Remove required attribute when any day is selected
+                    $firstCheckbox.removeAttr('required');
+                    $firstCheckbox[0].setCustomValidity('');
+                } else {
+                    // Add required attribute when no days are selected
+                    $firstCheckbox.attr('required', 'required');
+                    $firstCheckbox[0].setCustomValidity('Please select at least one day.');
+                }
             }
         }
 
         return anyDaySelected;
+    }
+
+    /**
+     * Show validation feedback for day selection when form is validated
+     */
+    function showDaySelectionValidationFeedback() {
+        const anyDaySelected = $('.schedule-day-checkbox:checked').length > 0;
+        const $daySelectionContainer = $('#day-selection-container');
+
+        if (!$daySelectionContainer.hasClass('d-none')) {
+            const $invalidFeedback = $daySelectionContainer.find('.invalid-feedback');
+            const $validFeedback = $daySelectionContainer.find('.valid-feedback');
+
+            if (anyDaySelected) {
+                // Show valid feedback, hide invalid feedback
+                $invalidFeedback.addClass('d-none');
+                $validFeedback.removeClass('d-none');
+            } else {
+                // Show invalid feedback, hide valid feedback
+                $invalidFeedback.removeClass('d-none');
+                $validFeedback.addClass('d-none');
+            }
+        }
     }
 
     /**
@@ -1648,20 +1675,46 @@
 
         if ($form.length > 0) {
             $form.on('submit', function(e) {
-                // Get submission data with validation
-                const submissionData = getFormSubmissionData();
+                // Validate day selection for custom validation
+                validateDaySelection();
 
-                if (!submissionData.isValid) {
+                // Check if form is valid using Bootstrap validation
+                if (!this.checkValidity()) {
                     e.preventDefault();
+                    e.stopPropagation();
 
-                    // Display validation errors
-                    displayFormValidationErrors(submissionData.errors);
+                    // Add Bootstrap validation class to trigger styling
+                    $form.addClass('was-validated');
+
+                    // Show validation feedback for day selection
+                    showDaySelectionValidationFeedback();
 
                     return false;
                 }
 
-                // Final data update before submission
-                updateScheduleData();
+                // Add Bootstrap validation class to trigger styling
+                $form.addClass('was-validated');
+
+                // Show validation feedback for day selection
+                showDaySelectionValidationFeedback();
+
+                // If form is valid, proceed with custom validation
+                if (this.checkValidity()) {
+                    // Get submission data with additional validation
+                    const submissionData = getFormSubmissionData();
+
+                    if (!submissionData.isValid) {
+                        e.preventDefault();
+
+                        // Display validation errors
+                        displayFormValidationErrors(submissionData.errors);
+
+                        return false;
+                    }
+
+                    // Final data update before submission
+                    updateScheduleData();
+                }
             });
         }
     }

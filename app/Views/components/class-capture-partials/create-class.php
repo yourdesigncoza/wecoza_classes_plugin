@@ -137,7 +137,7 @@
                <h5 class="mb-2 mt-3">Days of Week <span class="text-danger">*</span></h5>
                <div class="days-checkbox-group">
                   <div class="form-check form-check-inline">
-                     <input class="form-check-input schedule-day-checkbox" type="checkbox" id="schedule_day_monday" name="schedule_days[]" value="Monday">
+                     <input class="form-check-input schedule-day-checkbox" type="checkbox" id="schedule_day_monday" name="schedule_days[]" value="Monday" required>
                      <label class="form-check-label" for="schedule_day_monday">Monday</label>
                   </div>
                   <div class="form-check form-check-inline">
