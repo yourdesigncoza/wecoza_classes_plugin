@@ -258,21 +258,30 @@ class ClassController {
      * @return array
      */
     private function getSiteAddresses() {
-        // Static site address data - in production this would come from database
-        return [
-            '11_1' => 'Aspen Pharmacare Head Office, 1 Sandton Drive, Sandton, 2196',
-            '11_2' => 'Aspen Pharmacare Production Unit, 15 Industrial Road, Germiston, 1401',
-            '11_3' => 'Aspen Pharmacare Research Centre, 25 Science Park, Johannesburg, 2000',
-            '14_1' => 'Barloworld Northern Branch, 45 North Street, Pretoria, 0001',
-            '14_2' => 'Barloworld Southern Branch, 78 South Avenue, Cape Town, 8001',
-            '14_3' => 'Barloworld Central Branch, 12 Central Road, Bloemfontein, 9300',
-            '9_1' => 'Bidvest Group Main Office, 18 Bidvest Boulevard, Johannesburg, 2000',
-            '9_2' => 'Bidvest Group Distribution Center, 55 Logistics Lane, Durban, 4000',
-            '8_1' => 'FirstRand Corporate Office, 4 Merchant Place, Sandton, 2196',
-            '8_2' => 'FirstRand Training Center, 88 Learning Street, Johannesburg, 2000',
-            '4_1' => 'MTN Group Headquarters, 216 14th Avenue, Fairland, 2195',
-            '4_2' => 'MTN Group Technical Center, 99 Technology Drive, Midrand, 1685',
-        ];
+        try {
+            // Get database service
+            $db = \WeCozaClasses\Services\Database\DatabaseService::getInstance();
+
+            // Query site addresses from database
+            $sql = "SELECT site_id, address FROM public.sites WHERE address IS NOT NULL AND address != ''";
+            $stmt = $db->query($sql);
+
+            $addresses = [];
+            while ($row = $stmt->fetch()) {
+                $site_id = (int)$row['site_id'];
+                $address = sanitize_textarea_field($row['address']);
+
+                if (!empty($address)) {
+                    $addresses[$site_id] = $address;
+                }
+            }
+
+            return $addresses;
+
+        } catch (\Exception $e) {
+            error_log('WeCoza Classes Plugin: Error fetching site addresses: ' . $e->getMessage());
+            return [];
+        }
     }
 
     /**
@@ -374,53 +383,62 @@ class ClassController {
     // based on how the plugin will access the data (from theme integration or plugin-specific)
     
     private function getClients() {
-        // Static client data - in production this would come from database
-        return [
-            ['id' => 11, 'name' => 'Aspen Pharmacare'],
-            ['id' => 14, 'name' => 'Barloworld'],
-            ['id' => 9, 'name' => 'Bidvest Group'],
-            ['id' => 8, 'name' => 'FirstRand'],
-            ['id' => 4, 'name' => 'MTN Group'],
-            ['id' => 15, 'name' => 'Multichoice Group'],
-            ['id' => 5, 'name' => 'Naspers'],
-            ['id' => 12, 'name' => 'Nedbank Group'],
-            ['id' => 10, 'name' => 'Sanlam'],
-            ['id' => 1, 'name' => 'Sasol Limited'],
-            ['id' => 3, 'name' => 'Shoprite Holdings'],
-            ['id' => 2, 'name' => 'Standard Bank Group'],
-            ['id' => 13, 'name' => 'Tiger Brands'],
-            ['id' => 6, 'name' => 'Vodacom Group'],
-            ['id' => 7, 'name' => 'Woolworths Holdings']
-        ];
+        try {
+            // Get database service
+            $db = \WeCozaClasses\Services\Database\DatabaseService::getInstance();
+
+            // Query clients from database
+            $sql = "SELECT client_id, client_name FROM public.clients ORDER BY client_name ASC";
+            $stmt = $db->query($sql);
+
+            $clients = [];
+            while ($row = $stmt->fetch()) {
+                $clients[] = [
+                    'id' => (int)$row['client_id'],
+                    'name' => sanitize_text_field($row['client_name'])
+                ];
+            }
+
+            return $clients;
+
+        } catch (\Exception $e) {
+            error_log('WeCoza Classes Plugin: Error fetching clients: ' . $e->getMessage());
+            return [];
+        }
     }
 
     private function getSites() {
-        // Static site data grouped by client - in production this would come from database
-        return [
-            11 => [ // Aspen Pharmacare
-                ['id' => '11_1', 'name' => 'Aspen Pharmacare - Head Office'],
-                ['id' => '11_2', 'name' => 'Aspen Pharmacare - Production Unit'],
-                ['id' => '11_3', 'name' => 'Aspen Pharmacare - Research Centre']
-            ],
-            14 => [ // Barloworld
-                ['id' => '14_1', 'name' => 'Barloworld - Northern Branch'],
-                ['id' => '14_2', 'name' => 'Barloworld - Southern Branch'],
-                ['id' => '14_3', 'name' => 'Barloworld - Central Branch']
-            ],
-            9 => [ // Bidvest Group
-                ['id' => '9_1', 'name' => 'Bidvest Group - Main Office'],
-                ['id' => '9_2', 'name' => 'Bidvest Group - Distribution Center']
-            ],
-            8 => [ // FirstRand
-                ['id' => '8_1', 'name' => 'FirstRand - Corporate Office'],
-                ['id' => '8_2', 'name' => 'FirstRand - Training Center']
-            ],
-            4 => [ // MTN Group
-                ['id' => '4_1', 'name' => 'MTN Group - Headquarters'],
-                ['id' => '4_2', 'name' => 'MTN Group - Technical Center']
-            ],
-            // Add more clients as needed
-        ];
+        try {
+            // Get database service
+            $db = \WeCozaClasses\Services\Database\DatabaseService::getInstance();
+
+            // Query sites from database with client information
+            $sql = "SELECT s.site_id, s.client_id, s.site_name, s.address
+                    FROM public.sites s
+                    ORDER BY s.client_id ASC, s.site_name ASC";
+            $stmt = $db->query($sql);
+
+            $sites = [];
+            while ($row = $stmt->fetch()) {
+                $client_id = (int)$row['client_id'];
+
+                if (!isset($sites[$client_id])) {
+                    $sites[$client_id] = [];
+                }
+
+                $sites[$client_id][] = [
+                    'id' => (int)$row['site_id'],
+                    'name' => sanitize_text_field($row['site_name']),
+                    'address' => sanitize_textarea_field($row['address'])
+                ];
+            }
+
+            return $sites;
+
+        } catch (\Exception $e) {
+            error_log('WeCoza Classes Plugin: Error fetching sites: ' . $e->getMessage());
+            return [];
+        }
     }
 
     private function getAgents() {

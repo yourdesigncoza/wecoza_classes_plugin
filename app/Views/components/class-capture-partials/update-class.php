@@ -1,5 +1,41 @@
 <!-- Class Details Display Section -->
-<?php if (isset($data['class_data']) && $data['class_data']): ?>
+<?php
+// Validate and prepare data for update mode
+if (isset($data['class_data']) && $data['class_data']):
+    // Ensure we have proper data structure for clients and sites
+    $clients = $data['clients'] ?? [];
+    $sites = $data['sites'] ?? [];
+    $classData = $data['class_data'];
+
+    // Find client name if not already in class data
+    if (empty($classData['client_name']) && !empty($classData['client_id'])) {
+        foreach ($clients as $client) {
+            if ((int)$client['id'] === (int)$classData['client_id']) {
+                $classData['client_name'] = $client['name'];
+                break;
+            }
+        }
+    }
+
+    // Find site name if not already available
+    if (empty($classData['site_name']) && !empty($classData['site_id'])) {
+        foreach ($sites as $clientSites) {
+            foreach ($clientSites as $site) {
+                if ((int)$site['id'] === (int)$classData['site_id']) {
+                    $classData['site_name'] = $site['name'];
+                    // Also get address if not already in class data
+                    if (empty($classData['class_address_line']) && !empty($site['address'])) {
+                        $classData['class_address_line'] = $site['address'];
+                    }
+                    break 2;
+                }
+            }
+        }
+    }
+
+    // Update the class data with enriched information
+    $data['class_data'] = $classData;
+?>
 <div class="wecoza-class-details-display mb-4">
     <!-- Top Summary Cards -->
     <div class="card mb-3">
@@ -75,7 +111,8 @@
    <!-- ===== Section: Basic Details ===== -->
    <div class="container container-md classes-form ps-0">
       <!-- ===== Section: Basic Details ===== -->
-         <!-- UPDATE MODE: Display existing client/site info (read-only) -->
+         <!-- UPDATE MODE: Client/site selection with database integration -->
+         <!-- Uses the new database-driven client/site data structure with proper integer IDs -->
          <div class="row">
             <!-- Client Name (ID) -->
             <div class="col-md-3 mb-3">
@@ -84,7 +121,7 @@
                   <select id="client_id" name="client_id" class="form-select" required>
                      <option value="">Select</option>
                      <?php foreach ($data['clients'] as $client): ?>
-                        <option value="<?php echo esc_attr($client['id']); ?>" <?php echo (isset($data['class_data']['client_id']) && $data['class_data']['client_id'] == $client['id']) ? 'selected' : ''; ?>><?php echo esc_html($client['name']); ?></option>
+                        <option value="<?php echo esc_attr($client['id']); ?>" <?php echo (isset($data['class_data']['client_id']) && (int)$data['class_data']['client_id'] === (int)$client['id']) ? 'selected' : ''; ?>><?php echo esc_html($client['name']); ?></option>
                      <?php endforeach; ?>
                   </select>
                   <div class="invalid-feedback">Please select a client.</div>
@@ -102,7 +139,11 @@
                         <optgroup label="<?php echo esc_attr($client['name']); ?>">
                            <?php if (isset($data['sites'][$client['id']])): ?>
                               <?php foreach ($data['sites'][$client['id']] as $site): ?>
-                                 <option value="<?php echo esc_attr($site['id']); ?>" <?php echo (isset($data['class_data']['site_id']) && $data['class_data']['site_id'] == $site['id']) ? 'selected' : ''; ?>><?php echo esc_html($site['name']); ?></option>
+                                 <option value="<?php echo esc_attr($site['id']); ?>"
+                                    <?php echo (isset($data['class_data']['site_id']) && (int)$data['class_data']['site_id'] === (int)$site['id']) ? 'selected' : ''; ?>
+                                    data-address="<?php echo esc_attr($site['address'] ?? ''); ?>">
+                                    <?php echo esc_html($site['name']); ?>
+                                 </option>
                               <?php endforeach; ?>
                            <?php endif; ?>
                         </optgroup>
@@ -114,7 +155,7 @@
             </div>
 
             <!-- Single Address Field -->
-            <div class="col-md-6 mb-3" id="address-wrapper">
+            <div class="col-md-6 mb-3" id="address-wrapper" style="<?php echo !empty($data['class_data']['class_address_line']) ? 'display:block;' : 'display:none;'; ?>">
                <div class="mb-3">
                   <label for="site_address" class="form-label">Address</label>
                   <input
@@ -123,7 +164,26 @@
                      name="site_address"
                      class="form-control"
                      placeholder="Street, Suburb, Town, Postal Code"
-                     value="<?php echo esc_attr($data['class_data']['class_address_line'] ?? ''); ?>"
+                     value="<?php
+                        // Try to get address from class data first, then from site data if available
+                        $address = $data['class_data']['class_address_line'] ?? '';
+
+                        // If no address in class data, try to get it from site data
+                        if (empty($address) && !empty($data['class_data']['site_id'])) {
+                            $siteId = (int)$data['class_data']['site_id'];
+                            // Look through sites data to find the address
+                            foreach ($data['sites'] as $clientSites) {
+                                foreach ($clientSites as $site) {
+                                    if ((int)$site['id'] === $siteId && !empty($site['address'])) {
+                                        $address = $site['address'];
+                                        break 2;
+                                    }
+                                }
+                            }
+                        }
+
+                        echo esc_attr($address);
+                     ?>"
                      readonly
                      />
                </div>
