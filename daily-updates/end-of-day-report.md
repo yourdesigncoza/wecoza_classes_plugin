@@ -100,18 +100,6 @@ Additional:
 
 ---
 
-## 4. Next Steps
-
-1. **Integration Testing:** Validate learner-level auto-population across subjects.
-2. **User Acceptance Testing:** Confirm new learner-status options in production.
-3. **Unit Testing:** Add tests for `learner-level-utils.js` utilities.
-4. **Documentation:** Update user docs for auto-population features.
-5. **Performance Testing:** Measure script-loading improvements & FullCalendar changes.
-6. **Data Migration:** Ensure existing learner data aligns with new level options.
-7. **Process Improvement:** Adopt clearer commit-message conventions.
-
----
-
 ## 5. Blockers / Notes
 
 * **Development Workflow:** Removal of workflow directory means new reporting processes may need to be established.
