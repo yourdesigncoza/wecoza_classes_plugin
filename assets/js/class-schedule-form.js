@@ -1153,15 +1153,18 @@
                 const learnerId = $(this).val();
                 const learnerName = $(this).text();
 
-                // Check if learner is already added
-                if (classLearners.some(learner => learner.id === learnerId)) {
+                // Convert to string to ensure consistent comparison
+                const learnerIdStr = String(learnerId);
+
+                // Check if learner is already added - ensure both IDs are strings for comparison
+                if (classLearners.some(learner => String(learner.id) === learnerIdStr)) {
                     console.log('Learner', learnerName, 'already added, skipping');
                     return;
                 }
 
-                // Add learner to array
+                // Add learner to array (store as string for consistency)
                 const learnerData = {
-                    id: learnerId,
+                    id: learnerIdStr,
                     name: learnerName,
                     level: '', // Default level (empty, will be auto-populated when subject is selected)
                     status: 'CIC - Currently in Class' // Default status
@@ -1174,6 +1177,11 @@
             // Update the display and data
             updateLearnersDisplay();
             updateLearnersData();
+
+            // Synchronize exam learner options if the function exists
+            if (typeof window.classes_sync_exam_learner_options === 'function') {
+                window.classes_sync_exam_learner_options();
+            }
 
             // Clear the selection
             $addLearnerSelect.val([]);
@@ -1219,6 +1227,14 @@
 
             console.log('Updated learners display with', classLearners.length, 'learners');
 
+            // Debug: Check if remove buttons were created correctly
+            const removeButtons = $classLearnersTbody.find('.remove-learner-btn');
+            console.log('Created', removeButtons.length, 'remove buttons for class learners');
+            removeButtons.each(function(index) {
+                const learnerId = $(this).data('learner-id');
+                console.log('Remove button', index + 1, 'has learner-id:', learnerId);
+            });
+
             // Auto-populate learner levels if a class subject is already selected
             const classSubjectSelect = document.getElementById('class_subject');
             if (classSubjectSelect && classSubjectSelect.value) {
@@ -1237,6 +1253,10 @@
         function updateLearnersData() {
             const jsonData = JSON.stringify(classLearners);
             $classLearnersData.val(jsonData);
+
+            // Trigger custom event for learner data change
+            $(document).trigger('classLearnersChanged', [classLearners]);
+
             console.log('Updated learners data:', jsonData);
         }
 
@@ -1246,27 +1266,72 @@
             const field = $(this).hasClass('learner-level-select') ? 'level' : 'status';
             const value = $(this).val();
 
-            // Update the learner data
-            const learner = classLearners.find(l => l.id === learnerId);
+            // Convert to string to ensure consistent comparison
+            const learnerIdStr = String(learnerId);
+
+            // Update the learner data - ensure both IDs are strings for comparison
+            const learner = classLearners.find(l => String(l.id) === learnerIdStr);
             if (learner) {
                 learner[field] = value;
                 updateLearnersData();
-                console.log('Updated learner', learnerId, field, 'to', value);
+                console.log('Updated learner', learnerIdStr, field, 'to', value);
+            } else {
+                console.warn('Learner not found for ID:', learnerIdStr);
             }
         });
 
         // Handle remove learner
-        $(document).on('click', '.remove-learner-btn', function() {
-            const learnerId = $(this).data('learner-id');
+        $(document).on('click', '.remove-learner-btn', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
 
-            // Remove from array
-            classLearners = classLearners.filter(learner => learner.id !== learnerId);
+            const learnerId = $(this).data('learner-id');
+            console.log('Remove learner button clicked for learner ID:', learnerId, 'Type:', typeof learnerId);
+
+            if (!learnerId) {
+                console.error('No learner ID found on remove button');
+                return;
+            }
+
+            // Convert to string to ensure consistent comparison (since HTML data attributes are strings)
+            const learnerIdStr = String(learnerId);
+
+            // Debug: Log current classLearners array
+            console.log('Current classLearners array:', classLearners);
+            console.log('Looking for learner with ID:', learnerIdStr);
+
+            // Remove from array - ensure both IDs are strings for comparison
+            const initialLength = classLearners.length;
+            classLearners = classLearners.filter(learner => {
+                const learnerIdInArray = String(learner.id);
+                const shouldKeep = learnerIdInArray !== learnerIdStr;
+                console.log('Comparing:', learnerIdInArray, '!==', learnerIdStr, '=', shouldKeep);
+                return shouldKeep;
+            });
+
+            if (classLearners.length === initialLength) {
+                console.warn('Learner', learnerIdStr, 'was not found in classLearners array');
+                console.log('Available learner IDs in array:', classLearners.map(l => String(l.id)));
+                return;
+            }
+
+            console.log('Successfully removed learner', learnerIdStr, 'from classLearners array');
 
             // Update display and data
             updateLearnersDisplay();
             updateLearnersData();
 
-            console.log('Removed learner', learnerId);
+            // Remove from exam learners if they were selected for exams (cascading removal)
+            if (typeof window.classes_remove_exam_learner === 'function') {
+                window.classes_remove_exam_learner(learnerIdStr);
+            }
+
+            // Synchronize exam learner options if the function exists
+            if (typeof window.classes_sync_exam_learner_options === 'function') {
+                window.classes_sync_exam_learner_options();
+            }
+
+            console.log('Removed learner', learnerIdStr, 'from class learners with cascading removal');
         });
 
         // Load existing learner data if available (for editing)
@@ -1276,6 +1341,13 @@
                 classLearners = JSON.parse(existingData);
                 updateLearnersDisplay();
                 console.log('Loaded existing learners:', classLearners);
+
+                // Synchronize exam learner options after loading existing data
+                setTimeout(function() {
+                    if (typeof window.classes_sync_exam_learner_options === 'function') {
+                        window.classes_sync_exam_learner_options();
+                    }
+                }, 200); // Delay to ensure exam learner functionality is initialized
 
                 // Auto-populate learner levels if a class subject is already selected (for editing)
                 const classSubjectSelect = document.getElementById('class_subject');
