@@ -759,7 +759,7 @@
 
         // Create warning container
         const warningHtml = `
-            <div id="time-validation-warnings" class="alert alert-warning alert-dismissible fade show mt-2" role="alert">
+            <div id="time-validation-warnings" class="alert alert-subtle-warning mt-4 alert-dismissible fade show" role="alert">
                 <i class="bi bi-exclamation-triangle me-2"></i>
                 <strong>Time Validation Warnings:</strong>
                 <ul class="mb-0 mt-1">
@@ -2531,6 +2531,12 @@
                         // Convert selected days to day indices
                         const dayIndices = selectedDays.map(day => getDayIndex(day));
 
+                        // Debug logging for multiple day selection
+                        console.log('🗓️ End Date Calculation - Weekly Pattern');
+                        console.log('📅 Selected days:', selectedDays);
+                        console.log('🔢 Day indices:', dayIndices);
+                        console.log('⏰ Sessions needed:', sessionsNeeded);
+
                         // Set start date to the first occurrence of any selected day
                         const currentDayIndex = date.getDay();
                         if (!dayIndices.includes(currentDayIndex)) {
@@ -2557,8 +2563,8 @@
                             let isPublicHoliday = false;
                             let isHolidayOverridden = false;
 
-                            if (typeof wecozaPublicHolidays !== 'undefined' && wecozaPublicHolidays.events) {
-                                const matchingHoliday = wecozaPublicHolidays.events.find(holiday => {
+                            if (typeof window.wecozaPublicHolidays !== 'undefined' && window.wecozaPublicHolidays.events) {
+                                const matchingHoliday = window.wecozaPublicHolidays.events.find(holiday => {
                                     return holiday.start === dateStr;
                                 });
 
@@ -2585,7 +2591,12 @@
                                 !isInStopPeriod &&
                                 (!isPublicHoliday || isHolidayOverridden)) {
                                 sessionsScheduled++;
-                                console.log('Session scheduled on:', dateStr, 'Sessions so far:', sessionsScheduled);
+                                console.log('✅ Session scheduled on:', dateStr, 'Day:', getDayName(currentDayIndex), 'Sessions so far:', sessionsScheduled);
+                            } else {
+                                // Debug why this day was skipped
+                                const dayName = getDayName(currentDayIndex);
+                                const isSelectedDay = dayIndices.includes(currentDayIndex);
+                                console.log('❌ Day skipped:', dateStr, 'Day:', dayName, 'Selected:', isSelectedDay, 'Exception:', isExceptionDate, 'Stop period:', isInStopPeriod, 'Holiday:', isPublicHoliday);
                             }
 
                             // Move to next day
@@ -2602,6 +2613,12 @@
 
                         // Convert selected days to day indices
                         const dayIndices = selectedDays.map(day => getDayIndex(day));
+
+                        // Debug logging for multiple day selection
+                        console.log('🗓️ End Date Calculation - Bi-weekly Pattern');
+                        console.log('📅 Selected days:', selectedDays);
+                        console.log('🔢 Day indices:', dayIndices);
+                        console.log('⏰ Sessions needed:', sessionsNeeded);
 
                         // Set start date to the first occurrence of any selected day
                         const currentDayIndex = date.getDay();
@@ -2632,8 +2649,8 @@
                             let isPublicHoliday = false;
                             let isHolidayOverridden = false;
 
-                            if (typeof wecozaPublicHolidays !== 'undefined' && wecozaPublicHolidays.events) {
-                                const matchingHoliday = wecozaPublicHolidays.events.find(holiday => {
+                            if (typeof window.wecozaPublicHolidays !== 'undefined' && window.wecozaPublicHolidays.events) {
+                                const matchingHoliday = window.wecozaPublicHolidays.events.find(holiday => {
                                     return holiday.start === dateStr;
                                 });
 
@@ -2654,6 +2671,13 @@
                                 !isDateInStopPeriod(dateStr, stopRestartPeriods) &&
                                 (!isPublicHoliday || isHolidayOverridden)) {
                                 sessionsScheduled++;
+                                console.log('✅ Bi-weekly session scheduled on:', dateStr, 'Day:', getDayName(currentDayIndex), 'Week:', weekCounter, 'Sessions so far:', sessionsScheduled);
+                            } else {
+                                // Debug why this day was skipped
+                                const dayName = getDayName(currentDayIndex);
+                                const isSelectedDay = dayIndices.includes(currentDayIndex);
+                                const isFirstWeek = weekCounter === 0;
+                                console.log('❌ Bi-weekly day skipped:', dateStr, 'Day:', dayName, 'Selected:', isSelectedDay, 'First week:', isFirstWeek, 'Week counter:', weekCounter);
                             }
 
                             // Move to next day
@@ -2694,8 +2718,8 @@
                             let isPublicHoliday = false;
                             let isHolidayOverridden = false;
 
-                            if (typeof wecozaPublicHolidays !== 'undefined' && wecozaPublicHolidays.events) {
-                                const matchingHoliday = wecozaPublicHolidays.events.find(holiday => {
+                            if (typeof window.wecozaPublicHolidays !== 'undefined' && window.wecozaPublicHolidays.events) {
+                                const matchingHoliday = window.wecozaPublicHolidays.events.find(holiday => {
                                     return holiday.start === dateStr;
                                 });
 
@@ -2724,6 +2748,12 @@
                     // Format date as YYYY-MM-DD
                     const endDate = date.toISOString().split('T')[0];
                     $('#schedule_end_date').val(endDate);
+
+                    // Debug summary
+                    console.log('🎯 End Date Calculation Complete');
+                    console.log('📊 Total sessions scheduled:', sessionsScheduled, 'of', sessionsNeeded, 'needed');
+                    console.log('📅 Final end date:', endDate);
+                    console.log('🗓️ Selected days used in calculation:', getSelectedDays());
 
                     // Update schedule tables
                     updateScheduleTables();
