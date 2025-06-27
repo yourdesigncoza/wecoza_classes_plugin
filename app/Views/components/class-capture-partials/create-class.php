@@ -98,11 +98,6 @@
             <div class="invalid-feedback">Please select the start date.</div>
             <div class="valid-feedback">Looks good!</div>
          </div>
-         <div class="col-md-4 ">
-            <label for="schedule_end_date" class="form-label">End Date</label>
-            <input type="date" id="schedule_end_date" name="schedule_end_date" class="form-control readonly-field" placeholder="YYYY-MM-DD" readonly>
-            <small class="text-muted">Automatically calculated based on class duration</small>
-         </div>
       </div>
       <!-- Class Schedule Form Section -->
       <div class="mb-4 mt-3">
@@ -300,6 +295,16 @@
          + Add Exception Date
          </button>
       </div>
+      <?php echo section_divider(); ?>
+         <div class="col-md-4 ">
+            <label for="schedule_end_date" class="form-label">Estimated End Date</label>
+            <input type="date" id="schedule_end_date" name="schedule_end_date" class="form-control readonly-field" placeholder="YYYY-MM-DD" readonly>
+            <button type="button" class="btn btn-subtle-warning mb-2 mt-2" id="calculate_schedule_end_date-btn">
+               Calculate Estimated End Date
+            </button>
+         </div>
+         <?php echo section_divider(); ?>
+      <?php /*
       <!-- Public Holidays Section -->
       <div class="mb-4">
          <h6 class="mb-2">Public Holidays in Schedule</h6>
@@ -354,6 +359,10 @@
       </template>
       <!-- Hidden input to store holiday override data -->
       <input type="hidden" id="holiday_overrides" name="schedule_data[holiday_overrides]" value="">
+      */?>
+
+
+
       <!-- Hidden inputs to store schedule data in the format expected by the backend -->
       <div id="schedule-data-container">
          <!-- These will be populated dynamically via JavaScript -->

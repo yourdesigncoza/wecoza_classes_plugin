@@ -47,15 +47,16 @@
         // Initialize backup agents functionality
         initBackupAgents();
 
+        // Initialize manual end date calculation button
+        initManualEndDateCalculation();
+
         // Load existing schedule data for editing (backward compatibility)
         loadExistingScheduleData();
 
-        // Initial auto-population and calculations after all initialization is complete
+        // Initial auto-population after all initialization is complete
         setTimeout(function() {
             // Auto-populate schedule start date if class start date exists but schedule start date is empty
             initAutoPopulateScheduleStartDate();
-
-            recalculateEndDate();
 
             // Check for holidays on initial load
             const startDate = $('#schedule_start_date').val();
@@ -80,6 +81,17 @@
         if (classStartDate && !scheduleStartDate) {
             $scheduleStartDate.val(classStartDate);
         }
+    }
+
+    /**
+     * Initialize manual end date calculation button
+     */
+    function initManualEndDateCalculation() {
+        // Add click event handler for the manual end date calculation button
+        $('#calculate_schedule_end_date-btn').on('click', function() {
+            // Call the existing recalculateEndDate function when button is clicked
+            recalculateEndDate();
+        });
     }
 
     /**
@@ -125,9 +137,6 @@
             if (startDate) {
                 checkForHolidays(startDate, endDate);
             }
-
-            // Recalculate end date when pattern changes
-            recalculateEndDate();
         });
 
         // Initialize day selection buttons
@@ -137,7 +146,6 @@
             updatePerDayTimeControls(); // Add conditional display logic
             updateScheduleData();
             restrictStartDateBySelectedDays();
-            recalculateEndDate();
         });
 
         $('#clear-all-days').on('click', function() {
@@ -160,9 +168,6 @@
             if (startDate) {
                 checkForHolidays(startDate, endDate);
             }
-
-            // Recalculate end date when day changes
-            recalculateEndDate();
         });
 
         // Handle day of month selection changes
@@ -175,9 +180,6 @@
             if (startDate) {
                 checkForHolidays(startDate, endDate);
             }
-
-            // Recalculate end date when day changes
-            recalculateEndDate();
         });
     }
 
@@ -377,9 +379,6 @@
 
             // Update schedule data
             updateScheduleData();
-
-            // Recalculate end date when per-day times change
-            recalculateEndDate();
         });
 
         // Handle copy to all days functionality
@@ -506,9 +505,6 @@
 
             // Update schedule data
             updateScheduleData();
-
-            // Recalculate end date when duration changes
-            recalculateEndDate();
         });
     }
 
@@ -955,8 +951,6 @@
                 }
             }
 
-            // Use recalculateEndDate instead of calculateEndDate to account for exception dates
-            recalculateEndDate();
             updateScheduleData();
         });
     }
@@ -1001,8 +995,6 @@
             $newRow.find('.remove-exception-btn').on('click', function() {
                 $newRow.remove();
                 updateScheduleData();
-                // Ensure end date is recalculated when an exception date is removed
-                recalculateEndDate();
             });
 
             // Update schedule data when date or reason changes
@@ -1023,10 +1015,6 @@
                 }
 
                 updateScheduleData();
-                // Ensure end date is recalculated when an exception date is changed
-                setTimeout(function() {
-                    recalculateEndDate();
-                }, 100);
             });
         });
     }
@@ -1049,15 +1037,11 @@
             $newRow.find('.date-remove-btn').on('click', function() {
                 $newRow.remove();
                 updateScheduleData();
-                // Recalculate end date when stop/restart dates are removed
-                recalculateEndDate();
             });
 
             // Update schedule data when dates change
             $newRow.find('input[name="stop_dates[]"], input[name="restart_dates[]"]').on('change', function() {
                 updateScheduleData();
-                // Recalculate end date when stop/restart dates change
-                recalculateEndDate();
             });
         });
     }
@@ -1471,9 +1455,6 @@
 
             // Update "Override All" checkbox state
             updateOverrideAllCheckbox();
-
-            // Recalculate end date with the new overrides
-            recalculateEndDate();
         });
 
         // Handle "Override All" checkbox
