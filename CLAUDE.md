@@ -99,9 +99,12 @@ Three main shortcodes with controller routing:
 Each shortcode maps to controller methods via configuration.
 
 ### Public Holidays Integration
+- **Status**: Fully active and restored in create-class.php (lines 300-354)
 - **Source**: Static South African holidays in `PublicHolidaysController.php`
 - **Detection**: Smart conflict detection only shows holidays that fall on scheduled class days
-- **Override System**: Individual and bulk override capabilities
+- **Override System**: Individual and bulk override capabilities with hidden form input
+- **Form Integration**: Template-based dynamic holiday row generation
+- **UI Features**: Skip All/Override All bulk actions, real-time status badges
 - **Integration**: Holidays factor into end date calculations and schedule generation
 
 ### Schedule Data Format
@@ -119,9 +122,14 @@ Classes support complex scheduling with JSONB storage:
 
 ### Development Workflow
 - **Daily Reports**: Automated development tracking in `daily-updates/`
+  - `WEC-DAILY-WORK-REPORT-*.md`: Generated daily reports with commit analysis
+  - `end-of-day-report.md`: Template for generating daily development reports
 - **Reference Documentation**: Analysis reports in `reference/` for complex features
+  - `public-holidays-integration-analysis.md`: Comprehensive holiday system analysis
+  - `schedule-end-date-calculation-analysis.md`: End date calculation documentation
 - **Migration System**: Database migrations in `includes/migrations/`
 - **Version Control**: Git-based with descriptive commit messages
+- **Documentation**: CLAUDE.md for development guidance and README.md for user documentation
 
 ### WordPress Integration
 - **Hooks**: Minimal WordPress dependency with clean separation
@@ -141,7 +149,7 @@ Classes support complex scheduling with JSONB storage:
 This plugin requires PostgreSQL database connection. WordPress database is NOT used for class data. Database connection must be configured before plugin activation.
 
 ### Calendar Integration
-Holiday detection requires `window.wecozaPublicHolidays` to be available. Data is localized via `ClassController.php` and consumed by scheduling JavaScript.
+The Public Holidays Section is **FULLY ACTIVE** in the create-class.php form. Recent commits restored this functionality after it was temporarily disabled. Holiday detection requires `window.wecozaPublicHolidays` to be available. Data is localized via `ClassController.php` and consumed by scheduling JavaScript.
 
 ### Form Validation
 Forms use Bootstrap validation classes with custom JavaScript. Server-side validation mirrors client-side rules defined in configuration.
@@ -157,3 +165,12 @@ Development uses datetime stamps for cache busting. Production should use static
 
 ### Testing Strategy
 No automated test suite. Testing performed via WordPress admin interface and browser-based JavaScript functionality verification.
+
+### Reference Documentation System
+The `reference/` directory contains detailed analysis reports for complex features:
+- **Analysis Reports**: In-depth technical documentation for major features
+- **Implementation Details**: Code structure, data flow, and integration patterns
+- **Current Status**: Up-to-date assessment of feature states and recent changes
+- **Development Context**: Essential information for understanding complex implementations
+
+Use these reports when working on related features or debugging complex functionality.

@@ -7,6 +7,7 @@ A comprehensive class management system for WeCoza training programs. This WordP
 - **Class Management**: Create, edit, and delete training classes with comprehensive form validation
 - **Advanced Search & Filtering**: Real-time client-side search functionality with pagination
 - **Scheduling System**: Advanced scheduling with calendar integration and per-day time management
+- **Public Holidays Integration**: Smart holiday detection with individual and bulk override capabilities
 - **Learner Management**: Assign and manage learners with status tracking and level assignment
 - **Calendar Integration**: FullCalendar integration with public holidays detection
 - **Agent Assignment**: Assign agents and supervisors with backup agent support
@@ -16,6 +17,7 @@ A comprehensive class management system for WeCoza training programs. This WordP
 - **Database Integration**: PostgreSQL integration with comprehensive schema support
 - **Responsive Design**: Bootstrap 5 compatible interface with mobile optimization
 - **Auto-Population**: Intelligent learner level auto-population based on class subjects
+- **Documentation System**: Comprehensive development guides and feature analysis reports
 
 ## Requirements
 
@@ -182,6 +184,7 @@ app/
 ```
 wecoza-classes-plugin/
 ├── wecoza-classes-plugin.php    # Main plugin file
+├── CLAUDE.md                    # Development guide for Claude Code
 ├── includes/                    # Core plugin classes and migrations
 ├── app/                        # MVC application structure
 │   ├── Controllers/            # Business logic and request handling
@@ -192,9 +195,10 @@ wecoza-classes-plugin/
 ├── assets/                     # CSS, JS, and images
 │   └── js/                    # JavaScript files for functionality
 ├── config/                     # Configuration files
-├── tests/                      # Unit tests and test files
+├── reference/                  # Feature analysis and technical documentation
 ├── daily-updates/              # Development reports and documentation
-├── classes_schema_3.sql        # Database schema reference
+├── schema/                     # Database schema files
+│   └── classes_schema_3.sql    # Database schema reference
 └── README.md                   # This file
 ```
 
@@ -230,12 +234,22 @@ Tests are designed for manual frontend testing rather than automated command-lin
 3. Monitor browser console for debugging information
 4. Verify database operations through the admin interface
 
-## Development Workflow
+## Documentation System
 
-### Daily Reports
-The plugin includes a development reporting system in `daily-updates/`:
+### Development Documentation
+- **CLAUDE.md**: Comprehensive development guide for Claude Code with architecture overview, commands, and implementation details
+- **README.md**: User-facing documentation with installation, features, and usage instructions
+
+### Reference Documentation (`reference/`)
+- **Feature Analysis Reports**: In-depth technical analysis of complex features
+- **Implementation Documentation**: Code structure, data flow, and integration patterns
+- **Current Status Reports**: Up-to-date assessments of feature states and recent changes
+
+### Daily Development Reports (`daily-updates/`)
 - **end-of-day-report.md**: Template for generating daily development reports
-- **WEC-DAILY-WORK-REPORT-*.md**: Generated daily reports with commit analysis
+- **WEC-DAILY-WORK-REPORT-*.md**: Generated daily reports with commit analysis and progress tracking
+
+## Development Workflow
 
 ### Code Standards
 - **Function Prefixing**: All functions prefixed with `classes_` or `wecoza_classes_`
@@ -255,6 +269,17 @@ This plugin is licensed under the GPL v2 or later.
 
 ## Recent Updates
 
+### Documentation & Analysis (June 2025)
+- **CLAUDE.md**: Comprehensive development guide with architecture overview and commands
+- **Reference Documentation**: Detailed analysis reports for complex features including public holidays integration
+- **Development Workflow**: Enhanced documentation for future development work
+
+### Public Holidays System (June 2025)
+- **Restored Functionality**: Public holidays section fully active in class creation forms
+- **Smart Detection**: Only shows holidays that conflict with scheduled class days
+- **Override System**: Individual and bulk holiday override capabilities
+- **Form Reorganization**: Improved logical flow of form sections
+
 ### Search & Pagination System (June 2025)
 - **Real-time Search**: Client-side search functionality for classes table
 - **Pagination**: 5 items per page with Bootstrap navigation controls
@@ -271,7 +296,7 @@ This plugin is licensed under the GPL v2 or later.
 - **Schema Documentation**: Complete database schema reference
 - **JSONB Integration**: Flexible data storage for complex structures
 - **Migration System**: Database migration support for updates
-- **Testing Framework**: Unit tests for core functionality
+- **Reference System**: Comprehensive analysis documentation in `reference/` directory
 
 ## Changelog
 
