@@ -295,16 +295,8 @@
          + Add Exception Date
          </button>
       </div>
-      <?php echo section_divider(); ?>
-         <div class="col-md-4 ">
-            <label for="schedule_end_date" class="form-label">Estimated End Date</label>
-            <input type="date" id="schedule_end_date" name="schedule_end_date" class="form-control readonly-field" placeholder="YYYY-MM-DD" readonly>
-            <button type="button" class="btn btn-subtle-warning mb-2 mt-2" id="calculate_schedule_end_date-btn">
-               Calculate Estimated End Date
-            </button>
-         </div>
          <?php echo section_divider(); ?>
-      <?php /*
+
       <!-- Public Holidays Section -->
       <div class="mb-4">
          <h6 class="mb-2">Public Holidays in Schedule</h6>
@@ -359,22 +351,54 @@
       </template>
       <!-- Hidden input to store holiday override data -->
       <input type="hidden" id="holiday_overrides" name="schedule_data[holiday_overrides]" value="">
-      */?>
 
-
-
+   </div>
+   <!-- Class Date History Section -->
+   <div class="mb-4 mt-3">
+      <h5 class="mb-1">Add Stop and Restart Dates.</h5>
+      <p class="text-muted small mb-1">A class can have multiple stop and restart dates.</p>
+      <!-- Container for all date history rows -->
+      <div id="date-history-container"></div>
+      <!-- Hidden Template Row (initially d-none) -->
+      <div class="row date-history-row d-none" id="date-history-row-template">
+         <!-- Stop Date -->
+         <div class="col-md-5 mb-2">
+            <label class="form-label">Stop Date</label>
+            <input type="date" name="stop_dates[]" class="form-control form-control-sm">
+            <div class="invalid-feedback">Please select a valid date.</div>
+            <div class="valid-feedback">Looks good!</div>
+         </div>
+         <!-- Restart Date -->
+         <div class="col-md-5 mb-2">
+            <label class="form-label">Restart Date</label>
+            <input type="date" name="restart_dates[]" class="form-control form-control-sm">
+            <div class="invalid-feedback">Please select a valid date.</div>
+            <div class="valid-feedback">Looks good!</div>
+         </div>
+         <!-- Remove Button -->
+         <div class="col-md-2 mb-2">
+            <label class="form-label invisible">&nbsp;</label>
+            <button type="button" class="btn btn-outline-danger btn-sm remove-date-row-btn form-control date-remove-btn">Remove</button>
+         </div>
+      </div>
+      <!-- Add Row Button -->
+      <button type="button" class="btn btn-outline-primary btn-sm" id="add-date-history-btn">
+      + Add Stop/Restart Dates
+      </button>
+   </div>
+      <?php echo section_divider(); ?>
+         <div class="col-md-4 ">
+            <label for="schedule_end_date" class="form-label">Estimated End Date</label>
+            <input type="date" id="schedule_end_date" name="schedule_end_date" class="form-control readonly-field" placeholder="YYYY-MM-DD" readonly>
+            <button type="button" class="btn btn-subtle-warning mb-2 mt-2" id="calculate_schedule_end_date-btn">
+               Calculate Estimated End Date
+            </button>
+         </div>
+      <?php echo section_divider(); ?>
+      <!-- Schedule Statistics Section -->
       <!-- Hidden inputs to store schedule data in the format expected by the backend -->
       <div id="schedule-data-container">
          <!-- These will be populated dynamically via JavaScript -->
-      </div>
-      <!-- Schedule Statistics Section -->
-      <!-- Schedule Statistics Toggle Button -->
-      <div class="mt-3 ">
-         <button type="button" class="btn btn-outline-primary btn-sm" id="toggle-statistics-btn">
-         <i class="bi bi-bar-chart-line me-1"></i> View Schedule Statistics
-         </button>
-         <div class="clearfix"></div>
-         <small class="text-muted mb-1">Click to view detailed statistics about the training schedule</small>
       </div>
       <!-- Schedule Statistics Section (hidden by default) -->
       <div class="card shadow-none border  d-none" id="schedule-statistics-section" data-component-card="data-component-card">
@@ -451,40 +475,15 @@
             </div>
          </div>
       </div>
-   </div>
-   <!-- Class Date History Section -->
-   <div class="mb-4 mt-3">
-      <h5 class="mb-1">Class Date History</h5>
-      <p class="text-muted small mb-1">Add stop and restart dates for this class. A class can have multiple stop and restart dates.</p>
-      <!-- Container for all date history rows -->
-      <div id="date-history-container"></div>
-      <!-- Hidden Template Row (initially d-none) -->
-      <div class="row date-history-row d-none" id="date-history-row-template">
-         <!-- Stop Date -->
-         <div class="col-md-5 mb-2">
-            <label class="form-label">Stop Date</label>
-            <input type="date" name="stop_dates[]" class="form-control form-control-sm">
-            <div class="invalid-feedback">Please select a valid date.</div>
-            <div class="valid-feedback">Looks good!</div>
-         </div>
-         <!-- Restart Date -->
-         <div class="col-md-5 mb-2">
-            <label class="form-label">Restart Date</label>
-            <input type="date" name="restart_dates[]" class="form-control form-control-sm">
-            <div class="invalid-feedback">Please select a valid date.</div>
-            <div class="valid-feedback">Looks good!</div>
-         </div>
-         <!-- Remove Button -->
-         <div class="col-md-2 mb-2">
-            <label class="form-label invisible">&nbsp;</label>
-            <button type="button" class="btn btn-outline-danger btn-sm remove-date-row-btn form-control date-remove-btn">Remove</button>
-         </div>
+      <!-- Schedule Statistics Toggle Button -->
+      <div class="mt-3 ">
+         <button type="button" class="btn btn-outline-primary btn-sm" id="toggle-statistics-btn">
+         <i class="bi bi-bar-chart-line me-1"></i> View Schedule Statistics
+         </button>
+         <div class="clearfix"></div>
+         <small class="text-muted mb-1">Click to view detailed statistics about the training schedule</small>
       </div>
-      <!-- Add Row Button -->
-      <button type="button" class="btn btn-outline-primary btn-sm" id="add-date-history-btn">
-      + Add Stop/Restart Dates
-      </button>
-   </div>
+
    <?php echo section_divider(); ?>
    <!-- ===== Section: Funding & Exam Details ===== -->
    <?php echo section_header('Funding & Exam Details'); ?>
