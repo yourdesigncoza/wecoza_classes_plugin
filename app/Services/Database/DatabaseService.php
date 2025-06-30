@@ -27,6 +27,15 @@ class DatabaseService {
             $pgName = get_option('wecoza_postgres_dbname', 'defaultdb');
             $pgUser = get_option('wecoza_postgres_user', 'doadmin');
             $pgPass = get_option('wecoza_postgres_password', '');
+            
+            // Check if password is empty
+            if (empty($pgPass)) {
+                error_log('WeCoza Classes Plugin: PostgreSQL password not configured. Please set wecoza_postgres_password option.');
+                throw new \Exception('Database password not configured');
+            }
+            
+            // Log connection attempt (without password)
+            error_log("WeCoza Classes Plugin: Attempting PostgreSQL connection to $pgHost:$pgPort/$pgName as $pgUser");
 
             // Create PDO instance for PostgreSQL
             $this->pdo = new \PDO(
@@ -39,6 +48,8 @@ class DatabaseService {
                     \PDO::ATTR_EMULATE_PREPARES => false,
                 ]
             );
+            
+            error_log('WeCoza Classes Plugin: PostgreSQL connection successful');
 
         } catch (\PDOException $e) {
             // Log error
@@ -54,7 +65,12 @@ class DatabaseService {
      */
     public static function getInstance() {
         if (self::$instance === null) {
-            self::$instance = new self();
+            try {
+                self::$instance = new self();
+            } catch (\Exception $e) {
+                error_log('WeCoza Classes Plugin: Failed to get database instance: ' . $e->getMessage());
+                throw $e; // Re-throw to caller
+            }
         }
         return self::$instance;
     }

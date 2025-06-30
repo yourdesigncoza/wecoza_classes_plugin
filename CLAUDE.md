@@ -79,6 +79,8 @@ The plugin follows strict MVC architecture with namespace `WeCozaClasses\`:
   - `classes-table-search.js`: Real-time search with pagination
   - `wecoza-calendar.js`: FullCalendar integration
 - **CSS**: Bootstrap 5 compatible, integrated with theme styles
+  - **Stylesheet Location**: All stylesheets are in `/opt/lampp/htdocs/wecoza/wp-content/themes/wecoza_3_child_theme/includes/css`
+  - **Primary Stylesheet**: `ydcoza-styles.css` is the ONLY stylesheet that should be updated
 - **Versioning**: Dynamic timestamps prevent caching issues during development
 
 ### Configuration System

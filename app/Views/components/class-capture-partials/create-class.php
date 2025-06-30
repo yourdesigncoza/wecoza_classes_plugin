@@ -10,6 +10,9 @@
       <!-- ===== Section: Basic Details ===== -->
       <!-- CREATE MODE: Full client/site selection -->
       <div class="row">
+         <div class="col-md-12">
+            <h6 class="mb-2">Client Details</h6>
+         </div>
          <!-- Client Name (ID) -->
          <div class="col-md-3 ">
                <label for="client_id" class="form-label">Client Name (ID) <span class="text-danger">*</span></label>
@@ -24,6 +27,7 @@
          </div>
          <!-- Class/Site Name -->
          <div class="col-md-3 ">
+
                <label for="site_id" class="form-label">Class/Site Name <span class="text-danger">*</span></label>
                <select id="site_id" name="site_id" class="form-select" required>
                   <option value="">Select Site</option>
@@ -56,6 +60,9 @@
       <?php echo section_divider(); ?>
       <!-- ===== Section: Scheduling & Class Info ===== -->
       <div class="row mt-3">
+         <div class="col-md-12">
+            <h6 class="mb-2">Class Details</h6>
+         </div>
          <!-- Class Type (Main Category) -->
          <div class="col-md-4 ">
             <label for="class_type" class="form-label">Class Type <span class="text-danger">*</span></label>
@@ -93,18 +100,19 @@
          </div>
          <!-- Class Original Start Date -->
          <div class="col-md-4 ">
-            <label for="class_start_date" class="form-label">Class Original Start Date <span class="text-danger">*</span></label>
+            <label for="class_start_date" class="form-label">Class Start Date <span class="text-danger">*</span></label>
             <input type="date" id="class_start_date" name="class_start_date" class="form-control" placeholder="YYYY-MM-DD" required>
             <div class="invalid-feedback">Please select the start date.</div>
             <div class="valid-feedback">Looks good!</div>
          </div>
       </div>
+      <?php echo section_divider(); ?>
       <!-- Class Schedule Form Section -->
       <div class="mb-4 mt-3">
-         <h5 class="mb-2">Class Schedule</h5>
+         <h6 class="mb-2">Class Schedule</h6>
          <!-- Date Range -->
          <div class="row ">
-            <div class="col-md-4 ">
+            <div class="col-md-4 d-none">
                <label for="schedule_start_date" class="form-label">Schedule Start Date <span class="text-danger">*</span></label>
                <input type="date" id="schedule_start_date" name="schedule_start_date" class="form-control" placeholder="YYYY-MM-DD" required>
                <div class="invalid-feedback">Please select a start date.</div>
@@ -129,7 +137,7 @@
          <div class="row ">
             <!-- Day Selection (for weekly/biweekly) -->
             <div class="col-md-12 " id="day-selection-container">
-               <h5 class="mb-2 mt-3">Days of Week <span class="text-danger">*</span></h5>
+               <h6 class="mb-2 mt-3">Days of Week <span class="text-danger">*</span></h6>
                <div class="days-checkbox-group">
                   <div class="form-check form-check-inline">
                      <input class="form-check-input schedule-day-checkbox" type="checkbox" id="schedule_day_monday" name="schedule_days[]" value="Monday" required>
@@ -285,7 +293,7 @@
             </div>
             <!-- Remove Button -->
             <div class="col-md-2 mb-2">
-               <div class="d-flex h-100 align-items-end">
+               <div class="d-flex h-100 align-items-end mt-4">
                   <button type="button" class="btn btn-outline-danger btn-sm remove-exception-btn form-control date-remove-btn">Remove</button>
                </div>
             </div>
@@ -353,9 +361,10 @@
       <input type="hidden" id="holiday_overrides" name="schedule_data[holiday_overrides]" value="">
 
    </div>
+   <?php echo section_divider(); ?>
    <!-- Class Date History Section -->
    <div class="mb-4 mt-3">
-      <h5 class="mb-1">Add Stop and Restart Dates.</h5>
+      <h6 class="mb-1">Add Stop and Restart Dates.</h6>
       <p class="text-muted small mb-1">A class can have multiple stop and restart dates.</p>
       <!-- Container for all date history rows -->
       <div id="date-history-container"></div>
@@ -388,6 +397,8 @@
    </div>
       <?php echo section_divider(); ?>
          <div class="col-md-4 ">
+            <h6>Class End Date</h6>
+            <small class="text-muted mb-1">If you make any changes to the schedule, you will need to recalculate the end date.</small>
             <label for="schedule_end_date" class="form-label">Estimated End Date</label>
             <input type="date" id="schedule_end_date" name="schedule_end_date" class="form-control readonly-field" placeholder="YYYY-MM-DD" readonly>
             <button type="button" class="btn btn-subtle-warning mb-2 mt-2" id="calculate_schedule_end_date-btn">
@@ -481,7 +492,7 @@
          <i class="bi bi-bar-chart-line me-1"></i> View Schedule Statistics
          </button>
          <div class="clearfix"></div>
-         <small class="text-muted mb-1">Click to view detailed statistics about the training schedule</small>
+         <small class="text-muted mb-1">Click to view detailed statistics about the class schedule</small>
       </div>
 
    <?php echo section_divider(); ?>
@@ -634,10 +645,10 @@
    </div>
    <?php echo section_divider(); ?>
    <!-- ===== Section: Assignments & Dates ===== -->
-   <?php echo section_header('Assignments & Dates', 'Assign staff to this class.'); ?>
+   <?php echo section_header('Agents'); ?>
    <!-- Class Agents Section -->
    <div class="mb-4">
-      <h5 class="mb-1">Class Agents</h5>
+      <h6 class="mb-1">Class Agents</h6>
       <p class="text-muted small mb-1">Assign the primary class agent. If the agent changes during the class, the history will be tracked.</p>
       <!-- Initial Class Agent -->
       <div class="row mb-2">
@@ -681,7 +692,7 @@
       </div>
       <!-- Backup Agents Section -->
       <div class="mt-4 mb-4">
-         <h5 class="mb-1">Backup Agents</h5>
+         <h6 class="mb-1">Backup Agents</h6>
          <p class="text-muted small mb-1">Add backup agents with specific dates when they will be available.</p>
          <!-- Container for all backup agent rows -->
          <div id="backup-agents-container"></div>

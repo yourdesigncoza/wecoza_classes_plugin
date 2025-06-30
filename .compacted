@@ -1,0 +1,45 @@
+# Compact Summary: WeCoza Classes Plugin Debug Session
+
+## Issue: AJAX Form Submission Error
+**Error**: "A network error occurred. Please try again." - 500 Internal Server Error
+
+## Root Cause Analysis
+1. **PHP Fatal Error**: `json_decode(): Argument #1 ($json) must be of type string, array given`
+2. **Location**: ClassController.php line 737 in processJsonField()
+3. **Problem**: Form submitting nested arrays that processJsonField tried to json_decode
+
+## Key Fixes Applied
+
+### 1. Fixed processJsonField Method
+```php
+// Added array detection before json_decode
+if (is_array($field)) {
+    return $this->reconstructScheduleData($data);
+}
+```
+
+### 2. Added reconstructScheduleData Method
+- Handles nested form array structure
+- Reconstructs schedule_data from form's nested arrays
+- Properly formats per_day_times and exception_dates
+
+### 3. Field Mapping Corrections
+- `schedule_start_date` → `original_start_date`
+- `seta_id` → `seta`
+- Boolean handling for 'Yes'/'No' values
+
+### 4. Added exam_learners Field
+- Created migration: `add_exam_learners_field.sql`
+- Updated ClassModel with exam_learners property
+- Modified save/update methods to include exam_learners
+- Separated exam learners from regular learner_ids
+
+## Current Status
+- Form submission working (Class ID 33 created successfully)
+- All field mappings corrected
+- Error handling enhanced
+- exam_learners implementation complete (pending migration)
+
+## Next Steps
+1. Run database migration for exam_learners field
+2. Test form with new field structure
