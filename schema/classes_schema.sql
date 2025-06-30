@@ -52,7 +52,8 @@ CREATE TABLE public.classes (
     class_notes_data jsonb DEFAULT '[]'::jsonb,
     initial_class_agent integer,
     initial_agent_start_date date,
-    qa_reports jsonb DEFAULT '[]'::jsonb
+    qa_reports jsonb DEFAULT '[]'::jsonb,
+    exam_learners jsonb DEFAULT '[]'::jsonb
 );
 
 
@@ -164,6 +165,14 @@ COMMENT ON COLUMN public.classes.qa_reports IS 'JSON array storing QA report fil
 
 
 --
+-- Name: COLUMN classes.exam_learners; Type: COMMENT; Schema: public; Owner: doadmin
+--
+
+COMMENT ON COLUMN public.classes.exam_learners IS 'JSON array storing exam learner IDs and 
+  metadata for learners taking exams';
+
+
+--
 -- Name: classes_class_id_seq; Type: SEQUENCE; Schema: public; Owner: doadmin
 --
 
@@ -229,6 +238,13 @@ CREATE INDEX idx_classes_class_subject ON public.classes USING btree (class_subj
 
 
 --
+-- Name: idx_classes_exam_learners; Type: INDEX; Schema: public; Owner: doadmin
+--
+
+CREATE INDEX idx_classes_exam_learners ON public.classes USING gin (exam_learners);
+
+
+--
 -- Name: idx_classes_learner_ids; Type: INDEX; Schema: public; Owner: doadmin
 --
 
@@ -281,6 +297,13 @@ ALTER TABLE ONLY public.classes
 
 
 --
--- PostgreSQL database dump complete
+-- Name: classes fk_classes_site; Type: FK CONSTRAINT; Schema: public; Owner: doadmin
 --
 
+ALTER TABLE ONLY public.classes
+    ADD CONSTRAINT fk_classes_site FOREIGN KEY (site_id) REFERENCES public.sites(site_id) ON DELETE SET NULL;
+
+
+--
+-- PostgreSQL database dump complete
+--

@@ -224,6 +224,56 @@ $error_message = $error_message ?? '';
                                         </div>
                                     </td>
                                 </tr>
+                                <!-- Backup Agents -->
+                                <?php if (!empty($class['backup_agent_names']) && is_array($class['backup_agent_names'])): ?>
+                                <tr>
+                                    <td class="py-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="d-flex bg-info-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
+                                                <i class="bi bi-people text-info" style="font-size: 12px;"></i>
+                                            </div>
+                                            <p class="fw-bold mb-0">Backup Agents : </p>
+                                        </div>
+                                    </td>
+                                    <td class="py-2">
+                                        <div class="fw-semibold mb-0">
+                                            <span class="badge badge-phoenix fs-10 badge-phoenix-info me-2"><?php echo count($class['backup_agent_names']); ?> Backup<?php echo count($class['backup_agent_names']) !== 1 ? 's' : ''; ?></span>
+                                            <div class="mt-1">
+                                                <?php foreach ($class['backup_agent_names'] as $backupAgent): ?>
+                                                    <div class="fs-9 mb-1">
+                                                        <i class="bi bi-person me-1"></i>
+                                                        <?php echo esc_html($backupAgent['name']); ?>
+                                                        <span class="text-muted">(ID: <?php echo esc_html($backupAgent['id']); ?>)</span>
+                                                    </div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php endif; ?>
+                                <!-- Initial Agent History - Only show if different from current agent -->
+                                <?php if (!empty($class['initial_class_agent']) && 
+                                         $class['initial_class_agent'] != $class['class_agent'] &&
+                                         !empty($class['initial_agent_name'])): ?>
+                                <tr>
+                                    <td class="py-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="d-flex bg-secondary-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
+                                                <i class="bi bi-clock-history text-secondary" style="font-size: 12px;"></i>
+                                            </div>
+                                            <p class="fw-bold mb-0">Original Agent : </p>
+                                        </div>
+                                    </td>
+                                    <td class="py-2">
+                                        <div class="fw-semibold mb-0">
+                                            <?php echo esc_html($class['initial_agent_name']); ?>
+                                            <div class="fs-9 text-muted">
+                                                Started: <?php echo !empty($class['initial_agent_start_date']) ? date('M j, Y', strtotime($class['initial_agent_start_date'])) : 'N/A'; ?>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php endif; ?>
                                 <tr>
                                     <td class="py-2">
                                         <div class="d-flex align-items-center">
@@ -347,6 +397,48 @@ $error_message = $error_message ?? '';
                                         </p>
                                     </td>
                                 </tr>
+                                <!-- Stop/Restart Periods -->
+                                <?php if (!empty($class['stop_restart_dates']) && is_array($class['stop_restart_dates'])): ?>
+                                <tr>
+                                    <td class="py-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="d-flex bg-warning-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
+                                                <i class="bi bi-pause-circle text-warning" style="font-size: 12px;"></i>
+                                            </div>
+                                            <p class="fw-bold mb-0">Stop/Restart Periods : </p>
+                                        </div>
+                                    </td>
+                                    <td class="py-2">
+                                        <div class="fw-semibold mb-0">
+                                            <?php 
+                                            $stopPeriods = $class['stop_restart_dates'];
+                                            $periodCount = count($stopPeriods);
+                                            ?>
+                                            <span class="badge badge-phoenix fs-10 badge-phoenix-warning me-2">
+                                                <?php echo $periodCount; ?> Period<?php echo $periodCount !== 1 ? 's' : ''; ?>
+                                            </span>
+                                            <div class="mt-2">
+                                                <?php foreach ($stopPeriods as $period): ?>
+                                                    <?php 
+                                                    if (isset($period['stop_date']) && isset($period['restart_date'])):
+                                                        $stopDate = new DateTime($period['stop_date']);
+                                                        $restartDate = new DateTime($period['restart_date']);
+                                                        $interval = $stopDate->diff($restartDate);
+                                                        $days = $interval->days;
+                                                    ?>
+                                                    <div class="fs-9 mb-1">
+                                                        <i class="bi bi-calendar-range me-1"></i>
+                                                        <?php echo date('M j', strtotime($period['stop_date'])); ?> - 
+                                                        <?php echo date('M j, Y', strtotime($period['restart_date'])); ?>
+                                                        <span class="text-muted">(<?php echo $days; ?> day<?php echo $days !== 1 ? 's' : ''; ?>)</span>
+                                                    </div>
+                                                    <?php endif; ?>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
@@ -373,7 +465,7 @@ $error_message = $error_message ?? '';
                                             if (!empty($learners) && is_array($learners)):
                                                 $learnerCount = count($learners);
                                             ?>
-                                                <span class="badge bg-primary me-2"><?php echo $learnerCount; ?> Learner<?php echo $learnerCount !== 1 ? 's' : ''; ?></span>
+                                                <span class="badge badge-phoenix fs-10 badge-phoenix-primary me-2"><?php echo $learnerCount; ?> Learner<?php echo $learnerCount !== 1 ? 's' : ''; ?></span>
                                                 <div class="mt-2">
                                                     <?php foreach ($learners as $index => $learner): ?>
                                                         <?php if ($index < 3): // Show first 3 learners ?>
@@ -402,6 +494,52 @@ $error_message = $error_message ?? '';
                                         </div>
                                     </td>
                                 </tr>
+                                
+                                <!-- Exam Learners Section - Only show for exam classes -->
+                                <?php if ($class['exam_class'] && !empty($class['exam_learners']) && is_array($class['exam_learners'])): ?>
+                                <tr>
+                                    <td class="py-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="d-flex bg-warning-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
+                                                <i class="bi bi-mortarboard-fill text-warning" style="font-size: 12px;"></i>
+                                            </div>
+                                            <p class="fw-bold mb-0">Exam Candidates : </p>
+                                        </div>
+                                    </td>
+                                    <td class="py-2">
+                                        <div class="fw-semibold mb-0">
+                                            <?php
+                                            $examLearners = $class['exam_learners'];
+                                            $examLearnerCount = count($examLearners);
+                                            ?>
+                                            <span class="badge badge-phoenix fs-10 badge-phoenix-warning me-2">
+                                                <?php echo $examLearnerCount; ?> Exam Candidate<?php echo $examLearnerCount !== 1 ? 's' : ''; ?>
+                                            </span>
+                                            <div class="mt-2">
+                                                <?php foreach ($examLearners as $index => $examLearner): ?>
+                                                    <?php if ($index < 3): // Show first 3 exam learners ?>
+                                                        <div class="fs-9 mb-1">
+                                                            <i class="bi bi-mortarboard me-1"></i>
+                                                            <?php echo esc_html($examLearner['name'] ?? 'Unknown'); ?>
+                                                            <?php if (!empty($examLearner['exam_status'])): ?>
+                                                                <span class="badge bg-light text-dark ms-1" style="font-size: 0.7rem;">
+                                                                    <?php echo esc_html($examLearner['exam_status']); ?>
+                                                                </span>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                <?php endforeach; ?>
+                                                <?php if ($examLearnerCount > 3): ?>
+                                                    <div class="fs-9 text-muted">
+                                                        <i class="bi bi-three-dots me-1"></i>
+                                                        and <?php echo ($examLearnerCount - 3); ?> more exam candidate<?php echo ($examLearnerCount - 3) !== 1 ? 's' : ''; ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
@@ -484,6 +622,194 @@ $error_message = $error_message ?? '';
                 </div>
             </div>
 
+            <!-- QA Reports Section -->
+            <?php if (!empty($class['qa_reports']) && is_array($class['qa_reports'])): ?>
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-file-earmark-check me-2"></i>Quality Assurance Reports
+                        <span class="badge bg-secondary ms-2"><?php echo count($class['qa_reports']); ?></span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Report Date</th>
+                                    <th>Report Type</th>
+                                    <th>File Name</th>
+                                    <th>Uploaded By</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($class['qa_reports'] as $index => $report): ?>
+                                <tr>
+                                    <td>
+                                        <?php 
+                                        $reportDate = isset($report['date']) ? date('M j, Y', strtotime($report['date'])) : 'N/A';
+                                        echo esc_html($reportDate);
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <?php echo esc_html($report['type'] ?? 'Standard QA'); ?>
+                                    </td>
+                                    <td>
+                                        <i class="bi bi-file-pdf text-danger me-1"></i>
+                                        <?php echo esc_html($report['filename'] ?? 'qa_report_' . ($index + 1) . '.pdf'); ?>
+                                    </td>
+                                    <td>
+                                        <?php echo esc_html($report['uploaded_by'] ?? 'System'); ?>
+                                    </td>
+                                    <td>
+                                        <?php if (!empty($report['file_path'])): ?>
+                                        <a href="<?php echo esc_url($report['file_path']); ?>" 
+                                           class="btn btn-sm btn-outline-primary" 
+                                           download
+                                           title="Download Report">
+                                            <i class="bi bi-download me-1"></i>Download
+                                        </a>
+                                        <?php else: ?>
+                                        <span class="text-muted">File not available</span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <!-- Class Notes Timeline Section -->
+            <?php if (!empty($class['class_notes_data']) && is_array($class['class_notes_data'])): ?>
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-journal-text me-2"></i>Class Notes & Updates
+                        <span class="badge bg-secondary ms-2"><?php echo count($class['class_notes_data']); ?></span>
+                        <button class="btn btn-sm btn-link float-end" type="button" data-bs-toggle="collapse" data-bs-target="#classNotesCollapse" aria-expanded="true" aria-controls="classNotesCollapse">
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                    </h5>
+                </div>
+                <div class="collapse show" id="classNotesCollapse">
+                    <div class="card-body">
+                        <div class="timeline-container">
+                            <?php 
+                            // Sort notes by timestamp (newest first)
+                            $notes = $class['class_notes_data'];
+                            usort($notes, function($a, $b) {
+                                return strtotime($b['timestamp'] ?? '0') - strtotime($a['timestamp'] ?? '0');
+                            });
+                            
+                            foreach ($notes as $index => $note): 
+                                $categoryClass = 'secondary';
+                                $categoryIcon = 'bi-info-circle';
+                                
+                                // Set category-specific styling
+                                switch($note['category'] ?? '') {
+                                    case 'Class on track':
+                                        $categoryClass = 'success';
+                                        $categoryIcon = 'bi-check-circle';
+                                        break;
+                                    case 'Good QA report':
+                                        $categoryClass = 'success';
+                                        $categoryIcon = 'bi-clipboard-check';
+                                        break;
+                                    case 'Poor attendance':
+                                        $categoryClass = 'warning';
+                                        $categoryIcon = 'bi-exclamation-triangle';
+                                        break;
+                                    case 'Equipment problems':
+                                        $categoryClass = 'danger';
+                                        $categoryIcon = 'bi-tools';
+                                        break;
+                                    case 'Agent Absent':
+                                        $categoryClass = 'danger';
+                                        $categoryIcon = 'bi-person-x';
+                                        break;
+                                    case 'Client unhappy':
+                                        $categoryClass = 'danger';
+                                        $categoryIcon = 'bi-emoji-frown';
+                                        break;
+                                    case 'Learners unhappy':
+                                        $categoryClass = 'warning';
+                                        $categoryIcon = 'bi-people';
+                                        break;
+                                }
+                            ?>
+                            <div class="timeline-item mb-3">
+                                <div class="row g-3">
+                                    <div class="col-auto">
+                                        <div class="timeline-icon">
+                                            <div class="d-flex bg-<?php echo $categoryClass; ?>-subtle rounded-circle flex-center" style="width:40px; height:40px">
+                                                <i class="bi <?php echo $categoryIcon; ?> text-<?php echo $categoryClass; ?>"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div class="timeline-content">
+                                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                                <div>
+                                                    <span class="badge bg-<?php echo $categoryClass; ?>-subtle text-<?php echo $categoryClass; ?> me-2">
+                                                        <?php echo esc_html($note['category'] ?? 'General'); ?>
+                                                    </span>
+                                                    <small class="text-muted">
+                                                        by <?php echo esc_html($note['author'] ?? 'Unknown'); ?>
+                                                    </small>
+                                                </div>
+                                                <small class="text-muted">
+                                                    <?php 
+                                                    $timestamp = strtotime($note['timestamp'] ?? 'now');
+                                                    echo date('M j, Y g:i A', $timestamp);
+                                                    ?>
+                                                </small>
+                                            </div>
+                                            <p class="mb-0"><?php echo esc_html($note['note'] ?? ''); ?></p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php if ($index < count($notes) - 1): ?>
+                                <div class="timeline-connector"></div>
+                                <?php endif; ?>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <style>
+            .timeline-container {
+                position: relative;
+                padding-left: 20px;
+            }
+            
+            .timeline-item {
+                position: relative;
+            }
+            
+            .timeline-connector {
+                position: absolute;
+                left: 39px;
+                top: 45px;
+                width: 2px;
+                height: calc(100% - 45px);
+                background-color: #dee2e6;
+            }
+            
+            .timeline-content {
+                background-color: #f8f9fa;
+                border-radius: 0.5rem;
+                padding: 1rem;
+                border: 1px solid #e9ecef;
+            }
+            </style>
+            <?php endif; ?>
+
             <!-- Class Calendar Section -->
             <div class="card mb-4">
                 <div class="card-header">
@@ -548,7 +874,11 @@ $error_message = $error_message ?? '';
                                 </div>
                                 <div class="legend-item">
                                     <div class="legend-color stop-restart"></div>
-                                    <span>Stop/Restart Dates</span>
+                                    <span>Stop Dates</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color stop-restart-restart"></div>
+                                    <span>Restart Dates</span>
                                 </div>
                                 <div class="legend-item">
                                     <div class="legend-color stop-period"></div>
@@ -639,7 +969,7 @@ $error_message = $error_message ?? '';
                 <div class="row mb-3">
                     <div class="col-12">
                         <div class="d-flex align-items-center justify-content-between">
-                            <span class="badge bg-primary fs-9"><?php echo count($learners); ?> Total Learner<?php echo count($learners) !== 1 ? 's' : ''; ?></span>
+                            <span class="badge badge-phoenix badge-phoenix-primary fs-9"><?php echo count($learners); ?> Total Learner<?php echo count($learners) !== 1 ? 's' : ''; ?></span>
                             <small class="text-muted">Class: <?php echo esc_html($class['class_subject'] ?? 'N/A'); ?></small>
                         </div>
                     </div>
@@ -701,7 +1031,7 @@ $error_message = $error_message ?? '';
                                                 $statusIcon = 'bi-bars-staggered';
                                             }
                                             ?>
-                                            <div class="badge bg-<?php echo $statusClass; ?> fs-10">
+                                            <div class="badge badge-phoenix fs-10 badge-phoenix-<?php echo $statusClass; ?>">
                                                 <span class="fw-bold"><?php echo esc_html($learnerStatus); ?></span>
                                                 <i class="<?php echo $statusIcon; ?> ms-1"></i>
                                             </div>

@@ -1758,8 +1758,21 @@ class ClassController {
                     'class_id' => $class_id,
                     'class_code' => 'SAMPLE-CLASS-' . $class_id,
                     'class_subject' => 'Sample Class Subject',
+                    'class_type' => 'Employed',
+                    'client_name' => 'Sample Client Ltd',
+                    'class_agent' => null, // Will fallback to initial_class_agent
+                    'supervisor_name' => 'Dr. Sarah Johnson',
+                    'project_supervisor_id' => 1,
+                    'seta_funded' => true,
+                    'seta' => 'CHIETA',
+                    'exam_class' => true,
+                    'exam_type' => 'Open Book Exam',
+                    'class_duration' => 240,
+                    'class_address_line' => '123 Sample Street, Sample City, 1234',
                     'original_start_date' => date('Y-m-d'),
                     'delivery_date' => date('Y-m-d', strtotime('+30 days')),
+                    'created_at' => date('Y-m-d H:i:s'),
+                    'updated_at' => date('Y-m-d H:i:s'),
                     'schedule_data' => null,
                     'exception_dates' => null,
                     'stop_restart_dates' => [
@@ -1767,18 +1780,121 @@ class ClassController {
                             'stop_date' => date('Y-m-d', strtotime('+10 days')),
                             'restart_date' => date('Y-m-d', strtotime('+15 days'))
                         ]
-                    ]
+                    ],
+                    'learner_ids' => [
+                        ['id' => 1, 'name' => 'Alice Johnson', 'status' => 'CIC - Currently in Class'],
+                        ['id' => 2, 'name' => 'Bob Smith', 'status' => 'CIC - Currently in Class'],
+                        ['id' => 3, 'name' => 'Charlie Brown', 'status' => 'Walk'],
+                        ['id' => 4, 'name' => 'Diana Prince', 'status' => 'CIC - Currently in Class']
+                    ],
+                    'exam_learners' => [
+                        ['id' => 1, 'name' => 'Alice Johnson', 'exam_status' => 'Registered'],
+                        ['id' => 2, 'name' => 'Bob Smith', 'exam_status' => 'Registered'],
+                        ['id' => 4, 'name' => 'Diana Prince', 'exam_status' => 'Pending']
+                    ],
+                    'qa_reports' => [
+                        [
+                            'date' => date('Y-m-d', strtotime('-5 days')),
+                            'type' => 'Initial QA Visit',
+                            'filename' => 'qa_report_initial_' . $class_id . '.pdf',
+                            'file_path' => '#',
+                            'uploaded_by' => 'QA Manager'
+                        ],
+                        [
+                            'date' => date('Y-m-d', strtotime('-2 days')),
+                            'type' => 'Follow-up QA',
+                            'filename' => 'qa_report_followup_' . $class_id . '.pdf',
+                            'file_path' => '#',
+                            'uploaded_by' => 'Senior QA Officer'
+                        ]
+                    ],
+                    'class_notes_data' => [
+                        [
+                            'note' => 'Class started successfully. All learners present.',
+                            'category' => 'Class on track',
+                            'author' => 'John Doe',
+                            'timestamp' => date('Y-m-d H:i:s', strtotime('-7 days'))
+                        ],
+                        [
+                            'note' => 'Two learners arrived late due to transport issues.',
+                            'category' => 'Poor attendance',
+                            'author' => 'John Doe',
+                            'timestamp' => date('Y-m-d H:i:s', strtotime('-6 days'))
+                        ],
+                        [
+                            'note' => 'QA visit completed. Positive feedback received.',
+                            'category' => 'Good QA report',
+                            'author' => 'QA Manager',
+                            'timestamp' => date('Y-m-d H:i:s', strtotime('-5 days'))
+                        ],
+                        [
+                            'note' => 'Equipment issue resolved. Projector replaced.',
+                            'category' => 'Equipment problems',
+                            'author' => 'John Doe',
+                            'timestamp' => date('Y-m-d H:i:s', strtotime('-3 days'))
+                        ]
+                    ],
+                    'backup_agent_ids' => [
+                        ['agent_id' => 2, 'date' => date('Y-m-d', strtotime('-10 days'))],
+                        ['agent_id' => 3, 'date' => date('Y-m-d', strtotime('-5 days'))]
+                    ],
+                    'initial_class_agent' => 5,
+                    'initial_agent_start_date' => date('Y-m-d', strtotime('-30 days'))
                 ];
             }
 
             // Handle JSONB fields that come as strings from PostgreSQL
-            $jsonbFields = ['learner_ids', 'backup_agent_ids', 'schedule_data', 'stop_restart_dates', 'class_notes_data', 'qa_reports'];
+            $jsonbFields = ['learner_ids', 'backup_agent_ids', 'schedule_data', 'stop_restart_dates', 'class_notes_data', 'qa_reports', 'exam_learners'];
 
             foreach ($jsonbFields as $field) {
                 if (isset($result[$field]) && is_string($result[$field])) {
                     $decoded = json_decode($result[$field], true);
                     if ($decoded !== null) {
                         $result[$field] = $decoded;
+                    }
+                }
+            }
+
+            // Enrich with agent names
+            $agents = $this->getAgents();
+            $agentLookup = [];
+            foreach ($agents as $agent) {
+                $agentLookup[$agent['id']] = $agent['name'];
+            }
+
+            // Add current agent name (fallback to initial_class_agent if class_agent is empty)
+            $currentAgentId = $result['class_agent'] ?? $result['initial_class_agent'] ?? null;
+            if (!empty($currentAgentId)) {
+                $result['agent_name'] = $agentLookup[$currentAgentId] ?? 'Unknown Agent';
+                $result['class_agent'] = $currentAgentId; // Ensure class_agent is set for display
+            }
+
+            // Add initial agent name
+            if (!empty($result['initial_class_agent'])) {
+                $result['initial_agent_name'] = $agentLookup[$result['initial_class_agent']] ?? 'Unknown Agent';
+            }
+
+            // Add backup agent names
+            if (!empty($result['backup_agent_ids']) && is_array($result['backup_agent_ids'])) {
+                $result['backup_agent_names'] = [];
+                foreach ($result['backup_agent_ids'] as $agentId) {
+                    if (isset($agentId['agent_id'])) {
+                        $id = $agentId['agent_id'];
+                        $result['backup_agent_names'][] = [
+                            'id' => $id,
+                            'name' => $agentLookup[$id] ?? 'Unknown Agent'
+                        ];
+                    }
+                }
+            }
+
+            // Add supervisor name
+            if (!empty($result['project_supervisor_id'])) {
+                $supervisors = $this->getSupervisors();
+                foreach ($supervisors as $supervisor) {
+                    if ($supervisor['id'] == $result['project_supervisor_id']) {
+                        $result['supervisor_name'] = $supervisor['name'];
+                        break;
                     }
                 }
             }
@@ -2043,7 +2159,7 @@ class ClassController {
                             'start' => $stopDate,
                             'allDay' => true,
                             'display' => 'block',
-                            'classNames' => ['text-danger', 'wecoza-stop-restart'],
+                            'classNames' => ['text-danger', 'wecoza-stop'],
                             'extendedProps' => [
                                 'type' => 'stop_date',
                                 'class_id' => $class['class_id'],
@@ -2063,7 +2179,7 @@ class ClassController {
                             'start' => $restartDate,
                             'allDay' => true,
                             'display' => 'block',
-                            'classNames' => ['text-danger', 'wecoza-stop-restart'],
+                            'classNames' => ['text-danger', 'wecoza-restart'],
                             'extendedProps' => [
                                 'type' => 'restart_date',
                                 'class_id' => $class['class_id'],

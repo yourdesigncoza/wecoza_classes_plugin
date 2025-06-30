@@ -235,7 +235,7 @@ $controller = $controller ?? null;
                                             <?php endif; ?>
 
                                             <?php if ($hasInitialAgent): ?>
-                                            <div class="text-muted small">
+                                            <div>
                                                 <strong>Initial:</strong>
                                                 <?php
                                                 $initial_agent_id = $class['initial_class_agent'];
