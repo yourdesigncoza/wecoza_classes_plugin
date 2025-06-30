@@ -269,6 +269,20 @@ This plugin is licensed under the GPL v2 or later.
 
 ## Recent Updates
 
+### Class Creation Workflow Enhancement (June 2025)
+- **Automatic Redirect**: After successful class creation, users are automatically redirected to the single class display page
+- **URL Construction**: Uses WordPress best practices with `get_page_by_path()`, `get_permalink()`, and `add_query_arg()`
+- **Error Resolution**: Fixed AJAX form submission errors related to JSON field processing
+- **Exam Learners Field**: Added dedicated `exam_learners` database field for better data separation
+- **Response Enhancement**: Server returns redirect URL in AJAX success response for seamless UX
+
+### AJAX & Form Processing (June 2025)
+- **JSON Field Processing**: Fixed `processJsonField()` method to handle both array and string inputs
+- **Schedule Data Reconstruction**: Added `reconstructScheduleData()` method for complex form array structures
+- **Error Handling**: Enhanced error logging and debugging capabilities
+- **Field Mapping**: Corrected field name mappings (schedule_start_date → original_start_date, seta_id → seta)
+- **Nonce Security**: Improved AJAX security with proper nonce verification
+
 ### Documentation & Analysis (June 2025)
 - **CLAUDE.md**: Comprehensive development guide with architecture overview and commands
 - **Reference Documentation**: Detailed analysis reports for complex features including public holidays integration
@@ -311,4 +325,3 @@ This plugin is licensed under the GPL v2 or later.
 - Learner management system
 - Agent assignment features
 
-Test 101

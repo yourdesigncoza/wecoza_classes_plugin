@@ -578,6 +578,21 @@ function showCustomAlert(message) {
 
             // Add AJAX action
             formData.append('action', 'save_class');
+            
+            // Add nonce for security
+            formData.append('nonce', wecozaClass.nonce);
+            
+            // Debug logging
+            if (wecozaClass.debug) {
+                console.log('Form submission initiated');
+                console.log('AJAX URL:', wecozaClass.ajaxUrl);
+                console.log('Action:', 'save_class');
+                console.log('Nonce:', wecozaClass.nonce);
+                console.log('Form fields:');
+                for (let pair of formData.entries()) {
+                    console.log(pair[0] + ':', pair[1]);
+                }
+            }
 
             // Submit via AJAX
             $.ajax({
@@ -591,15 +606,24 @@ function showCustomAlert(message) {
                         // Show success message
                         showSuccessMessage(response.data.message || 'Class saved successfully!');
 
-                        // Redirect if URL provided
-                        const redirectUrl = $('#redirect_url').val();
+                        // Check for redirect URL from server response first, then form field
+                        const redirectUrl = response.data.redirect_url || $('#redirect_url').val();
+                        
                         if (redirectUrl) {
+                            // Log the redirect for debugging
+                            console.log('Redirecting to:', redirectUrl);
+                            
                             setTimeout(function() {
                                 window.location.href = redirectUrl;
                             }, 1500);
                         } else {
                             // Reset form for new entry
                             $form[0].reset();
+                            
+                            // Optionally show the class ID
+                            if (response.data.class_id) {
+                                console.log('Class created with ID:', response.data.class_id);
+                            }
                         }
                     } else {
                         // Show error message
@@ -607,8 +631,38 @@ function showCustomAlert(message) {
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('AJAX Error:', error);
-                    showErrorMessage('A network error occurred. Please try again.');
+                    console.error('AJAX Error:', {
+                        status: status,
+                        error: error,
+                        responseText: xhr.responseText,
+                        statusCode: xhr.status
+                    });
+                    
+                    let errorMessage = 'A network error occurred. ';
+                    
+                    if (xhr.status === 0) {
+                        errorMessage += 'Please check your internet connection.';
+                    } else if (xhr.status === 404) {
+                        errorMessage += 'The requested endpoint was not found.';
+                    } else if (xhr.status === 500) {
+                        errorMessage += 'A server error occurred. Please check the server logs.';
+                    } else if (xhr.responseJSON && xhr.responseJSON.data) {
+                        errorMessage = xhr.responseJSON.data;
+                    } else if (xhr.responseText) {
+                        // Try to extract meaningful error from response
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            if (response.data) {
+                                errorMessage = response.data;
+                            }
+                        } catch (e) {
+                            errorMessage += 'Status: ' + xhr.status + '. Please try again.';
+                        }
+                    } else {
+                        errorMessage += 'Status: ' + xhr.status + '. Please try again.';
+                    }
+                    
+                    showErrorMessage(errorMessage);
                 },
                 complete: function() {
                     // Restore button state

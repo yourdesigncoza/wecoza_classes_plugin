@@ -35,6 +35,7 @@ class ClassModel {
     private $projectSupervisorId;
     private $deliveryDate;
     private $learnerIds = [];
+    private $examLearners = [];
     private $backupAgentIds = [];
     private $scheduleData = [];
     private $stopRestartDates = [];
@@ -87,6 +88,7 @@ class ClassModel {
 
         // Handle JSONB arrays - support both snake_case and camelCase
         $this->setLearnerIds($this->parseJsonField($data['learner_ids'] ?? $data['learnerIds'] ?? $data['add_learner'] ?? []));
+        $this->setExamLearners($this->parseJsonField($data['exam_learners'] ?? $data['examLearners'] ?? []));
         $this->setBackupAgentIds($this->parseJsonField($data['backup_agent_ids'] ?? $data['backupAgentIds'] ?? $data['backup_agent'] ?? []));
         $this->setScheduleData($this->parseJsonField($data['schedule_data'] ?? $data['scheduleData'] ?? []));
         $this->setStopRestartDates($this->parseJsonField($data['stop_restart_dates'] ?? []));
@@ -143,9 +145,9 @@ class ClassModel {
                 class_code, class_duration, original_start_date, seta_funded, seta,
                 exam_class, exam_type, qa_visit_dates, qa_reports, class_agent, initial_class_agent,
                 initial_agent_start_date, project_supervisor_id, delivery_date,
-                learner_ids, backup_agent_ids, schedule_data, stop_restart_dates,
+                learner_ids, exam_learners, backup_agent_ids, schedule_data, stop_restart_dates,
                 class_notes_data, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             $params = [
                 $this->getClientId(),
@@ -168,6 +170,7 @@ class ClassModel {
                 $this->getProjectSupervisorId(),
                 $this->getDeliveryDate(),
                 json_encode($this->getLearnerIds()),
+                json_encode($this->getExamLearners()),
                 json_encode($this->getBackupAgentIds()),
                 json_encode($this->getScheduleData()),
                 $stopRestartJson,
@@ -207,7 +210,7 @@ class ClassModel {
                 class_subject = ?, class_code = ?, class_duration = ?, original_start_date = ?,
                 seta_funded = ?, seta = ?, exam_class = ?, exam_type = ?, qa_visit_dates = ?, qa_reports = ?,
                 class_agent = ?, initial_class_agent = ?, initial_agent_start_date = ?,
-                project_supervisor_id = ?, delivery_date = ?, learner_ids = ?, backup_agent_ids = ?,
+                project_supervisor_id = ?, delivery_date = ?, learner_ids = ?, exam_learners = ?, backup_agent_ids = ?,
                 schedule_data = ?, stop_restart_dates = ?, class_notes_data = ?, updated_at = ?
                 WHERE class_id = ?";
 
@@ -219,7 +222,7 @@ class ClassModel {
                 $this->getQaVisitDates(), json_encode($this->getQaReports()), $this->getClassAgent(), $this->getInitialClassAgent(),
                 $this->getInitialAgentStartDate(), $this->getProjectSupervisorId(),
                 $this->getDeliveryDate(), json_encode($this->getLearnerIds()),
-                json_encode($this->getBackupAgentIds()), json_encode($this->getScheduleData()),
+                json_encode($this->getExamLearners()), json_encode($this->getBackupAgentIds()), json_encode($this->getScheduleData()),
                 $stopRestartJson, json_encode($this->getClassNotesData()),
                 $this->getUpdatedAt(), $this->getId()
             ];
@@ -376,6 +379,9 @@ class ClassModel {
 
     public function getLearnerIds() { return $this->learnerIds; }
     public function setLearnerIds($learnerIds) { $this->learnerIds = is_array($learnerIds) ? $learnerIds : []; return $this; }
+
+    public function getExamLearners() { return $this->examLearners; }
+    public function setExamLearners($examLearners) { $this->examLearners = is_array($examLearners) ? $examLearners : []; return $this; }
 
     public function getBackupAgentIds() { return $this->backupAgentIds; }
     public function setBackupAgentIds($backupAgentIds) { $this->backupAgentIds = is_array($backupAgentIds) ? $backupAgentIds : []; return $this; }

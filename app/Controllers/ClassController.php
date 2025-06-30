@@ -537,25 +537,28 @@ class ClassController {
      * Handle AJAX request to save class data
      */
     public static function saveClassAjax() {
-        error_log('=== CLASS SAVE AJAX START ===');
-        error_log('POST data: ' . print_r($_POST, true));
-        error_log('FILES data: ' . print_r($_FILES, true));
+        try {
+            error_log('=== CLASS SAVE AJAX START ===');
+            error_log('POST data keys: ' . implode(', ', array_keys($_POST)));
+            error_log('PHP file last modified: ' . date('Y-m-d H:i:s', filemtime(__FILE__)));
+            
+            // Create instance
+            $instance = new self();
 
-        // Create instance
-        $instance = new self();
+            // Check nonce for security
+            if (!isset($_POST['nonce']) || !\wp_verify_nonce($_POST['nonce'], 'wecoza_class_nonce')) {
+                error_log('Nonce verification failed');
+                error_log('Expected nonce name: wecoza_class_nonce');
+                error_log('Received nonce: ' . (isset($_POST['nonce']) ? $_POST['nonce'] : 'not set'));
+                $instance->sendJsonError('Security check failed. Please refresh the page and try again.');
+                return;
+            }
 
-        // Check nonce for security
-        if (!isset($_POST['nonce']) || !\wp_verify_nonce($_POST['nonce'], 'wecoza_class_nonce')) {
-            error_log('Nonce verification failed');
-            $instance->sendJsonError('Security check failed.');
-            return;
-        }
+            error_log('Nonce verification passed');
 
-        error_log('Nonce verification passed');
-
-        // Process form data (including file uploads)
-        $formData = self::processFormData($_POST, $_FILES);
-        error_log('Processed form data: ' . print_r($formData, true));
+            // Process form data (including file uploads)
+            $formData = self::processFormData($_POST, $_FILES);
+            error_log('Processed form data keys: ' . implode(', ', array_keys($formData)));
 
         // Determine if this is create or update operation
         $isUpdate = isset($formData['id']) && !empty($formData['id']);
@@ -565,6 +568,15 @@ class ClassController {
 
         // Use direct model access for create or update
         try {
+            // First check if database is properly configured
+            try {
+                $db = \WeCozaClasses\Services\Database\DatabaseService::getInstance();
+            } catch (\Exception $dbError) {
+                error_log('Database connection failed during save: ' . $dbError->getMessage());
+                $instance->sendJsonError('Database connection failed. Please ensure PostgreSQL credentials are configured in WordPress options (wecoza_postgres_password).');
+                return;
+            }
+            
             if ($isUpdate) {
                 // Load existing class and update it
                 $class = ClassModel::getById($classId);
@@ -586,9 +598,25 @@ class ClassController {
 
             if ($result) {
                 error_log('Class saved successfully with ID: ' . $class->getId());
+                
+                // Generate redirect URL to single class display page
+                $redirect_url = '';
+                $display_page = \get_page_by_path('app/display-single-class');
+                if ($display_page) {
+                    $redirect_url = \add_query_arg(
+                        'class_id', 
+                        $class->getId(), 
+                        \get_permalink($display_page->ID)
+                    );
+                    error_log('Generated redirect URL: ' . $redirect_url);
+                } else {
+                    error_log('Display single class page not found at path: app/display-single-class');
+                }
+                
                 $instance->sendJsonSuccess([
                     'message' => $isUpdate ? 'Class updated successfully.' : 'Class created successfully.',
-                    'class_id' => $class->getId()
+                    'class_id' => $class->getId(),
+                    'redirect_url' => $redirect_url
                 ]);
             } else {
                 error_log('Model operation failed');
@@ -598,7 +626,24 @@ class ClassController {
             }
         } catch (\Exception $e) {
             error_log('Exception during class save: ' . $e->getMessage());
+            error_log('Exception trace: ' . $e->getTraceAsString());
             $instance->sendJsonError('An error occurred while saving the class: ' . $e->getMessage());
+        }
+        } catch (\Error $e) {
+            error_log('FATAL ERROR in saveClassAjax: ' . $e->getMessage());
+            error_log('Error file: ' . $e->getFile() . ' Line: ' . $e->getLine());
+            error_log('Error trace: ' . $e->getTraceAsString());
+            
+            // Try to send JSON error if possible
+            if (isset($instance)) {
+                $instance->sendJsonError('A server error occurred. Please check the error logs.');
+            } else {
+                \wp_send_json_error('A server error occurred. Please check the error logs.');
+            }
+        } catch (\Throwable $e) {
+            error_log('THROWABLE in saveClassAjax: ' . $e->getMessage());
+            error_log('File: ' . $e->getFile() . ' Line: ' . $e->getLine());
+            \wp_send_json_error('A critical error occurred. Please check the error logs.');
         }
     }
 
@@ -631,6 +676,7 @@ class ClassController {
         if (isset($formData['project_supervisor'])) $class->setProjectSupervisorId($formData['project_supervisor']);
         if (isset($formData['delivery_date'])) $class->setDeliveryDate($formData['delivery_date']);
         if (isset($formData['learner_ids'])) $class->setLearnerIds($formData['learner_ids']);
+        if (isset($formData['exam_learners'])) $class->setExamLearners($formData['exam_learners']);
         if (isset($formData['backup_agent_ids'])) $class->setBackupAgentIds($formData['backup_agent_ids']);
         if (isset($formData['schedule_data'])) $class->setScheduleData($formData['schedule_data']);
         if (isset($formData['stop_restart_dates'])) $class->setStopRestartDates($formData['stop_restart_dates']);
@@ -665,10 +711,13 @@ class ClassController {
      * @return array Processed form data
      */
     private static function processFormData($data, $files = []) {
+        error_log('processFormData: Starting to process form data');
         $processed = [];
 
-        // Basic fields - using snake_case field names that the model expects
-        $processed['id'] = isset($data['class_id']) && $data['class_id'] !== 'auto-generated' ? intval($data['class_id']) : null;
+        try {
+            // Basic fields - using snake_case field names that the model expects
+            $processed['id'] = isset($data['class_id']) && $data['class_id'] !== 'auto-generated' ? intval($data['class_id']) : null;
+            error_log('processFormData: Processed ID field');
         $processed['client_id'] = isset($data['client_id']) && !empty($data['client_id']) ? intval($data['client_id']) : null;
         $processed['site_id'] = isset($data['site_id']) && !is_array($data['site_id']) ? $data['site_id'] : null;
         $processed['site_address'] = isset($data['site_address']) && !is_array($data['site_address']) ? self::sanitizeText($data['site_address']) : null;
@@ -676,10 +725,20 @@ class ClassController {
         $processed['class_subject'] = isset($data['class_subject']) && !is_array($data['class_subject']) ? self::sanitizeText($data['class_subject']) : null;
         $processed['class_code'] = isset($data['class_code']) && !is_array($data['class_code']) ? self::sanitizeText($data['class_code']) : null;
         $processed['class_duration'] = isset($data['class_duration']) && !empty($data['class_duration']) ? intval($data['class_duration']) : null;
-        $processed['original_start_date'] = isset($data['original_start_date']) && !is_array($data['original_start_date']) ? self::sanitizeText($data['original_start_date']) : null;
-        $processed['seta_funded'] = isset($data['seta_funded']) ? (bool)$data['seta_funded'] : false;
-        $processed['seta'] = isset($data['seta']) && !is_array($data['seta']) ? self::sanitizeText($data['seta']) : null;
-        $processed['exam_class'] = isset($data['exam_class']) ? (bool)$data['exam_class'] : false;
+        // Map schedule_start_date to original_start_date for backward compatibility
+        $processed['original_start_date'] = isset($data['schedule_start_date']) && !is_array($data['schedule_start_date']) 
+            ? self::sanitizeText($data['schedule_start_date']) 
+            : (isset($data['original_start_date']) && !is_array($data['original_start_date']) 
+                ? self::sanitizeText($data['original_start_date']) 
+                : null);
+        // Handle boolean fields properly - check for 'Yes'/'No' string values
+        $processed['seta_funded'] = isset($data['seta_funded']) && ($data['seta_funded'] === 'Yes' || $data['seta_funded'] === '1' || $data['seta_funded'] === true);
+        $processed['seta'] = isset($data['seta_id']) && !is_array($data['seta_id']) 
+            ? self::sanitizeText($data['seta_id']) 
+            : (isset($data['seta']) && !is_array($data['seta']) 
+                ? self::sanitizeText($data['seta']) 
+                : null);
+        $processed['exam_class'] = isset($data['exam_class']) && ($data['exam_class'] === 'Yes' || $data['exam_class'] === '1' || $data['exam_class'] === true);
         $processed['exam_type'] = isset($data['exam_type']) && !is_array($data['exam_type']) ? self::sanitizeText($data['exam_type']) : null;
         $processed['qa_visit_dates'] = isset($data['qa_visit_dates']) && !is_array($data['qa_visit_dates']) ? self::sanitizeText($data['qa_visit_dates']) : null;
         $processed['class_agent'] = isset($data['class_agent']) && !empty($data['class_agent']) ? intval($data['class_agent']) : null;
@@ -693,12 +752,78 @@ class ClassController {
         $processed['qa_reports'] = isset($data['qa_reports']) && is_array($data['qa_reports']) ? array_map([self::class, 'sanitizeText'], $data['qa_reports']) : [];
 
         // JSON fields that need special handling
-        $processed['learner_ids'] = self::processJsonField($data, 'class_learners_data');
-        $processed['backup_agent_ids'] = self::processJsonField($data, 'backup_agents_data');
+        // JSON fields that need special handling
+        error_log('processFormData: Processing JSON fields');
+        
+        // Process learner IDs 
+        $learnerIds = [];
+        if (isset($data['class_learners_data']) && is_string($data['class_learners_data']) && !empty($data['class_learners_data'])) {
+            $learnerData = json_decode(stripslashes($data['class_learners_data']), true);
+            if (is_array($learnerData)) {
+                $learnerIds = $learnerData;
+            }
+        }
+        $processed['learner_ids'] = $learnerIds;
+        error_log('processFormData: Processed learner_ids');
+        
+        // Process exam learners separately
+        $examLearners = [];
+        if (isset($data['exam_learners']) && is_string($data['exam_learners']) && !empty($data['exam_learners'])) {
+            $examLearnerData = json_decode(stripslashes($data['exam_learners']), true);
+            if (is_array($examLearnerData)) {
+                $examLearners = $examLearnerData;
+            }
+        }
+        $processed['exam_learners'] = $examLearners;
+        error_log('processFormData: Processed exam_learners');
+        
+        // Process backup agents from form arrays
+        $backupAgents = [];
+        if (isset($data['backup_agent_ids']) && is_array($data['backup_agent_ids'])) {
+            $agentIds = $data['backup_agent_ids'];
+            $agentDates = isset($data['backup_agent_dates']) ? $data['backup_agent_dates'] : [];
+            
+            for ($i = 0; $i < count($agentIds); $i++) {
+                if (!empty($agentIds[$i])) {
+                    $backupAgents[] = [
+                        'agent_id' => intval($agentIds[$i]),
+                        'date' => isset($agentDates[$i]) ? $agentDates[$i] : ''
+                    ];
+                }
+            }
+        }
+        $processed['backup_agent_ids'] = $backupAgents;
+        error_log('processFormData: Processed backup_agent_ids: ' . json_encode($backupAgents));
+        
         $processed['schedule_data'] = self::processJsonField($data, 'schedule_data');
-        $processed['stop_restart_dates'] = self::processJsonField($data, 'stop_restart_dates');
+        error_log('processFormData: Processed schedule_data');
+        
+        // Process stop/restart dates from form arrays
+        $stopRestartDates = [];
+        if (isset($data['stop_dates']) && is_array($data['stop_dates'])) {
+            $stopDates = $data['stop_dates'];
+            $restartDates = isset($data['restart_dates']) ? $data['restart_dates'] : [];
+            
+            for ($i = 0; $i < count($stopDates); $i++) {
+                if (!empty($stopDates[$i]) && isset($restartDates[$i]) && !empty($restartDates[$i])) {
+                    $stopRestartDates[] = [
+                        'stop_date' => $stopDates[$i],
+                        'restart_date' => $restartDates[$i]
+                    ];
+                }
+            }
+        }
+        $processed['stop_restart_dates'] = $stopRestartDates;
+        error_log('processFormData: Processed stop_restart_dates: ' . json_encode($stopRestartDates));
 
+        error_log('processFormData: Successfully processed all form data');
         return $processed;
+        
+        } catch (\Exception $e) {
+            error_log('processFormData ERROR: ' . $e->getMessage());
+            error_log('processFormData ERROR trace: ' . $e->getTraceAsString());
+            throw $e;
+        }
     }
 
     /**
@@ -709,33 +834,163 @@ class ClassController {
      * @return array Processed JSON data
      */
     private static function processJsonField($data, $field) {
-        if (!isset($data[$field]) || empty($data[$field])) {
+        error_log("processJsonField: Processing field {$field}");
+        
+        if (!isset($data[$field])) {
+            error_log("processJsonField: Field {$field} not set");
             return [];
         }
 
         $value = $data[$field];
+        
+        // If it's already an array (from form submission), return it
+        if (is_array($value)) {
+            error_log("processJsonField: Field {$field} is already an array");
+            
+            // Special handling for schedule_data field
+            if ($field === 'schedule_data') {
+                // The form sends schedule_data as nested arrays, we need to reconstruct it
+                $scheduleData = self::reconstructScheduleData($data);
+                error_log("processJsonField: Reconstructed schedule_data: " . json_encode($scheduleData));
+                return self::processScheduleData($scheduleData);
+            }
+            
+            return $value;
+        }
 
-        // Handle WordPress addslashes and HTML encoding
+        // Handle WordPress addslashes and HTML encoding for strings
         if (is_string($value)) {
+            if (empty($value)) {
+                error_log("processJsonField: Field {$field} is empty string");
+                return [];
+            }
+            
             $value = stripslashes($value);
             $value = html_entity_decode($value, ENT_QUOTES, 'UTF-8');
+            
+            // Decode JSON
+            $decoded = json_decode($value, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                error_log("JSON decode error for field {$field}: " . json_last_error_msg());
+                error_log("JSON string that failed: " . $value);
+                return [];
+            }
+            
+            // Special handling for schedule_data field
+            if ($field === 'schedule_data' && !empty($decoded)) {
+                $decoded = self::processScheduleData($decoded);
+            }
+            
+            return $decoded ?: [];
         }
 
-        // Decode JSON
-        $decoded = json_decode($value, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            error_log("JSON decode error for field {$field}: " . json_last_error_msg());
-            return [];
-        }
-
-        // Special handling for schedule_data field
-        if ($field === 'schedule_data' && !empty($decoded)) {
-            $decoded = self::processScheduleData($decoded);
-        }
-
-        return $decoded ?: [];
+        error_log("processJsonField: Field {$field} is neither array nor string");
+        return [];
     }
 
+    /**
+     * Reconstruct schedule data from form's nested array structure
+     *
+     * @param array $data Form data
+     * @return array Reconstructed schedule data
+     */
+    private static function reconstructScheduleData($data) {
+        $scheduleData = [];
+        
+        // Extract base fields from schedule_data array
+        if (isset($data['schedule_data']) && is_array($data['schedule_data'])) {
+            foreach ($data['schedule_data'] as $key => $value) {
+                if (!is_array($value)) {
+                    $scheduleData[$key] = $value;
+                }
+            }
+            
+            // Handle nested arrays
+            if (isset($data['schedule_data']['per_day_times'])) {
+                $scheduleData['per_day_times'] = $data['schedule_data']['per_day_times'];
+            }
+            if (isset($data['schedule_data']['selected_days'])) {
+                $scheduleData['selected_days'] = $data['schedule_data']['selected_days'];
+            }
+            if (isset($data['schedule_data']['exception_dates'])) {
+                $scheduleData['exception_dates'] = $data['schedule_data']['exception_dates'];
+            }
+            if (isset($data['schedule_data']['holiday_overrides'])) {
+                // Handle holiday_overrides - convert string values to boolean
+                $overrides = [];
+                foreach ($data['schedule_data']['holiday_overrides'] as $date => $value) {
+                    $overrides[$date] = ($value === '1' || $value === 'true' || $value === true);
+                }
+                $scheduleData['holiday_overrides'] = $overrides;
+            }
+        }
+        
+        // Add missing data from form
+        if (!isset($scheduleData['start_date']) && isset($data['schedule_start_date'])) {
+            $scheduleData['start_date'] = $data['schedule_start_date'];
+        }
+        if (!isset($scheduleData['end_date']) && isset($data['schedule_end_date'])) {
+            $scheduleData['end_date'] = $data['schedule_end_date'];
+        }
+        
+        // Ensure we have the selected days from the form
+        if (empty($scheduleData['selected_days']) && isset($data['schedule_days']) && is_array($data['schedule_days'])) {
+            $scheduleData['selected_days'] = array_values(array_filter($data['schedule_days']));
+        }
+        
+        // Build per_day_times if not present
+        if (empty($scheduleData['per_day_times']) && isset($data['day_start_time']) && isset($data['day_end_time'])) {
+            $scheduleData['per_day_times'] = [];
+            foreach ($data['day_start_time'] as $day => $startTime) {
+                if (!empty($startTime) && isset($data['day_end_time'][$day])) {
+                    $endTime = $data['day_end_time'][$day];
+                    $duration = self::calculateDuration($startTime, $endTime);
+                    $scheduleData['per_day_times'][$day] = [
+                        'start_time' => $startTime,
+                        'end_time' => $endTime,
+                        'duration' => number_format($duration, 2)
+                    ];
+                }
+            }
+        }
+        
+        // Process exception dates from form arrays
+        if (empty($scheduleData['exception_dates']) && isset($data['exception_dates']) && is_array($data['exception_dates'])) {
+            $scheduleData['exception_dates'] = [];
+            $exceptionDates = $data['exception_dates'];
+            $exceptionReasons = isset($data['exception_reasons']) ? $data['exception_reasons'] : [];
+            
+            for ($i = 0; $i < count($exceptionDates); $i++) {
+                if (!empty($exceptionDates[$i])) {
+                    $scheduleData['exception_dates'][] = [
+                        'date' => $exceptionDates[$i],
+                        'reason' => isset($exceptionReasons[$i]) ? $exceptionReasons[$i] : ''
+                    ];
+                }
+            }
+        }
+        
+        // Ensure metadata
+        if (!isset($scheduleData['metadata'])) {
+            $scheduleData['metadata'] = [
+                'lastUpdated' => date('c'),
+                'validatedAt' => date('c')
+            ];
+        }
+        
+        // Ensure timeData
+        if (!isset($scheduleData['timeData'])) {
+            $scheduleData['timeData'] = [
+                'mode' => isset($scheduleData['time_mode']) ? $scheduleData['time_mode'] : 'per_day'
+            ];
+        }
+        
+        // Remove duplicate fields
+        unset($scheduleData['time_mode']);
+        
+        return $scheduleData;
+    }
+    
     /**
      * Process schedule data with format detection, validation, and conversion
      *
@@ -743,21 +998,14 @@ class ClassController {
      * @return array Processed schedule data in v2.0 format
      */
     private static function processScheduleData($scheduleData) {
-        // Validate the raw data first
-        $validator = new \WeCozaClasses\Services\ScheduleDataValidator();
-        $validationResult = $validator->validate($scheduleData);
-
-        // Log validation warnings
-        if (!empty($validationResult['warnings'])) {
-            error_log('Schedule data validation warnings: ' . implode(', ', $validationResult['warnings']));
+        // Basic validation of schedule data
+        if (!is_array($scheduleData)) {
+            error_log('Schedule data is not an array');
+            return [];
         }
 
-        // Handle validation errors
-        if (!$validationResult['isValid']) {
-            error_log('Schedule data validation failed: ' . implode(', ', $validationResult['errors']));
-            // For now, continue processing but log the errors
-            // In production, you might want to throw an exception or return an error
-        }
+        // Log the received schedule data for debugging
+        error_log('Processing schedule data: ' . json_encode($scheduleData));
 
         // Expect V2.0 format only
         return self::validateScheduleDataV2($scheduleData);
@@ -794,7 +1042,13 @@ class ClassController {
      * @return string Sanitized text
      */
     private static function sanitizeText($text) {
-        return sanitize_text_field($text);
+        // Check if WordPress function exists (it might not in some AJAX contexts)
+        if (function_exists('sanitize_text_field')) {
+            return sanitize_text_field($text);
+        }
+        
+        // Fallback sanitization
+        return htmlspecialchars(strip_tags($text), ENT_QUOTES, 'UTF-8');
     }
 
     /**
