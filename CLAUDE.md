@@ -66,8 +66,10 @@ The plugin follows strict MVC architecture with namespace `WeCozaClasses\`:
 
 ### Database Integration
 - **Primary Database**: PostgreSQL (not WordPress database)
+- **External Database**: Classes data is stored in DigitalOcean PostgreSQL at `db-wecoza-3-do-user-17263152-0.m.db.ondigitalocean.com:25060/defaultdb`
 - **Connection**: Configured via WordPress options, fallback to config defaults
-- **Schema**: Full schema in `schema/classes_schema_3.sql`
+- **IMPORTANT**: WordPress's `$wpdb` does NOT contain classes data - use `DatabaseService::getInstance()` for PostgreSQL access
+- **Schema**: Full schema in `schema/classes_schema_3.sql` and `schema/classes_schema.sql`
 - **Data Format**: JSONB fields for flexible schedule data storage
 - **Tables**: Classes, clients, agents, sites, learners with full relationship mapping
 
@@ -149,6 +151,8 @@ Classes support complex scheduling with JSONB storage:
 
 ### PostgreSQL Dependency
 This plugin requires PostgreSQL database connection. WordPress database is NOT used for class data. Database connection must be configured before plugin activation.
+
+**Critical**: All classes, learners, agents, sites, and related data are stored in an external PostgreSQL database on DigitalOcean, NOT in the WordPress database. Never use `global $wpdb` to query classes data - always use the DatabaseService class.
 
 ### Calendar Integration
 The Public Holidays Section is **FULLY ACTIVE** in the create-class.php form. Recent commits restored this functionality after it was temporarily disabled. Holiday detection requires `window.wecozaPublicHolidays` to be available. Data is localized via `ClassController.php` and consumed by scheduling JavaScript.

@@ -147,6 +147,27 @@ function showCustomAlert(message) {
 
         // Initialize form submission
         initializeFormSubmission();
+        
+        // Add listener for class_start_date changes to trigger schedule updates
+        $('#class_start_date').on('change', function() {
+            const newDate = $(this).val();
+            if (newDate) {
+                // Update schedule start date if it's empty or still has default value
+                const $scheduleStartDate = $('#schedule_start_date');
+                const currentScheduleDate = $scheduleStartDate.val();
+                const today = new Date().toISOString().split('T')[0];
+                
+                if (!currentScheduleDate || currentScheduleDate === today) {
+                    $scheduleStartDate.val(newDate);
+                    console.log('Updated schedule start date from class start date:', newDate);
+                    
+                    // Trigger schedule data update
+                    if (typeof updateScheduleData === 'function') {
+                        setTimeout(updateScheduleData, 100);
+                    }
+                }
+            }
+        });
     }
 
     /**
@@ -557,6 +578,66 @@ function showCustomAlert(message) {
     }
 
     /**
+     * Validate schedule data before submission
+     */
+    function validateScheduleData() {
+        const errors = [];
+        const result = { isValid: true, errors: errors };
+        
+        // Check if schedule start date exists
+        const scheduleStartDate = $('#schedule_start_date').val();
+        if (!scheduleStartDate) {
+            // Try to use class start date as fallback
+            const classStartDate = $('#class_start_date').val();
+            if (classStartDate) {
+                $('#schedule_start_date').val(classStartDate);
+                console.log('Used class start date as fallback for schedule start date');
+            } else {
+                // If we're still missing the date, set today's date as default
+                const today = new Date().toISOString().split('T')[0];
+                $('#schedule_start_date').val(today);
+                console.log('Used today\'s date as fallback for schedule start date:', today);
+            }
+        }
+        
+        // Check if schedule pattern is selected
+        const pattern = $('#schedule_pattern').val();
+        if (!pattern) {
+            errors.push('Schedule pattern must be selected');
+        }
+        
+        // For weekly/biweekly patterns, ensure at least one day is selected
+        if ((pattern === 'weekly' || pattern === 'biweekly')) {
+            const selectedDays = $('.schedule-day-checkbox:checked').length;
+            if (selectedDays === 0) {
+                errors.push('At least one day must be selected for weekly/biweekly schedules');
+            }
+        }
+        
+        // For monthly pattern, ensure day of month is selected
+        if (pattern === 'monthly') {
+            const dayOfMonth = $('#schedule_day_of_month').val();
+            if (!dayOfMonth) {
+                errors.push('Day of month must be selected for monthly schedules');
+            }
+        }
+        
+        // Check if class duration exists
+        const duration = $('#class_duration').val();
+        if (!duration || duration <= 0) {
+            errors.push('Class duration is required and must be greater than 0');
+        }
+        
+        result.isValid = errors.length === 0;
+        
+        if (!result.isValid) {
+            console.error('Schedule validation errors:', errors);
+        }
+        
+        return result;
+    }
+
+    /**
      * Initialize form submission
      */
     function initializeFormSubmission() {
@@ -573,6 +654,20 @@ function showCustomAlert(message) {
             // Clear previous messages
             $('#form-messages').empty();
 
+            // Ensure schedule data is updated before submission
+            if (typeof updateScheduleData === 'function') {
+                updateScheduleData();
+                console.log('Called updateScheduleData before form submission');
+            }
+            
+            // Validate schedule data before submission
+            const scheduleValidation = validateScheduleData();
+            if (!scheduleValidation.isValid) {
+                showErrorMessage('Schedule validation failed: ' + scheduleValidation.errors.join(', '));
+                $submitButton.html(originalButtonText).prop('disabled', false);
+                return false;
+            }
+            
             // Prepare form data
             const formData = new FormData(this);
 

@@ -266,15 +266,28 @@ if (isset($data['class_data']) && $data['class_data']):
          // Extract schedule data for pre-population
          $scheduleData = $data['class_data']['schedule_data'] ?? [];
          $schedulePattern = $scheduleData['pattern'] ?? '';
-         $scheduleDays = $scheduleData['days'] ?? [];
+         $scheduleDays = $scheduleData['selectedDays'] ?? $scheduleData['days'] ?? [];
          $scheduleStartTime = $scheduleData['start_time'] ?? '';
          $scheduleEndTime = $scheduleData['end_time'] ?? '';
-         $scheduleStartDate = $scheduleData['start_date'] ?? '';
-         $scheduleEndDate = $scheduleData['end_date'] ?? '';
-         $holidayOverrides = $scheduleData['holiday_overrides'] ?? [];
+         $scheduleStartDate = $scheduleData['start_date'] ?? $scheduleData['startDate'] ?? '';
+         $scheduleEndDate = $scheduleData['end_date'] ?? $scheduleData['endDate'] ?? '';
+         $holidayOverrides = $scheduleData['holiday_overrides'] ?? $scheduleData['holidayOverrides'] ?? [];
+         $timeData = $scheduleData['timeData'] ?? [];
+         $perDayTimes = isset($timeData['perDayTimes']) ? $timeData['perDayTimes'] : [];
 
          // Convert holiday overrides to JSON string for the hidden field
          $holidayOverridesJson = !empty($holidayOverrides) ? json_encode($holidayOverrides) : '';
+         
+         // Debug schedule data
+         if (isset($_GET['debug']) && $_GET['debug'] === '1') {
+             echo "<!-- Schedule Debug Data:\n";
+             echo "Pattern: " . print_r($schedulePattern, true) . "\n";
+             echo "Days: " . print_r($scheduleDays, true) . "\n";
+             echo "Time Data: " . print_r($timeData, true) . "\n";
+             echo "Per Day Times: " . print_r($perDayTimes, true) . "\n";
+             echo "Full Schedule Data: " . print_r($scheduleData, true) . "\n";
+             echo "-->\n";
+         }
          ?>
 
          <!-- Schedule Pattern Selection -->
@@ -295,7 +308,7 @@ if (isset($data['class_data']) && $data['class_data']):
             </div>
 
             <!-- Day Selection (for weekly/biweekly) -->
-            <div class="col-md-12 mb-3" id="day-selection-container">
+            <div class="col-md-12 mb-3 <?php echo (!in_array($schedulePattern, ['weekly', 'biweekly'])) ? 'd-none' : ''; ?>" id="day-selection-container">
                <label class="form-label">Days of Week <span class="text-danger">*</span></label>
                <div class="days-checkbox-group">
                   <?php
@@ -339,6 +352,68 @@ if (isset($data['class_data']) && $data['class_data']):
          <!-- Single Time Controls (shown when no days selected) -->
          <div id="single-time-controls" class="row mb-3 d-none">
             <!-- This section is now hidden and will be replaced by per-day controls when days are selected -->
+         </div>
+         
+         <!-- Per-Day Time Controls (shown when multiple days selected) -->
+         <div id="per-day-time-controls" class="d-none mt-3">
+            <div class="">
+               <h6 class="mb-2">Set Times for Each Day</h6>
+               <p class="text-muted small mb-2">Configure individual start and end times for each selected day.</p>
+            </div>
+            <!-- Container for dynamically generated day sections -->
+            <div id="per-day-sections-container" class="row g-4">
+               <!-- Day sections will be generated here by JavaScript -->
+            </div>
+            <!-- Hidden template for day time section -->
+            <div id="day-time-section-template" class="per-day-time-section col-sm-6 col-md-4 col-lg-3 d-none" data-day="">
+               <div class="card h-100 border">
+                  <div class="card-body">
+                     <div class="d-flex justify-content-between align-items-center ">
+                        <h6 class="card-title  day-name"></h6>
+                        <button type="button" class="btn btn-sm btn-outline-secondary copy-to-all-btn" title="Copy to all days">
+                        <i class="bi bi-files"></i>
+                        </button>
+                     </div>
+                     <div class="">
+                        <label class="form-label">Start Time <span class="text-danger">*</span></label>
+                        <select class="form-select day-start-time" data-day="" required>
+                           <option value="">Select</option>
+                           <?php
+                              // Generate time options from 6:00 AM to 8:00 PM in 30-minute increments
+                              $start = strtotime('06:00:00');
+                              $end = strtotime('20:00:00');
+                              $interval = 30 * 60; // 30 minutes in seconds
+
+                              for ($time = $start; $time <= $end; $time += $interval) {
+                                 $timeStr = date('H:i', $time);
+                                 echo '<option value="' . $timeStr . '">' . date('g:i A', $time) . '</option>';
+                              }
+                              ?>
+                        </select>
+                        <div class="invalid-feedback">Please select a start time.</div>
+                     </div>
+                     <div class="mb-2">
+                        <label class="form-label">End Time <span class="text-danger">*</span></label>
+                        <select class="form-select day-end-time" data-day="" required>
+                           <option value="">Select</option>
+                           <?php
+                              // Generate time options from 6:30 AM to 8:30 PM in 30-minute increments
+                              $start = strtotime('06:30:00');
+                              $end = strtotime('20:30:00');
+                              $interval = 30 * 60; // 30 minutes in seconds
+
+                              for ($time = $start; $time <= $end; $time += $interval) {
+                                 $timeStr = date('H:i', $time);
+                                 echo '<option value="' . $timeStr . '">' . date('g:i A', $time) . '</option>';
+                              }
+                              ?>
+                        </select>
+                        <div class="invalid-feedback">Please select an end time.</div>
+                     </div>
+                     <small class="text-muted day-duration-display  d-none">Duration: <span class="duration-value badge badge-phoenix badge-phoenix-info">-</span> hours</small>
+                  </div>
+               </div>
+            </div>
          </div>
 
          <!-- Date Range -->
@@ -1042,6 +1117,13 @@ if (isset($data['class_data']) && $data['class_data']):
 
 <!-- Pre-populate form data for update mode -->
 <script>
+// Debug: Log the class data
+<?php if (isset($_GET['debug']) && $_GET['debug'] === '1' && isset($data['class_data'])): ?>
+console.log('Update Form - Class Data:', <?php echo json_encode($data['class_data']); ?>);
+console.log('Update Form - Available Class Types:', <?php echo json_encode($data['class_types']); ?>);
+console.log('Update Form - Available Yes/No Options:', <?php echo json_encode($data['yes_no_options']); ?>);
+<?php endif; ?>
+
 document.addEventListener('DOMContentLoaded', function() {
     // Pre-populate learner data if available
     <?php if (isset($data['class_data']['learner_ids']) && !empty($data['class_data']['learner_ids'])): ?>
@@ -1162,14 +1244,177 @@ document.addEventListener('DOMContentLoaded', function() {
                 newRow.removeAttribute('id');
 
                 const agentSelect = newRow.querySelector('select[name="backup_agent_ids[]"]');
-                if (agentSelect) {
-                    agentSelect.value = agentId;
+                const dateInput = newRow.querySelector('input[name="backup_agent_dates[]"]');
+                
+                // Handle both formats: simple ID or object with agent_id and date
+                let agentIdValue = agentId;
+                let dateValue = '';
+                
+                if (typeof agentId === 'object' && agentId !== null) {
+                    agentIdValue = agentId.agent_id || agentId.id || '';
+                    dateValue = agentId.date || '';
+                }
+                
+                if (agentSelect && agentIdValue) {
+                    agentSelect.value = agentIdValue;
+                }
+                if (dateInput && dateValue) {
+                    dateInput.value = dateValue;
                 }
 
                 backupAgentsContainer.appendChild(newRow);
             });
         }
     }
+    <?php endif; ?>
+
+    // Pre-populate exception dates if available
+    <?php if (isset($data['class_data']['schedule_data']['exceptionDates']) && !empty($data['class_data']['schedule_data']['exceptionDates'])): ?>
+    const exceptionDates = <?php echo json_encode($data['class_data']['schedule_data']['exceptionDates']); ?>;
+    
+    if (exceptionDates && Array.isArray(exceptionDates)) {
+        const exceptionDatesContainer = document.getElementById('exception-dates-container');
+        const exceptionDateTemplate = document.getElementById('exception-date-row-template');
+        
+        if (exceptionDatesContainer && exceptionDateTemplate) {
+            exceptionDates.forEach(function(exception) {
+                const newRow = exceptionDateTemplate.cloneNode(true);
+                newRow.classList.remove('d-none');
+                newRow.removeAttribute('id');
+                
+                const dateInput = newRow.querySelector('input[name="exception_dates[]"]');
+                const reasonSelect = newRow.querySelector('select[name="exception_reasons[]"]');
+                
+                if (dateInput && exception.date) {
+                    dateInput.value = exception.date;
+                }
+                if (reasonSelect && exception.reason) {
+                    reasonSelect.value = exception.reason;
+                }
+                
+                exceptionDatesContainer.appendChild(newRow);
+            });
+        }
+    }
+    <?php endif; ?>
+
+    // Pre-populate agent replacements if available
+    <?php if (isset($data['class_data']['agent_replacements']) && !empty($data['class_data']['agent_replacements'])): ?>
+    const agentReplacements = <?php echo json_encode($data['class_data']['agent_replacements']); ?>;
+    
+    if (agentReplacements && Array.isArray(agentReplacements)) {
+        const agentReplacementsContainer = document.getElementById('agent-replacements-container');
+        const agentReplacementTemplate = document.getElementById('agent-replacement-row-template');
+        
+        if (agentReplacementsContainer && agentReplacementTemplate) {
+            agentReplacements.forEach(function(replacement) {
+                const newRow = agentReplacementTemplate.cloneNode(true);
+                newRow.classList.remove('d-none');
+                newRow.removeAttribute('id');
+                
+                const agentSelect = newRow.querySelector('select[name="replacement_agent_ids[]"]');
+                const dateInput = newRow.querySelector('input[name="replacement_agent_dates[]"]');
+                
+                if (agentSelect && replacement.agent_id) {
+                    agentSelect.value = replacement.agent_id;
+                }
+                if (dateInput && replacement.date) {
+                    dateInput.value = replacement.date;
+                }
+                
+                agentReplacementsContainer.appendChild(newRow);
+            });
+        }
+    }
+    <?php endif; ?>
+
+    // Initialize schedule data for update mode
+    <?php if (isset($data['class_data']['schedule_data']) && !empty($data['class_data']['schedule_data'])): ?>
+    // Pass schedule data to the scheduling JavaScript
+    window.existingScheduleData = <?php echo json_encode($data['class_data']['schedule_data']); ?>;
+    <?php endif; ?>
+    
+    // Initialize client/site selection
+    <?php if (isset($data['class_data']['client_id']) && isset($data['class_data']['site_id'])): ?>
+    setTimeout(function() {
+        // Trigger client change to load sites
+        const clientSelect = document.getElementById('client_id');
+        if (clientSelect) {
+            const event = new Event('change', { bubbles: true });
+            clientSelect.dispatchEvent(event);
+            
+            // After sites are loaded, select the correct one
+            setTimeout(function() {
+                const siteSelect = document.getElementById('site_id');
+                const currentSiteId = '<?php echo esc_js($data['class_data']['site_id'] ?? ''); ?>';
+                if (siteSelect && currentSiteId) {
+                    siteSelect.value = currentSiteId;
+                    // Trigger site change to update address
+                    const siteEvent = new Event('change', { bubbles: true });
+                    siteSelect.dispatchEvent(siteEvent);
+                }
+            }, 300);
+        }
+    }, 50);
+    <?php endif; ?>
+    
+    // Trigger class type change to load subjects
+    <?php if (isset($data['class_data']['class_type']) && !empty($data['class_data']['class_type'])): ?>
+    setTimeout(function() {
+        const classTypeSelect = document.getElementById('class_type');
+        if (classTypeSelect && classTypeSelect.value) {
+            // Trigger change event to load subjects
+            const event = new Event('change', { bubbles: true });
+            classTypeSelect.dispatchEvent(event);
+            
+            // Wait for subjects to be loaded and select the correct one
+            const currentSubject = '<?php echo esc_js($data['class_data']['class_subject'] ?? ''); ?>';
+            if (currentSubject) {
+                // Use MutationObserver to wait for options to be loaded
+                const classSubjectSelect = document.getElementById('class_subject');
+                if (classSubjectSelect) {
+                    const observer = new MutationObserver(function(mutations, obs) {
+                        // Check if options have been loaded
+                        if (classSubjectSelect.options.length > 1) {
+                            // Options loaded, now select the correct one
+                            for (let i = 0; i < classSubjectSelect.options.length; i++) {
+                                if (classSubjectSelect.options[i].value === currentSubject) {
+                                    classSubjectSelect.value = currentSubject;
+                                    // Trigger change event to update duration
+                                    const subjectEvent = new Event('change', { bubbles: true });
+                                    classSubjectSelect.dispatchEvent(subjectEvent);
+                                    break;
+                                }
+                            }
+                            // Stop observing
+                            obs.disconnect();
+                        }
+                    });
+                    
+                    // Start observing
+                    observer.observe(classSubjectSelect, {
+                        childList: true,
+                        subtree: true
+                    });
+                    
+                    // Fallback timeout in case observer doesn't trigger
+                    setTimeout(function() {
+                        observer.disconnect();
+                        if (classSubjectSelect.value !== currentSubject) {
+                            for (let i = 0; i < classSubjectSelect.options.length; i++) {
+                                if (classSubjectSelect.options[i].value === currentSubject) {
+                                    classSubjectSelect.value = currentSubject;
+                                    const subjectEvent = new Event('change', { bubbles: true });
+                                    classSubjectSelect.dispatchEvent(subjectEvent);
+                                    break;
+                                }
+                            }
+                        }
+                    }, 2000);
+                }
+            }
+        }
+    }, 100);
     <?php endif; ?>
 });
 </script>
