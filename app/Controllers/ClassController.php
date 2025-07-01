@@ -349,12 +349,20 @@ class ClassController {
     private function handleUpdateMode($atts, $class_id) {
         $class = null;
         
+        // Enable debug logging if requested
+        $debug = isset($_GET['debug']) && $_GET['debug'] === '1';
+        
         if ($class_id) {
             // Get existing class data
             $class = $this->getSingleClass($class_id);
             
             if (empty($class)) {
                 return '<div class="alert alert-danger">Class not found.</div>';
+            }
+            
+            // Debug logging
+            if ($debug) {
+                $this->logDebugData($class_id, $class);
             }
         }
 
@@ -507,8 +515,8 @@ class ClassController {
 
     private function getYesNoOptions() {
         return array(
-            array('id' => 1, 'name' => 'Yes'),
-            array('id' => 0, 'name' => 'No')
+            array('id' => 'Yes', 'name' => 'Yes'),
+            array('id' => 'No', 'name' => 'No')
         );
     }
 
@@ -537,7 +545,25 @@ class ClassController {
      * Handle AJAX request to save class data
      */
     public static function saveClassAjax() {
+        // Start output buffering to capture any unexpected output
+        ob_start();
+        
+        // Set error handler to capture warnings/notices
+        $errorMessages = [];
+        set_error_handler(function($errno, $errstr, $errfile, $errline) use (&$errorMessages) {
+            $errorMessages[] = "PHP Warning: $errstr in $errfile on line $errline";
+            return true; // Suppress the error from being output
+        });
+        
         try {
+            // Ensure clean output buffer for JSON response
+            while (ob_get_level() > 1) {
+                ob_end_clean();
+            }
+            
+            // Set JSON content type
+            header('Content-Type: application/json; charset=utf-8');
+            
             error_log('=== CLASS SAVE AJAX START ===');
             error_log('POST data keys: ' . implode(', ', array_keys($_POST)));
             error_log('PHP file last modified: ' . date('Y-m-d H:i:s', filemtime(__FILE__)));
@@ -550,6 +576,10 @@ class ClassController {
                 error_log('Nonce verification failed');
                 error_log('Expected nonce name: wecoza_class_nonce');
                 error_log('Received nonce: ' . (isset($_POST['nonce']) ? $_POST['nonce'] : 'not set'));
+                
+                // Clean buffer and restore error handler before sending response
+                ob_clean();
+                restore_error_handler();
                 $instance->sendJsonError('Security check failed. Please refresh the page and try again.');
                 return;
             }
@@ -573,6 +603,10 @@ class ClassController {
                 $db = \WeCozaClasses\Services\Database\DatabaseService::getInstance();
             } catch (\Exception $dbError) {
                 error_log('Database connection failed during save: ' . $dbError->getMessage());
+                
+                // Clean buffer and restore error handler before sending response
+                ob_clean();
+                restore_error_handler();
                 $instance->sendJsonError('Database connection failed. Please ensure PostgreSQL credentials are configured in WordPress options (wecoza_postgres_password).');
                 return;
             }
@@ -582,6 +616,10 @@ class ClassController {
                 $class = ClassModel::getById($classId);
                 if (!$class) {
                     error_log('Class not found for update: ' . $classId);
+                    
+                    // Clean buffer and restore error handler before sending response
+                    ob_clean();
+                    restore_error_handler();
                     $instance->sendJsonError('Class not found for update.');
                     return;
                 }
@@ -613,6 +651,17 @@ class ClassController {
                     error_log('Display single class page not found at path: app/display-single-class');
                 }
                 
+                // Log any captured warnings
+                if (!empty($errorMessages)) {
+                    foreach ($errorMessages as $errorMsg) {
+                        error_log($errorMsg);
+                    }
+                }
+                
+                // Clean buffer and restore error handler before sending response
+                ob_clean();
+                restore_error_handler();
+                
                 $instance->sendJsonSuccess([
                     'message' => $isUpdate ? 'Class updated successfully.' : 'Class created successfully.',
                     'class_id' => $class->getId(),
@@ -620,6 +669,11 @@ class ClassController {
                 ]);
             } else {
                 error_log('Model operation failed');
+                
+                // Clean buffer and restore error handler before sending response
+                ob_clean();
+                restore_error_handler();
+                
                 $instance->sendJsonError(
                     $isUpdate ? 'Failed to update class.' : 'Failed to create class.'
                 );
@@ -627,12 +681,21 @@ class ClassController {
         } catch (\Exception $e) {
             error_log('Exception during class save: ' . $e->getMessage());
             error_log('Exception trace: ' . $e->getTraceAsString());
+            
+            // Clean buffer and restore error handler before sending response
+            ob_clean();
+            restore_error_handler();
+            
             $instance->sendJsonError('An error occurred while saving the class: ' . $e->getMessage());
         }
         } catch (\Error $e) {
             error_log('FATAL ERROR in saveClassAjax: ' . $e->getMessage());
             error_log('Error file: ' . $e->getFile() . ' Line: ' . $e->getLine());
             error_log('Error trace: ' . $e->getTraceAsString());
+            
+            // Clean buffer and restore error handler before sending response
+            ob_clean();
+            restore_error_handler();
             
             // Try to send JSON error if possible
             if (isset($instance)) {
@@ -643,6 +706,11 @@ class ClassController {
         } catch (\Throwable $e) {
             error_log('THROWABLE in saveClassAjax: ' . $e->getMessage());
             error_log('File: ' . $e->getFile() . ' Line: ' . $e->getLine());
+            
+            // Clean buffer and restore error handler before sending response
+            ob_clean();
+            restore_error_handler();
+            
             \wp_send_json_error('A critical error occurred. Please check the error logs.');
         }
     }
@@ -796,7 +864,7 @@ class ClassController {
         error_log('processFormData: Processed backup_agent_ids: ' . json_encode($backupAgents));
         
         $processed['schedule_data'] = self::processJsonField($data, 'schedule_data');
-        error_log('processFormData: Processed schedule_data');
+        error_log('processFormData: Processed schedule_data: ' . json_encode($processed['schedule_data']));
         
         // Process stop/restart dates from form arrays
         $stopRestartDates = [];
@@ -897,8 +965,11 @@ class ClassController {
     private static function reconstructScheduleData($data) {
         $scheduleData = [];
         
+        error_log('reconstructScheduleData: Input data keys: ' . implode(', ', array_keys($data)));
+        
         // Extract base fields from schedule_data array
         if (isset($data['schedule_data']) && is_array($data['schedule_data'])) {
+            error_log('reconstructScheduleData: schedule_data exists and is array');
             foreach ($data['schedule_data'] as $key => $value) {
                 if (!is_array($value)) {
                     $scheduleData[$key] = $value;
@@ -915,7 +986,7 @@ class ClassController {
             if (isset($data['schedule_data']['exception_dates'])) {
                 $scheduleData['exception_dates'] = $data['schedule_data']['exception_dates'];
             }
-            if (isset($data['schedule_data']['holiday_overrides'])) {
+            if (isset($data['schedule_data']['holiday_overrides']) && is_array($data['schedule_data']['holiday_overrides'])) {
                 // Handle holiday_overrides - convert string values to boolean
                 $overrides = [];
                 foreach ($data['schedule_data']['holiday_overrides'] as $date => $value) {
@@ -1058,6 +1129,8 @@ class ClassController {
      * @return array Validated and sanitized data
      */
     private static function validateScheduleDataV2($data) {
+        error_log('validateScheduleDataV2: Input data keys: ' . implode(', ', array_keys($data)));
+        
         $validated = [
             'version' => '2.0',
             'pattern' => 'weekly',
@@ -1087,13 +1160,17 @@ class ClassController {
             $validated['pattern'] = $data['pattern'];
         }
 
-        // Validate dates
+        // Validate dates - check both camelCase and snake_case versions
         if (isset($data['startDate']) && self::isValidDate($data['startDate'])) {
             $validated['startDate'] = sanitize_text_field($data['startDate']);
+        } elseif (isset($data['start_date']) && self::isValidDate($data['start_date'])) {
+            $validated['startDate'] = sanitize_text_field($data['start_date']);
         }
 
         if (isset($data['endDate']) && self::isValidDate($data['endDate'])) {
             $validated['endDate'] = sanitize_text_field($data['endDate']);
+        } elseif (isset($data['end_date']) && self::isValidDate($data['end_date'])) {
+            $validated['endDate'] = sanitize_text_field($data['end_date']);
         }
 
         // Validate day of month for monthly pattern
@@ -1107,22 +1184,45 @@ class ClassController {
         // Validate time data
         if (isset($data['timeData']) && is_array($data['timeData'])) {
             $validated['timeData'] = self::validateTimeData($data['timeData']);
+        } else {
+            // Check if we have per_day_times directly in the data
+            if (isset($data['per_day_times']) && is_array($data['per_day_times'])) {
+                $validated['timeData'] = [
+                    'mode' => 'per-day',
+                    'perDayTimes' => $data['per_day_times']
+                ];
+            }
+        }
+        
+        // If timeData was set but per_day_times exists, override with the actual data
+        if (isset($data['per_day_times']) && is_array($data['per_day_times']) && !empty($data['per_day_times'])) {
+            $validated['timeData'] = [
+                'mode' => 'per-day',
+                'perDayTimes' => $data['per_day_times']
+            ];
         }
 
-        // Validate selected days
+        // Validate selected days - check both camelCase and snake_case versions
         if (isset($data['selectedDays']) && is_array($data['selectedDays'])) {
             $allowedDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
             $validated['selectedDays'] = array_intersect($data['selectedDays'], $allowedDays);
+        } elseif (isset($data['selected_days']) && is_array($data['selected_days'])) {
+            $allowedDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            $validated['selectedDays'] = array_intersect($data['selected_days'], $allowedDays);
         }
 
-        // Validate exception dates
+        // Validate exception dates - check both camelCase and snake_case versions
         if (isset($data['exceptionDates']) && is_array($data['exceptionDates'])) {
             $validated['exceptionDates'] = self::validateExceptionDates($data['exceptionDates']);
+        } elseif (isset($data['exception_dates']) && is_array($data['exception_dates'])) {
+            $validated['exceptionDates'] = self::validateExceptionDates($data['exception_dates']);
         }
 
-        // Validate holiday overrides
+        // Validate holiday overrides - check both camelCase and snake_case versions
         if (isset($data['holidayOverrides']) && is_array($data['holidayOverrides'])) {
             $validated['holidayOverrides'] = self::validateHolidayOverrides($data['holidayOverrides']);
+        } elseif (isset($data['holiday_overrides']) && is_array($data['holiday_overrides'])) {
+            $validated['holidayOverrides'] = self::validateHolidayOverrides($data['holiday_overrides']);
         }
 
         // Preserve metadata
@@ -1134,6 +1234,8 @@ class ClassController {
         if (isset($data['generatedSchedule']) && is_array($data['generatedSchedule'])) {
             $validated['generatedSchedule'] = $data['generatedSchedule'];
         }
+        
+        error_log('validateScheduleDataV2: Output validated data: ' . json_encode($validated));
 
         return $validated;
     }
@@ -1758,14 +1860,16 @@ class ClassController {
                     'class_id' => $class_id,
                     'class_code' => 'SAMPLE-CLASS-' . $class_id,
                     'class_subject' => 'Sample Class Subject',
-                    'class_type' => 'Employed',
+                    'class_type' => 1, // Change to ID for form compatibility
+                    'client_id' => 1, // Add client_id for form
+                    'site_id' => 1, // Add site_id for form
                     'client_name' => 'Sample Client Ltd',
                     'class_agent' => null, // Will fallback to initial_class_agent
                     'supervisor_name' => 'Dr. Sarah Johnson',
                     'project_supervisor_id' => 1,
-                    'seta_funded' => true,
+                    'seta_funded' => 'Yes', // Change to Yes/No for form compatibility
                     'seta' => 'CHIETA',
-                    'exam_class' => true,
+                    'exam_class' => 'Yes', // Change to Yes/No for form compatibility
                     'exam_type' => 'Open Book Exam',
                     'class_duration' => 240,
                     'class_address_line' => '123 Sample Street, Sample City, 1234',
@@ -1773,7 +1877,35 @@ class ClassController {
                     'delivery_date' => date('Y-m-d', strtotime('+30 days')),
                     'created_at' => date('Y-m-d H:i:s'),
                     'updated_at' => date('Y-m-d H:i:s'),
-                    'schedule_data' => null,
+                    'schedule_data' => [
+                        'pattern' => 'weekly',
+                        'startDate' => date('Y-m-d'),
+                        'endDate' => date('Y-m-d', strtotime('+3 months')),
+                        'selectedDays' => ['Monday', 'Wednesday', 'Friday'],
+                        'timeData' => [
+                            'mode' => 'per-day',
+                            'perDayTimes' => [
+                                'Monday' => [
+                                    'startTime' => '09:00',
+                                    'endTime' => '11:00',
+                                    'duration' => 2
+                                ],
+                                'Wednesday' => [
+                                    'startTime' => '14:00',
+                                    'endTime' => '16:30',
+                                    'duration' => 2.5
+                                ],
+                                'Friday' => [
+                                    'startTime' => '10:00',
+                                    'endTime' => '12:00',
+                                    'duration' => 2
+                                ]
+                            ]
+                        ],
+                        'version' => '2.0',
+                        'holidayOverrides' => [],
+                        'exceptionDates' => []
+                    ],
                     'exception_dates' => null,
                     'stop_restart_dates' => [
                         [
@@ -1901,6 +2033,26 @@ class ClassController {
 
             // Schedule data expected to be in V2.0 format only
 
+            // Transform boolean fields to Yes/No for form compatibility
+            if (isset($result['seta_funded'])) {
+                $result['seta_funded'] = $result['seta_funded'] === true || $result['seta_funded'] === 't' || $result['seta_funded'] === '1' || $result['seta_funded'] === 'Yes' ? 'Yes' : 'No';
+            }
+            
+            if (isset($result['exam_class'])) {
+                $result['exam_class'] = $result['exam_class'] === true || $result['exam_class'] === 't' || $result['exam_class'] === '1' || $result['exam_class'] === 'Yes' ? 'Yes' : 'No';
+            }
+
+            // Convert class_type string to ID if needed
+            if (isset($result['class_type']) && !is_numeric($result['class_type'])) {
+                $classTypes = $this->getClassType();
+                foreach ($classTypes as $type) {
+                    if (strcasecmp($type['name'], $result['class_type']) === 0) {
+                        $result['class_type'] = $type['id'];
+                        break;
+                    }
+                }
+            }
+
             return $result;
         } catch (\Exception $e) {
             error_log('WeCoza Classes Plugin: Error in getSingleClass: ' . $e->getMessage());
@@ -1911,7 +2063,28 @@ class ClassController {
                 'class_subject' => 'Sample Class Subject',
                 'original_start_date' => date('Y-m-d'),
                 'delivery_date' => date('Y-m-d', strtotime('+30 days')),
-                'schedule_data' => null,
+                'schedule_data' => [
+                    'pattern' => 'weekly',
+                    'startDate' => date('Y-m-d'),
+                    'endDate' => date('Y-m-d', strtotime('+3 months')),
+                    'selectedDays' => ['Monday', 'Wednesday'],
+                    'timeData' => [
+                        'mode' => 'per-day',
+                        'perDayTimes' => [
+                            'Monday' => [
+                                'startTime' => '09:00',
+                                'endTime' => '11:00',
+                                'duration' => 2
+                            ],
+                            'Wednesday' => [
+                                'startTime' => '14:00',
+                                'endTime' => '16:00',
+                                'duration' => 2
+                            ]
+                        ]
+                    ],
+                    'version' => '2.0'
+                ],
                 'exception_dates' => null,
                 'stop_restart_dates' => [
                     [
@@ -1921,6 +2094,91 @@ class ClassController {
                 ]
             ];
         }
+    }
+
+    /**
+     * Log debug data for update form troubleshooting
+     * 
+     * @param int $class_id Class ID
+     * @param array $class_data Class data array
+     */
+    private function logDebugData($class_id, $class_data) {
+        $upload_dir = wp_upload_dir();
+        $log_dir = $upload_dir['basedir'] . '/wecoza-logs/update-form/' . date('Y-m-d');
+        
+        // Create directory if it doesn't exist
+        if (!file_exists($log_dir)) {
+            wp_mkdir_p($log_dir);
+        }
+        
+        $timestamp = date('H-i-s');
+        $log_file = $log_dir . '/' . $timestamp . '-class-' . $class_id . '-data.json';
+        
+        // Prepare debug data
+        $debug_data = [
+            'timestamp' => date('Y-m-d H:i:s'),
+            'class_id' => $class_id,
+            'user_id' => get_current_user_id(),
+            'request_uri' => $_SERVER['REQUEST_URI'],
+            'class_data' => $class_data,
+            'field_analysis' => [
+                'client_id' => [
+                    'value' => $class_data['client_id'] ?? null,
+                    'type' => gettype($class_data['client_id'] ?? null),
+                    'exists' => isset($class_data['client_id'])
+                ],
+                'site_id' => [
+                    'value' => $class_data['site_id'] ?? null,
+                    'type' => gettype($class_data['site_id'] ?? null),
+                    'exists' => isset($class_data['site_id'])
+                ],
+                'class_type' => [
+                    'value' => $class_data['class_type'] ?? null,
+                    'type' => gettype($class_data['class_type'] ?? null),
+                    'exists' => isset($class_data['class_type'])
+                ],
+                'seta_funded' => [
+                    'value' => $class_data['seta_funded'] ?? null,
+                    'type' => gettype($class_data['seta_funded'] ?? null),
+                    'exists' => isset($class_data['seta_funded'])
+                ],
+                'exam_class' => [
+                    'value' => $class_data['exam_class'] ?? null,
+                    'type' => gettype($class_data['exam_class'] ?? null),
+                    'exists' => isset($class_data['exam_class'])
+                ],
+                'schedule_data' => [
+                    'exists' => isset($class_data['schedule_data']),
+                    'is_array' => is_array($class_data['schedule_data'] ?? null),
+                    'keys' => array_keys($class_data['schedule_data'] ?? [])
+                ]
+            ]
+        ];
+        
+        // Write debug data
+        file_put_contents($log_file, json_encode($debug_data, JSON_PRETTY_PRINT));
+        
+        // Also create a summary log
+        $summary_file = $log_dir . '/' . $timestamp . '-class-' . $class_id . '-summary.log';
+        $summary = "Update Form Debug Log\n";
+        $summary .= "=====================\n";
+        $summary .= "Timestamp: " . date('Y-m-d H:i:s') . "\n";
+        $summary .= "Class ID: $class_id\n";
+        $summary .= "User ID: " . get_current_user_id() . "\n\n";
+        $summary .= "Field Population Status:\n";
+        
+        foreach ($debug_data['field_analysis'] as $field => $info) {
+            $status = $info['exists'] ? '✓' : '✗';
+            $summary .= "$status $field: ";
+            if ($field === 'schedule_data') {
+                $summary .= $info['exists'] ? 'Present' : 'Missing';
+            } else {
+                $summary .= $info['exists'] ? $info['value'] . ' (' . $info['type'] . ')' : 'NOT SET';
+            }
+            $summary .= "\n";
+        }
+        
+        file_put_contents($summary_file, $summary);
     }
 
     /**

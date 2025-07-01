@@ -11,6 +11,10 @@
      * Initialize the class schedule form
      */
     function initClassScheduleForm() {
+        // Don't set default values - let user choose
+        
+        // Don't set default pattern - let user choose
+        
         // Initialize schedule pattern selection
         initSchedulePatternSelection();
 
@@ -57,6 +61,8 @@
         setTimeout(function() {
             // Auto-populate schedule start date if class start date exists but schedule start date is empty
             initAutoPopulateScheduleStartDate();
+            
+            // Don't auto-fill schedule start date - let user choose
 
             // Check for holidays on initial load
             const startDate = $('#schedule_start_date').val();
@@ -64,6 +70,21 @@
             if (startDate) {
                 checkForHolidays(startDate, endDate);
             }
+            
+            // Auto-calculate end date if we have duration and start date
+            const duration = $('#class_duration').val();
+            if (startDate && duration && !endDate) {
+                recalculateEndDate();
+            }
+            
+            // Don't set default pattern - let user choose
+            
+            // Don't auto-select any days - let user choose
+            
+            // Ensure updateScheduleData runs after fields are populated
+            setTimeout(function() {
+                updateScheduleData();
+            }, 200);
         }, 100);
     }
 
@@ -73,14 +94,17 @@
     function initAutoPopulateScheduleStartDate() {
         const $classStartDate = $('#class_start_date');
         const $scheduleStartDate = $('#schedule_start_date');
+        const $originalStartDate = $('#original_start_date');
 
         const classStartDate = $classStartDate.val();
         const scheduleStartDate = $scheduleStartDate.val();
+        const originalStartDate = $originalStartDate.val();
 
-        // Auto-populate if class start date exists but schedule start date is empty
-        if (classStartDate && !scheduleStartDate) {
-            $scheduleStartDate.val(classStartDate);
-        }
+        // Don't auto-populate schedule start date - let user choose
+        // User can manually copy from class start date if needed
+        
+        // Don't auto-update schedule_start_date when class_start_date changes
+        // Let user manually set schedule start date
     }
 
     /**
@@ -181,6 +205,9 @@
                 checkForHolidays(startDate, endDate);
             }
         });
+        
+        // Trigger initial change to set correct visibility based on current pattern
+        $schedulePattern.trigger('change');
     }
 
     /**
@@ -309,6 +336,10 @@
             // Update data-day attributes for form elements
             $section.find('.day-start-time').attr('data-day', day).attr('name', 'day_start_time[' + day + ']');
             $section.find('.day-end-time').attr('data-day', day).attr('name', 'day_end_time[' + day + ']');
+            
+            // Don't set default times - let user choose
+            const $startTime = $section.find('.day-start-time');
+            const $endTime = $section.find('.day-end-time');
 
             // Show copy button only on first day
             if (index === 0) {
@@ -1813,11 +1844,9 @@
         const existingData = getExistingScheduleDataFromForm();
 
         if (existingData) {
-            // Detect data format and convert if necessary
-            const processedData = processLegacyScheduleData(existingData);
-
-            // Populate form with processed data
-            populateFormWithScheduleData(processedData);
+            // V2.0 format only - no legacy processing needed
+            // Directly populate form with schedule data
+            populateFormWithScheduleData(existingData);
         }
     }
 
@@ -1841,6 +1870,11 @@
         // 2. Check for data in window object (if localized by PHP)
         if (window.wecozaScheduleData) {
             return window.wecozaScheduleData;
+        }
+        
+        // 2b. Check for existingScheduleData set by update form
+        if (window.existingScheduleData) {
+            return window.existingScheduleData;
         }
 
         // 3. Check for pre-filled form values (legacy approach)
@@ -1876,17 +1910,21 @@
      */
     function populateFormWithScheduleData(data) {
         try {
+            console.log('Populating form with schedule data:', data);
+            
             // Set basic schedule fields
             if (data.pattern) {
                 $('#schedule_pattern').val(data.pattern).trigger('change');
             }
 
-            if (data.startDate) {
-                $('#schedule_start_date').val(data.startDate);
+            // Handle both startDate and start_date formats
+            if (data.startDate || data.start_date) {
+                $('#schedule_start_date').val(data.startDate || data.start_date);
             }
 
-            if (data.endDate) {
-                $('#schedule_end_date').val(data.endDate);
+            // Handle both endDate and end_date formats
+            if (data.endDate || data.end_date) {
+                $('#schedule_end_date').val(data.endDate || data.end_date);
             }
 
             if (data.dayOfMonth) {
@@ -1894,6 +1932,7 @@
             }
 
             // Set time data based on mode
+            // First check if timeData exists, otherwise check for legacy format
             if (data.timeData) {
                 if (data.timeData.mode === 'single') {
                     // Populate single time controls only if they exist
@@ -1917,12 +1956,25 @@
                     // Store for later use when per-day sections are created
                     window.pendingPerDayTimes = data.timeData.perDayTimes;
                 }
+            } else if (data.per_day_times || data.perDayTimes) {
+                // Handle legacy format where per_day_times is at root level
+                window.pendingPerDayTimes = data.per_day_times || data.perDayTimes;
             }
 
-            // Set selected days for weekly/biweekly patterns
-            if (data.selectedDays && data.selectedDays.length > 0) {
-                data.selectedDays.forEach(day => {
-                    $(`.schedule-day-checkbox[value="${day}"]`).prop('checked', true);
+            // Set selected days for weekly/biweekly patterns (handle both selectedDays and days)
+            const days = data.selectedDays || data.days || [];
+            console.log('Days to populate:', days);
+            console.log('Available checkboxes:', $('.schedule-day-checkbox').map(function() { return $(this).val(); }).get());
+            
+            if (days.length > 0) {
+                days.forEach(day => {
+                    const checkbox = $(`.schedule-day-checkbox[value="${day}"]`);
+                    if (checkbox.length > 0) {
+                        checkbox.prop('checked', true);
+                        console.log(`Checked day: ${day}`);
+                    } else {
+                        console.warn(`Checkbox not found for day: ${day}`);
+                    }
                 });
 
                 // Trigger day selection update
@@ -1931,10 +1983,13 @@
 
                     // Apply pending per-day times if available
                     if (window.pendingPerDayTimes) {
+                        console.log('Applying pending per-day times:', window.pendingPerDayTimes);
                         applyPerDayTimes(window.pendingPerDayTimes);
                         delete window.pendingPerDayTimes;
                     }
                 }, 100);
+            } else {
+                console.log('No days found to populate');
             }
 
             // Set exception dates
@@ -1944,10 +1999,14 @@
                 });
             }
 
-            // Set holiday overrides
-            if (data.holidayOverrides) {
-                Object.keys(data.holidayOverrides).forEach(date => {
-                    $(`.holiday-override-checkbox[data-date="${date}"]`).prop('checked', true);
+            // Set holiday overrides (handle both holidayOverrides and holiday_overrides)
+            const holidayOverrides = data.holidayOverrides || data.holiday_overrides;
+            if (holidayOverrides) {
+                Object.keys(holidayOverrides).forEach(date => {
+                    const $checkbox = $(`.holiday-override-checkbox[data-date="${date}"]`);
+                    if ($checkbox.length > 0) {
+                        $checkbox.prop('checked', true);
+                    }
                 });
             }
 
@@ -1967,18 +2026,38 @@
      * Apply per-day times to the generated sections
      */
     function applyPerDayTimes(perDayTimes) {
+        console.log('Applying per-day times to form:', perDayTimes);
+        
+        if (!perDayTimes || typeof perDayTimes !== 'object') {
+            console.warn('Invalid perDayTimes data:', perDayTimes);
+            return;
+        }
 
         Object.keys(perDayTimes).forEach(day => {
             const dayData = perDayTimes[day];
             const $section = $(`.per-day-time-section[data-day="${day}"]`);
 
+            console.log(`Looking for section for ${day}:`, $section.length > 0 ? 'Found' : 'Not found');
+            
             if ($section.length > 0) {
-                $section.find('.day-start-time').val(dayData.startTime);
-                $section.find('.day-end-time').val(dayData.endTime);
+                const $startTime = $section.find('.day-start-time');
+                const $endTime = $section.find('.day-end-time');
+                
+                if ($startTime.length && dayData.startTime) {
+                    $startTime.val(dayData.startTime);
+                    console.log(`Set ${day} start time to:`, dayData.startTime);
+                }
+                
+                if ($endTime.length && dayData.endTime) {
+                    $endTime.val(dayData.endTime);
+                    console.log(`Set ${day} end time to:`, dayData.endTime);
+                }
 
                 // Trigger change events to update duration and validation
-                $section.find('.day-start-time').trigger('change');
-                $section.find('.day-end-time').trigger('change');
+                $startTime.trigger('change');
+                $endTime.trigger('change');
+            } else {
+                console.warn(`No time section found for day: ${day}`);
             }
         });
     }
@@ -2035,12 +2114,20 @@
      * Returns structured data object ready for backend processing
      */
     function collectScheduleData() {
+        // Ensure we have a start date before collecting
+        let startDate = $('#schedule_start_date').val() || $('#class_start_date').val();
+        if (!startDate) {
+            startDate = new Date().toISOString().split('T')[0];
+            $('#schedule_start_date').val(startDate);
+            console.log('Set fallback start date in collectScheduleData:', startDate);
+        }
+        
         const data = {
-            // Basic schedule information
-            pattern: $('#schedule_pattern').val(),
-            startDate: $('#schedule_start_date').val(),
-            endDate: $('#schedule_end_date').val(),
-            dayOfMonth: $('#schedule_day_of_month').val(),
+            // Basic schedule information with fallbacks
+            pattern: $('#schedule_pattern').val() || 'weekly',
+            startDate: startDate,
+            endDate: $('#schedule_end_date').val() || '',
+            dayOfMonth: $('#schedule_day_of_month').val() || null,
 
             // Time data (single or per-day)
             timeData: getAllTimeData(),
@@ -2056,8 +2143,23 @@
 
             // Metadata
             lastUpdated: new Date().toISOString(),
-            version: '2.0' // Version for backward compatibility tracking
+            version: '2.0', // Version for backward compatibility tracking
+            
+            // Add validation metadata
+            metadata: {
+                lastUpdated: new Date().toISOString(),
+                validatedAt: new Date().toISOString()
+            }
         };
+        
+        // Debug logging
+        console.log('=== Schedule Data Collection ===');
+        console.log('Pattern:', data.pattern);
+        console.log('Start Date:', data.startDate);
+        console.log('End Date:', data.endDate);
+        console.log('Selected Days:', data.selectedDays);
+        console.log('Time Data:', data.timeData);
+        console.log('Full collected data:', JSON.stringify(data, null, 2));
 
         return data;
     }
@@ -2105,6 +2207,9 @@
      */
     function updateHiddenFormFields(scheduleData) {
         const $container = $('#schedule-data-container');
+        
+        console.log('=== Creating Hidden Fields for Schedule Data ===');
+        console.log('Container found:', $container.length > 0);
 
         // Clear existing hidden fields
         $container.empty();
@@ -2161,6 +2266,22 @@
         $('#holiday_overrides').val(JSON.stringify(scheduleData.holidayOverrides));
 
         // Legacy compatibility fields removed - V2.0 format only
+        
+        // Log final hidden field count
+        const hiddenFieldCount = $container.find('input[type="hidden"]').length;
+        console.log(`Total hidden fields created: ${hiddenFieldCount}`);
+        
+        // Verify critical fields exist and show status
+        const criticalFields = ['schedule_data[pattern]', 'schedule_data[start_date]'];
+        let allFieldsValid = true;
+        criticalFields.forEach(fieldName => {
+            const fieldExists = $container.find(`input[name="${fieldName}"]`).length > 0;
+            if (!fieldExists) {
+                // Only log as warning during initialization, not error
+                console.warn(`Field not yet created: ${fieldName}`);
+                allFieldsValid = false;
+            }
+        });
     }
 
     /**
@@ -2174,6 +2295,9 @@
                 value: value
             });
             $container.append($field);
+            console.log(`Created hidden field: ${name} = ${value}`);
+        } else {
+            console.warn(`Skipped empty hidden field: ${name}`);
         }
     }
 

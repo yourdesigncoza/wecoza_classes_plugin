@@ -112,7 +112,7 @@
          <h6 class="mb-2">Class Schedule</h6>
          <!-- Date Range -->
          <div class="row ">
-            <div class="col-md-4 d-none">
+            <div class="col-md-4">
                <label for="schedule_start_date" class="form-label">Schedule Start Date <span class="text-danger">*</span></label>
                <input type="date" id="schedule_start_date" name="schedule_start_date" class="form-control" placeholder="YYYY-MM-DD" required>
                <div class="invalid-feedback">Please select a start date.</div>
@@ -122,7 +122,7 @@
             <div class="col-md-4 ">
                <label for="schedule_pattern" class="form-label">Schedule Pattern <span class="text-danger">*</span></label>
                <select id="schedule_pattern" name="schedule_pattern" class="form-select" required>
-                  <option value="">Select</option>
+                  <option value="">Select Schedule Pattern</option>
                   <option value="weekly">Weekly (Every Week)</option>
                   <option value="biweekly">Bi-Weekly (Every Two Weeks)</option>
                   <option value="monthly">Monthly</option>
@@ -217,7 +217,7 @@
                      <div class="">
                         <label class="form-label">Start Time <span class="text-danger">*</span></label>
                         <select class="form-select day-start-time" data-day="" required>
-                           <option value="">Select</option>
+                           <option value="">Select Time</option>
                            <?php
                               // Generate time options from 6:00 AM to 8:00 PM in 30-minute increments
                               $start = strtotime('06:00:00');
@@ -236,7 +236,7 @@
                      <div class="mb-2">
                         <label class="form-label">End Time <span class="text-danger">*</span></label>
                         <select class="form-select day-end-time" data-day="" required>
-                           <option value="">Select</option>
+                           <option value="">Select Time</option>
                            <?php
                               // Generate time options from 6:30 AM to 8:30 PM in 30-minute increments
                               $start = strtotime('06:30:00');
@@ -411,6 +411,7 @@
       <div id="schedule-data-container">
          <!-- These will be populated dynamically via JavaScript -->
       </div>
+      
       <!-- Schedule Statistics Section (hidden by default) -->
       <div class="card shadow-none border  d-none" id="schedule-statistics-section" data-component-card="data-component-card">
          <div class="card-header p-3 border-bottom bg-body">
