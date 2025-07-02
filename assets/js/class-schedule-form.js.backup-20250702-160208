@@ -990,34 +990,22 @@
      * Helper function to get class type hours
      */
     function getClassTypeHours(classTypeId) {
-        // Use the actual value from class_duration field instead of hard-coded values
-        const duration = $('#class_duration').val();
-        
-        // Log for debugging
-        console.log('getClassTypeHours called - using class_duration value:', duration);
-        
-        // Return the parsed float value, or 0 if not set
-        return duration ? parseFloat(duration) : 0;
-    }
+        // This would typically come from the server
+        // For now, we'll use a simple mapping based on the class types
+        const classTypeHours = {
+            'AET_COMM': 120,
+            'AET_NUM': 120,
+            'GETC': 120,
+            'BA_NQF2': 120,
+            'BA_NQF3': 120,
+            'BA_NQF4': 120,
+            'REALLL': 160,
+            'SKILL_PACKAGE': 80,
+            'SOFT_SKILL': 40
+        };
 
-    /**
-     * Calculate actual calendar months between two dates
-     * More accurate than dividing days by 30
-     */
-    function calculateActualMonths(startDate, endDate) {
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        
-        // Calculate the difference in months
-        let months = (end.getFullYear() - start.getFullYear()) * 12;
-        months += end.getMonth() - start.getMonth();
-        
-        // Add partial month if end date is after start date's day
-        if (end.getDate() >= start.getDate()) {
-            months += 1;
-        }
-        
-        return Math.max(0, months); // Ensure non-negative result
+        // Default to 120 hours if not found
+        return classTypeHours[classTypeId] || 120;
     }
 
     /**
@@ -2369,8 +2357,7 @@
 
             stats.totalDays = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
             stats.totalWeeks = Math.ceil(stats.totalDays / 7);
-            // Use accurate calendar-based month calculation instead of dividing by 30
-            stats.totalMonths = calculateActualMonths(scheduleData.startDate, scheduleData.endDate);
+            stats.totalMonths = Math.ceil(stats.totalDays / 30);
 
             // Calculate total hours based on time mode
             if (scheduleData.timeData.mode === 'single') {
@@ -2559,7 +2546,6 @@
             const checkDate = new Date(dateStr);
 
             // Check if the date falls between stop date (inclusive) and restart date (exclusive)
-            // Note: restart date is the day classes resume, so it should NOT be in the stop period
             if (checkDate >= stopDate && checkDate < restartDate) {
                 return true;
             }
@@ -2633,18 +2619,6 @@
 
                 // Calculate number of sessions needed
                 const sessionsNeeded = Math.ceil(classHours / sessionDuration);
-                
-                // Create session tracking array for debugging
-                const sessionLog = [];
-                let debugInfo = {
-                    startDate: startDate,
-                    classHours: classHours,
-                    sessionDuration: sessionDuration,
-                    sessionsNeeded: sessionsNeeded,
-                    pattern: pattern,
-                    exceptionDatesCount: exceptionDates.length,
-                    stopPeriodsCount: stopRestartPeriods.length
-                };
 
                 // Calculate end date based on schedule pattern and exception dates
                 if (pattern && startDate) {
@@ -2662,15 +2636,11 @@
                         // Convert selected days to day indices
                         const dayIndices = selectedDays.map(day => getDayIndex(day));
 
-                        // Enhanced debug logging
-                        console.log('🔴 === START END DATE CALCULATION DEBUG ===');
+                        // Debug logging for multiple day selection
                         console.log('🗓️ End Date Calculation - Weekly Pattern');
                         console.log('📅 Selected days:', selectedDays);
                         console.log('🔢 Day indices:', dayIndices);
                         console.log('⏰ Sessions needed:', sessionsNeeded);
-                        console.log('📊 Class hours:', classHours, 'Session duration:', sessionDuration);
-                        console.log('🚫 Exception dates:', exceptionDates);
-                        console.log('⏸️ Stop periods:', stopRestartPeriods);
 
                         // Set start date to the first occurrence of any selected day
                         const currentDayIndex = date.getDay();
@@ -2726,55 +2696,16 @@
                                 !isInStopPeriod &&
                                 (!isPublicHoliday || isHolidayOverridden)) {
                                 sessionsScheduled++;
-                                
-                                // Add to session log
-                                sessionLog.push({
-                                    sessionNumber: sessionsScheduled,
-                                    date: dateStr,
-                                    dayName: getDayName(currentDayIndex),
-                                    isHoliday: isPublicHoliday,
-                                    isHolidayOverridden: isHolidayOverridden,
-                                    isException: false,
-                                    isInStopPeriod: false,
-                                    status: 'scheduled'
-                                });
-                                
-                                console.log('✅ Session #' + sessionsScheduled + ' scheduled on:', dateStr, 'Day:', getDayName(currentDayIndex));
-                                
-                                // Safety check - break if we've reached our target
-                                if (sessionsScheduled >= sessionsNeeded) {
-                                    console.log('🎯 TARGET REACHED! Breaking loop at session', sessionsScheduled);
-                                    break;
-                                }
+                                console.log('✅ Session scheduled on:', dateStr, 'Day:', getDayName(currentDayIndex), 'Sessions so far:', sessionsScheduled);
                             } else {
                                 // Debug why this day was skipped
                                 const dayName = getDayName(currentDayIndex);
                                 const isSelectedDay = dayIndices.includes(currentDayIndex);
-                                
-                                if (isSelectedDay) {
-                                    sessionLog.push({
-                                        sessionNumber: 'skipped',
-                                        date: dateStr,
-                                        dayName: dayName,
-                                        isHoliday: isPublicHoliday,
-                                        isException: isExceptionDate,
-                                        isInStopPeriod: isInStopPeriod,
-                                        status: 'skipped',
-                                        reason: isExceptionDate ? 'exception' : isInStopPeriod ? 'stop_period' : isPublicHoliday ? 'holiday' : 'unknown'
-                                    });
-                                }
-                                
                                 console.log('❌ Day skipped:', dateStr, 'Day:', dayName, 'Selected:', isSelectedDay, 'Exception:', isExceptionDate, 'Stop period:', isInStopPeriod, 'Holiday:', isPublicHoliday);
                             }
 
                             // Move to next day
                             date.setDate(date.getDate() + 1);
-                            
-                            // Emergency break to prevent infinite loops
-                            if (sessionsScheduled > sessionsNeeded + 100) {
-                                console.error('🚨 EMERGENCY BREAK: Too many sessions scheduled!', sessionsScheduled, 'vs needed:', sessionsNeeded);
-                                break;
-                            }
                         }
                     }
                     // Bi-weekly pattern
@@ -2919,80 +2850,15 @@
                         }
                     }
 
-                    // The date variable is now one day past the last scheduled session
-                    // We need to move back to the actual last session date
-                    let finalEndDate = date;
-                    
-                    // Find the last scheduled session from our log
-                    const lastScheduledSession = sessionLog.filter(s => s.status === 'scheduled').pop();
-                    if (lastScheduledSession) {
-                        finalEndDate = new Date(lastScheduledSession.date);
-                        console.log('📍 Adjusting end date to last scheduled session:', lastScheduledSession.date);
-                    } else {
-                        // If no sessions in log, move back one day as we've advanced past the end
-                        finalEndDate.setDate(finalEndDate.getDate() - 1);
-                        console.log('📍 Moving end date back one day (no session log available)');
-                    }
-                    
                     // Format date as YYYY-MM-DD
-                    const endDate = finalEndDate.toISOString().split('T')[0];
+                    const endDate = date.toISOString().split('T')[0];
                     $('#schedule_end_date').val(endDate);
 
-                    // Validate that calculated hours match expected hours
-                    const calculatedHours = sessionsScheduled * sessionDuration;
-                    const expectedHours = parseFloat($('#class_duration').val()) || 0;
-                    const hoursDifference = Math.abs(calculatedHours - expectedHours);
-                    
-                    // Debug summary with session log
+                    // Debug summary
                     console.log('🎯 End Date Calculation Complete');
                     console.log('📊 Total sessions scheduled:', sessionsScheduled, 'of', sessionsNeeded, 'needed');
                     console.log('📅 Final end date:', endDate);
                     console.log('🗓️ Selected days used in calculation:', getSelectedDays());
-                    console.log('⏰ Hours validation: Calculated', calculatedHours, 'vs Expected', expectedHours);
-                    
-                    // Output session log details
-                    console.log('📋 === SESSION LOG ANALYSIS ===');
-                    console.log('Total entries in log:', sessionLog.length);
-                    console.log('Scheduled sessions:', sessionLog.filter(s => s.status === 'scheduled').length);
-                    console.log('Skipped sessions:', sessionLog.filter(s => s.status === 'skipped').length);
-                    
-                    // Show first 10 sessions
-                    console.log('🔍 First 10 sessions:');
-                    sessionLog.slice(0, 10).forEach((session, index) => {
-                        console.log(`  ${index + 1}. ${session.date} (${session.dayName}) - ${session.status}` + 
-                                   (session.status === 'skipped' ? ` - Reason: ${session.reason}` : ` - Session #${session.sessionNumber}`));
-                    });
-                    
-                    // Show last 10 sessions
-                    console.log('🔍 Last 10 sessions:');
-                    const scheduledOnly = sessionLog.filter(s => s.status === 'scheduled');
-                    scheduledOnly.slice(-10).forEach((session, index) => {
-                        const actualIndex = scheduledOnly.length - 10 + index;
-                        console.log(`  ${actualIndex + 1}. ${session.date} (${session.dayName}) - Session #${session.sessionNumber}`);
-                    });
-                    
-                    // Analyze stop periods
-                    const stopPeriodSessions = sessionLog.filter(s => s.reason === 'stop_period');
-                    if (stopPeriodSessions.length > 0) {
-                        console.log('⏸️ Sessions skipped due to stop periods:', stopPeriodSessions.length);
-                        stopPeriodSessions.forEach(s => {
-                            console.log(`  - ${s.date} (${s.dayName})`);
-                        });
-                    }
-                    
-                    // Show warning if there's a significant mismatch (more than 0.1 hours difference)
-                    if (hoursDifference > 0.1) {
-                        console.warn('⚠️ Hours mismatch detected!');
-                        console.warn('Expected hours:', expectedHours);
-                        console.warn('Calculated hours:', calculatedHours);
-                        console.warn('Difference:', hoursDifference.toFixed(2), 'hours');
-                        console.warn('Sessions difference:', sessionsScheduled - sessionsNeeded);
-                        
-                        // You could also show a visual warning to the user here if needed
-                        // For example: $('#hours-warning').show().text('Warning: Calculated hours (' + calculatedHours + ') do not match expected hours (' + expectedHours + ')');
-                    }
-                    
-                    console.log('🔴 === END DEBUG OUTPUT ===');
 
                     // Update schedule tables
                     updateScheduleTables();

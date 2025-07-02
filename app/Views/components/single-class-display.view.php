@@ -148,6 +148,18 @@ $error_message = $error_message ?? '';
                                 </div>
                             </div>
                         </div>
+                        <!-- Total Hours Card -->
+                        <div class="col-sm-auto">
+                            <div class="d-flex align-items-center border-start-sm ps-sm-5">
+                                <div class="d-flex bg-warning-subtle rounded flex-center me-3" style="width:32px; height:32px">
+                                    <i class="bi bi-clock-history text-warning"></i>
+                                </div>
+                                <div>
+                                    <p class="fw-bold mb-1">Total Hours</p>
+                                    <h5 class="fw-bolder text-nowrap"><?php echo isset($class['class_duration']) ? number_format($class['class_duration'], 0) : 'N/A'; ?></h5>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -684,9 +696,13 @@ $error_message = $error_message ?? '';
                         $holidaysController = \WeCozaClasses\Controllers\PublicHolidaysController::getInstance();
                         $all_holidays = $holidaysController->getHolidaysInRange($start_date, $end_date);
                         
+                        // Calculate total sessions needed based on class duration
+                        $total_sessions_needed = $daily_hours > 0 ? ceil($class['class_duration'] / $daily_hours) : 0;
+                        $total_sessions_scheduled = 0;
+                        
                         // Process each month in the date range
                         $process_date = clone $current_date;
-                        while ($process_date <= $end_datetime) {
+                        while ($process_date <= $end_datetime && $total_sessions_scheduled < $total_sessions_needed) {
                             $year_month = $process_date->format('Y-m');
                             $year = (int)$process_date->format('Y');
                             $month = (int)$process_date->format('m');
@@ -700,7 +716,8 @@ $error_message = $error_message ?? '';
                                     'name' => $process_date->format('F'),
                                     'hours' => 0,
                                     'exceptions' => 0,
-                                    'stop_starts' => 0
+                                    'stop_starts' => 0,
+                                    'calculation_breakdown' => []
                                 ];
                             }
                             
@@ -764,9 +781,10 @@ $error_message = $error_message ?? '';
                                         $restart_date = new DateTime($stop_restart['restart_date']);
                                         
                                         // Remove any session dates that fall within the stop period
+                                        // Note: restart date is exclusive (the day classes resume)
                                         foreach ($final_sessions as $index => $session_date) {
                                             $session_datetime = new DateTime($session_date);
-                                            if ($session_datetime >= $stop_date && $session_datetime <= $restart_date) {
+                                            if ($session_datetime >= $stop_date && $session_datetime < $restart_date) {
                                                 unset($final_sessions[$index]);
                                             }
                                         }
@@ -793,62 +811,95 @@ $error_message = $error_message ?? '';
                             
                             $estimated_sessions = count($final_sessions);
                             
+                            // Limit sessions to not exceed total needed
+                            $remaining_sessions_needed = $total_sessions_needed - $total_sessions_scheduled;
+                            if ($estimated_sessions > $remaining_sessions_needed) {
+                                $estimated_sessions = $remaining_sessions_needed;
+                                // Trim the final_sessions array to match
+                                $final_sessions = array_slice($final_sessions, 0, $remaining_sessions_needed);
+                            }
+                            
+                            // Update total sessions scheduled
+                            $total_sessions_scheduled += $estimated_sessions;
+                            
+                            // Initialize month data with hours
+                            $monthly_data[$year][$month]['hours'] = $estimated_sessions * $daily_hours;
+                            
+                            // Check if we've reached our target
+                            if ($total_sessions_scheduled >= $total_sessions_needed) {
+                                // We've scheduled enough sessions, exit the loop
+                                break; // Break out of the while loop
+                            }
+                            
+                            // Calculate breakdown data for this month (store for use in UI)
+                            $month_name = $process_date->format('F Y');
+                            $potential_count = count($potential_sessions);
+                            $holiday_removals = 0;
+                            $exception_removals = 0;
+                            $stop_removals = 0;
+                            $override_additions = 0;
+                            
+                            // Count holiday removals
+                            foreach ($all_holidays as $holiday) {
+                                if (in_array($holiday['date'], $potential_sessions)) {
+                                    $holiday_removals++;
+                                }
+                            }
+                            
+                            // Count exception removals
+                            if (isset($schedule_data['exceptionDates'])) {
+                                foreach ($schedule_data['exceptionDates'] as $exception) {
+                                    if (in_array($exception['date'], $potential_sessions)) {
+                                        $exception_removals++;
+                                    }
+                                }
+                            }
+                            
+                            // Count stop period removals
+                            if (!empty($stop_restart_dates)) {
+                                foreach ($stop_restart_dates as $stop_restart) {
+                                    if (isset($stop_restart['stop_date']) && isset($stop_restart['restart_date'])) {
+                                        $stop_date = new DateTime($stop_restart['stop_date']);
+                                        $restart_date = new DateTime($stop_restart['restart_date']);
+                                        foreach ($potential_sessions as $session_date) {
+                                            $session_datetime = new DateTime($session_date);
+                                            if ($session_datetime >= $stop_date && $session_datetime < $restart_date) {
+                                                $stop_removals++;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // Count override additions
+                            if (isset($schedule_data['holidayOverrides'])) {
+                                foreach ($schedule_data['holidayOverrides'] as $holiday_date => $include) {
+                                    if ($include) {
+                                        $override_datetime = new DateTime($holiday_date);
+                                        if ($override_datetime->format('Y-m') === $year_month) {
+                                            $override_day_name = strtolower($override_datetime->format('l'));
+                                            if (in_array($override_day_name, $selected_days)) {
+                                                $override_additions++;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // Store calculation breakdown for this month
+                            $monthly_data[$year][$month]['calculation_breakdown'] = [
+                                'potential_sessions' => $potential_count,
+                                'holiday_removals' => $holiday_removals,
+                                'exception_removals' => $exception_removals,
+                                'stop_removals' => $stop_removals,
+                                'override_additions' => $override_additions,
+                                'final_sessions' => $estimated_sessions,
+                                'daily_hours' => $daily_hours,
+                                'calculated_hours' => $estimated_sessions * $daily_hours
+                            ];
+                            
                             // DEBUG: Show step-by-step accounting (only when debugging)
                             if (defined('WP_DEBUG') && WP_DEBUG) {
-                                $month_name = $process_date->format('F Y');
-                                $potential_count = count($potential_sessions);
-                                $holiday_removals = 0;
-                                $exception_removals = 0;
-                                $stop_removals = 0;
-                                $override_additions = 0;
-                                
-                                // Count holiday removals
-                                foreach ($all_holidays as $holiday) {
-                                    if (in_array($holiday['date'], $potential_sessions)) {
-                                        $holiday_removals++;
-                                    }
-                                }
-                                
-                                // Count exception removals
-                                if (isset($schedule_data['exceptionDates'])) {
-                                    foreach ($schedule_data['exceptionDates'] as $exception) {
-                                        if (in_array($exception['date'], $potential_sessions)) {
-                                            $exception_removals++;
-                                        }
-                                    }
-                                }
-                                
-                                // Count stop period removals
-                                if (!empty($stop_restart_dates)) {
-                                    foreach ($stop_restart_dates as $stop_restart) {
-                                        if (isset($stop_restart['stop_date']) && isset($stop_restart['restart_date'])) {
-                                            $stop_date = new DateTime($stop_restart['stop_date']);
-                                            $restart_date = new DateTime($stop_restart['restart_date']);
-                                            foreach ($potential_sessions as $session_date) {
-                                                $session_datetime = new DateTime($session_date);
-                                                if ($session_datetime >= $stop_date && $session_datetime <= $restart_date) {
-                                                    $stop_removals++;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                
-                                // Count override additions
-                                if (isset($schedule_data['holidayOverrides'])) {
-                                    foreach ($schedule_data['holidayOverrides'] as $holiday_date => $include) {
-                                        if ($include) {
-                                            $override_datetime = new DateTime($holiday_date);
-                                            if ($override_datetime->format('Y-m') === $year_month) {
-                                                $override_day_name = strtolower($override_datetime->format('l'));
-                                                if (in_array($override_day_name, $selected_days)) {
-                                                    $override_additions++;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                
                                 echo "<div style='background: #f9f9f9; padding: 8px; margin: 2px; border-left: 4px solid #007cba; font-size: 12px;'>";
                                 echo "<strong>$month_name Calculation:</strong><br>";
                                 echo "• Potential sessions: $potential_count<br>";
@@ -861,8 +912,7 @@ $error_message = $error_message ?? '';
                                 echo "</div>";
                             }
                             
-                            // Calculate and add hours for this month
-                            $monthly_data[$year][$month]['hours'] += $estimated_sessions * $daily_hours;
+                            // Hours already calculated above, no need to add again
                             
                             // Count exception dates in this month (for display purposes)
                             if (isset($schedule_data['exceptionDates'])) {
@@ -899,12 +949,20 @@ $error_message = $error_message ?? '';
                 }
             }
             // Validation: Show calculation summary if debugging is needed
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                echo "<div style='background: #e8f5e8; padding: 10px; margin: 10px 0; border: 1px solid #4caf50; border-radius: 4px;'>";
-                echo "<strong>Advanced Schedule Calculation Summary:</strong><br>";
-                echo "Daily Hours: " . number_format($daily_hours, 2) . "<br>";
-                echo "Selected Days: " . implode(', ', $selected_days_raw) . "<br>";
+            if (true || defined('WP_DEBUG') && WP_DEBUG) { // Force debug output
+                echo "<div style='background: #ffe8e8; padding: 10px; margin: 10px 0; border: 2px solid #ff4444; border-radius: 4px;'>";
+                echo "<strong>🔍 HOURS CALCULATION DEBUG:</strong><br>";
+                $db_total_hours = isset($class['class_duration']) ? $class['class_duration'] : 'Not Set';
+                echo "<strong style='color: #ff0000;'>Expected Total Hours (from database): " . $db_total_hours . "</strong><br>";
+                echo "<strong>Sessions needed: " . ($total_sessions_needed ?? 'N/A') . " (based on " . $db_total_hours . " hours ÷ " . number_format($daily_hours, 2) . " hours/session)</strong><br>";
+                echo "<strong>Total sessions actually scheduled: " . ($total_sessions_scheduled ?? 'N/A') . "</strong><br>";
+                echo "Daily Hours per Session: " . number_format($daily_hours, 2) . "<br>";
+                echo "Selected Days: " . implode(', ', $selected_days_raw) . " (" . count($selected_days) . " days/week)<br>";
                 echo "Pattern: " . ($schedule_data['pattern'] ?? 'unknown') . "<br>";
+                echo "Start Date: " . $start_date . "<br>";
+                echo "End Date: " . $end_date . "<br>";
+                $weeks_duration = round((strtotime($end_date) - strtotime($start_date)) / (7 * 24 * 60 * 60));
+                echo "Duration: ~" . $weeks_duration . " weeks<br>";
                 echo "Total Months: " . array_sum(array_map('count', $monthly_data)) . "<br>";
                 
                 // Count factors being accounted for
@@ -925,8 +983,39 @@ $error_message = $error_message ?? '';
                         $total_hours += $month_data['hours'];
                     }
                 }
-                echo "<strong>Total Calculated Hours: " . number_format($total_hours, 1) . "</strong><br>";
-                echo "<em>Now includes proper accounting for holidays, exceptions, and stop periods.</em>";
+                echo "<strong style='color: #ff0000;'>Total Calculated Hours: " . number_format($total_hours, 1) . "</strong><br>";
+                $expected_hours = isset($class['class_duration']) ? $class['class_duration'] : 0;
+                $discrepancy = $expected_hours - $total_hours;
+                echo "<strong style='color: #ff0000;'>DISCREPANCY: " . number_format(abs($discrepancy), 1) . " hours " . 
+                     ($discrepancy > 0 ? "missing" : ($discrepancy < 0 ? "extra" : "- Perfect match")) . "!</strong><br>";
+                
+                // Calculate what the hours per session should be
+                $total_sessions = 0;
+                foreach ($monthly_data as $year_data) {
+                    foreach ($year_data as $month_data) {
+                        if (isset($month_data['calculation_breakdown']['final_sessions'])) {
+                            $total_sessions += $month_data['calculation_breakdown']['final_sessions'];
+                        }
+                    }
+                }
+                $required_hours_per_session = $total_sessions > 0 ? $expected_hours / $total_sessions : 0;
+                echo "<br><strong>CALCULATION ANALYSIS:</strong><br>";
+                echo "Total Sessions Scheduled: " . $total_sessions . " (limited to " . ($total_sessions_needed ?? 'N/A') . " needed)<br>";
+                echo "Current Hours per Session: " . number_format($daily_hours, 2) . "<br>";
+                echo "Required Hours per Session for " . $expected_hours . " total: " . number_format($required_hours_per_session, 2) . "<br>";
+                echo "<br><strong>Per-Day Time Configuration:</strong><br>";
+                if (isset($schedule_data['timeData']['perDayTimes'])) {
+                    foreach ($schedule_data['timeData']['perDayTimes'] as $day => $times) {
+                        echo "$day: " . ($times['start_time'] ?? $times['startTime'] ?? 'N/A') . " - " . 
+                             ($times['end_time'] ?? $times['endTime'] ?? 'N/A') . 
+                             " (Duration: " . ($times['duration'] ?? 'N/A') . " hours)<br>";
+                    }
+                }
+                echo "<em>The issue appears to be that the configured session duration doesn't match the required duration to reach the expected total hours.<br>";
+                echo "This could be due to:<br>";
+                echo "• Incorrect session duration in the schedule<br>";
+                echo "• Missing or additional sessions not accounted for<br>";
+                echo "• The class duration field not matching the actual schedule requirements</em>";
                 echo "</div>";
             }
             ?>
@@ -952,13 +1041,18 @@ $error_message = $error_message ?? '';
                                     <div class="col-12 col-sm-6 col-lg-4 col-xl-4">
                                         <div class="card border border-300 h-100">
                                             <div class="card-body p-2 pt-1 pb-1">
-                                                <!-- <div class="d-flex align-items-center justify-content-between mb-1">
-                                                    <h6 class="text-body mb-0"><?php echo $month_data['name']; ?></h6>
-                                                    <i class="bi bi-calendar3 text-body-tertiary"></i>
-                                                </div> -->
+                                                <!-- Clickable Month Header -->
+                                                <div class="d-flex justify-content-between align-items-center mb-2" 
+                                                     style="cursor: pointer;" 
+                                                     data-bs-toggle="collapse" 
+                                                     data-bs-target="#breakdown-<?php echo $year; ?>-<?php echo $month_num; ?>" 
+                                                     aria-expanded="false">
+                                                    <span class="fw-bold mb-0 fs-10"><?php echo $month_data['name']; ?></span>
+                                                    <i class="bi bi-chevron-down fs-10 text-muted"></i>
+                                                </div>
                                                 
-                                                <div class="d-flex flex-wrap gap-1">
-                                                    <span class="fw-bold mb-0 fs-10" style="width:65px"><?php echo $month_data['name']; ?> : </span>
+                                                <!-- Month Summary Badges -->
+                                                <div class="d-flex flex-wrap gap-1 mb-2">
                                                     <!-- Total Hours Badge -->
                                                     <div class="badge badge-phoenix fs-10 badge-phoenix-primary">
                                                         <i class="bi bi-clock me-1"></i>
@@ -969,7 +1063,7 @@ $error_message = $error_message ?? '';
                                                     <?php if ($month_data['exceptions'] > 0): ?>
                                                     <div class="badge badge-phoenix fs-10 badge-phoenix-warning">
                                                         <i class="bi bi-exclamation-triangle me-1"></i>
-                                                        <?php echo $month_data['exceptions']; ?> exc
+                                                        <?php echo $month_data['exceptions']; ?> EXC
                                                     </div>
                                                     <?php endif; ?>
                                                     
@@ -977,9 +1071,48 @@ $error_message = $error_message ?? '';
                                                     <?php if ($month_data['stop_starts'] > 0): ?>
                                                     <div class="badge badge-phoenix fs-10 badge-phoenix-danger">
                                                         <i class="bi bi-pause-circle me-1"></i>
-                                                        <?php echo $month_data['stop_starts']; ?> stop
+                                                        <?php echo $month_data['stop_starts']; ?> STOP
                                                     </div>
                                                     <?php endif; ?>
+                                                </div>
+                                                
+                                                <!-- Expandable Calculation Breakdown -->
+                                                <div class="collapse" id="breakdown-<?php echo $year; ?>-<?php echo $month_num; ?>">
+                                                    <div class="border-top pt-2">
+                                                        <div class="fs-9 text-muted">
+                                                            <strong><?php echo $month_data['name']; ?> <?php echo $year; ?> Calculation:</strong>
+                                                        </div>
+                                                        
+                                                        <?php if (isset($month_data['calculation_breakdown'])): 
+                                                            $breakdown = $month_data['calculation_breakdown']; ?>
+                                                            <div class="fs-9 mt-1">
+                                                                <div>• Potential sessions: <?php echo $breakdown['potential_sessions']; ?></div>
+                                                                
+                                                                <?php if ($breakdown['holiday_removals'] > 0): ?>
+                                                                <div>• Minus holidays: -<?php echo $breakdown['holiday_removals']; ?></div>
+                                                                <?php endif; ?>
+                                                                
+                                                                <?php if ($breakdown['exception_removals'] > 0): ?>
+                                                                <div>• Minus exceptions: -<?php echo $breakdown['exception_removals']; ?></div>
+                                                                <?php endif; ?>
+                                                                
+                                                                <?php if ($breakdown['stop_removals'] > 0): ?>
+                                                                <div>• Minus stop periods: -<?php echo $breakdown['stop_removals']; ?></div>
+                                                                <?php endif; ?>
+                                                                
+                                                                <?php if ($breakdown['override_additions'] > 0): ?>
+                                                                <div>• Plus holiday overrides: +<?php echo $breakdown['override_additions']; ?></div>
+                                                                <?php endif; ?>
+                                                                
+                                                                <div class="fw-medium">• Final sessions: <?php echo $breakdown['final_sessions']; ?></div>
+                                                                <div class="fw-medium">• Hours: <?php echo $breakdown['final_sessions']; ?> × <?php echo number_format($breakdown['daily_hours'], 2); ?> = <?php echo number_format($breakdown['calculated_hours'], 2); ?>h</div>
+                                                            </div>
+                                                        <?php else: ?>
+                                                            <div class="fs-9 text-muted mt-1">
+                                                                <em>Calculation breakdown not available</em>
+                                                            </div>
+                                                        <?php endif; ?>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1469,6 +1602,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize view toggle functionality
     initializeViewToggle();
+    
+    // Initialize month breakdown toggle functionality
+    initializeMonthBreakdowns();
 });
 
 /**
@@ -2079,6 +2215,51 @@ function deleteClass(classId) {
             deleteButton.disabled = false;
         });
     }
+}
+
+/**
+ * Initialize Month Breakdown Toggle Functionality
+ * Handles the expandable calculation details for each month card
+ */
+function initializeMonthBreakdowns() {
+    console.log('Initializing month breakdown functionality...');
+    
+    // Get all month breakdown toggles
+    const breakdownToggles = document.querySelectorAll('[data-bs-toggle="collapse"]');
+    
+    if (breakdownToggles.length === 0) {
+        console.log('No month breakdown toggles found');
+        return;
+    }
+    
+    breakdownToggles.forEach(toggle => {
+        // Add event listener for expand/collapse events
+        const targetId = toggle.getAttribute('data-bs-target');
+        const targetElement = document.querySelector(targetId);
+        
+        if (targetElement) {
+            targetElement.addEventListener('show.bs.collapse', function() {
+                console.log('Expanding breakdown for:', targetId);
+                toggle.setAttribute('aria-expanded', 'true');
+            });
+            
+            targetElement.addEventListener('hide.bs.collapse', function() {
+                console.log('Collapsing breakdown for:', targetId);
+                toggle.setAttribute('aria-expanded', 'false');
+            });
+        }
+        
+        // Add hover effect for better UX
+        toggle.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = 'rgba(0,0,0,0.05)';
+        });
+        
+        toggle.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '';
+        });
+    });
+    
+    console.log(`Initialized ${breakdownToggles.length} month breakdown toggles`);
 }
 
 /**
