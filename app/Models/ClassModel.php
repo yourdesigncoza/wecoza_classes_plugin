@@ -158,9 +158,9 @@ class ClassModel {
                 $this->getClassCode(),
                 $this->getClassDuration(),
                 $this->getOriginalStartDate(),
-                $this->getSetaFunded(),
+                $this->getSetaFunded() ? 'true' : 'false',  // PostgreSQL boolean literal
                 $this->getSeta(),
-                $this->getExamClass(),
+                $this->getExamClass() ? 'true' : 'false',   // PostgreSQL boolean literal
                 $this->getExamType(),
                 $this->getQaVisitDates(),
                 json_encode($this->getQaReports()),
@@ -217,8 +217,11 @@ class ClassModel {
             $params = [
                 $this->getClientId(), $this->getSiteId(), $this->getClassAddressLine(),
                 $this->getClassType(), $this->getClassSubject(), $this->getClassCode(),
-                $this->getClassDuration(), $this->getOriginalStartDate(), $this->getSetaFunded(),
-                $this->getSeta(), $this->getExamClass(), $this->getExamType(),
+                $this->getClassDuration(), $this->getOriginalStartDate(), 
+                $this->getSetaFunded() ? 'true' : 'false',  // PostgreSQL boolean literal
+                $this->getSeta(), 
+                $this->getExamClass() ? 'true' : 'false',   // PostgreSQL boolean literal
+                $this->getExamType(),
                 $this->getQaVisitDates(), json_encode($this->getQaReports()), $this->getClassAgent(), $this->getInitialClassAgent(),
                 $this->getInitialAgentStartDate(), $this->getProjectSupervisorId(),
                 $this->getDeliveryDate(), json_encode($this->getLearnerIds()),
@@ -309,7 +312,10 @@ class ClassModel {
     public function getOriginalStartDate() { return $this->originalStartDate; }
     public function setOriginalStartDate($originalStartDate) { $this->originalStartDate = $originalStartDate; return $this; }
 
-    public function getSetaFunded() { return $this->setaFunded; }
+    public function getSetaFunded() { 
+        // Ensure we always return a boolean for database compatibility
+        return $this->setaFunded === null ? false : (bool)$this->setaFunded; 
+    }
     public function setSetaFunded($setaFunded) {
         // Convert Yes/No to boolean for database
         if ($setaFunded === 'Yes') {
@@ -328,7 +334,10 @@ class ClassModel {
         return $this;
     }
 
-    public function getExamClass() { return $this->examClass; }
+    public function getExamClass() { 
+        // Ensure we always return a boolean for database compatibility
+        return $this->examClass === null ? false : (bool)$this->examClass; 
+    }
     public function setExamClass($examClass) {
         // Convert Yes/No to boolean for database
         if ($examClass === 'Yes') {

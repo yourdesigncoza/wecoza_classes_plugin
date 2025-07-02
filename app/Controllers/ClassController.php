@@ -800,13 +800,27 @@ class ClassController {
                 ? self::sanitizeText($data['original_start_date']) 
                 : null);
         // Handle boolean fields properly - check for 'Yes'/'No' string values
-        $processed['seta_funded'] = isset($data['seta_funded']) && ($data['seta_funded'] === 'Yes' || $data['seta_funded'] === '1' || $data['seta_funded'] === true);
+        // Convert empty strings to false for boolean fields
+        error_log('processFormData: Processing seta_funded field. Raw value: ' . var_export(isset($data['seta_funded']) ? $data['seta_funded'] : 'not set', true));
+        $processed['seta_funded'] = false; // default to false
+        if (isset($data['seta_funded']) && !empty($data['seta_funded'])) {
+            $processed['seta_funded'] = ($data['seta_funded'] === 'Yes' || $data['seta_funded'] === '1' || $data['seta_funded'] === true);
+        }
+        error_log('processFormData: Processed seta_funded: ' . var_export($processed['seta_funded'], true));
+        
         $processed['seta'] = isset($data['seta_id']) && !is_array($data['seta_id']) 
             ? self::sanitizeText($data['seta_id']) 
             : (isset($data['seta']) && !is_array($data['seta']) 
                 ? self::sanitizeText($data['seta']) 
                 : null);
-        $processed['exam_class'] = isset($data['exam_class']) && ($data['exam_class'] === 'Yes' || $data['exam_class'] === '1' || $data['exam_class'] === true);
+        
+        // Convert empty strings to false for boolean fields
+        error_log('processFormData: Processing exam_class field. Raw value: ' . var_export(isset($data['exam_class']) ? $data['exam_class'] : 'not set', true));
+        $processed['exam_class'] = false; // default to false
+        if (isset($data['exam_class']) && !empty($data['exam_class'])) {
+            $processed['exam_class'] = ($data['exam_class'] === 'Yes' || $data['exam_class'] === '1' || $data['exam_class'] === true);
+        }
+        error_log('processFormData: Processed exam_class: ' . var_export($processed['exam_class'], true));
         $processed['exam_type'] = isset($data['exam_type']) && !is_array($data['exam_type']) ? self::sanitizeText($data['exam_type']) : null;
         $processed['qa_visit_dates'] = isset($data['qa_visit_dates']) && !is_array($data['qa_visit_dates']) ? self::sanitizeText($data['qa_visit_dates']) : null;
         $processed['class_agent'] = isset($data['class_agent']) && !empty($data['class_agent']) ? intval($data['class_agent']) : null;
@@ -920,6 +934,14 @@ class ClassController {
                 // The form sends schedule_data as nested arrays, we need to reconstruct it
                 $scheduleData = self::reconstructScheduleData($data);
                 error_log("processJsonField: Reconstructed schedule_data: " . json_encode($scheduleData));
+                
+                // Verify end_date is present
+                if (isset($scheduleData['end_date'])) {
+                    error_log('processJsonField: end_date is present: ' . $scheduleData['end_date']);
+                } else {
+                    error_log('processJsonField: WARNING - end_date is missing from reconstructed schedule_data');
+                }
+                
                 return self::processScheduleData($scheduleData);
             }
             
@@ -1000,8 +1022,18 @@ class ClassController {
         if (!isset($scheduleData['start_date']) && isset($data['schedule_start_date'])) {
             $scheduleData['start_date'] = $data['schedule_start_date'];
         }
-        if (!isset($scheduleData['end_date']) && isset($data['schedule_end_date'])) {
+        // Capture end date from multiple possible sources
+        if (isset($data['schedule_end_date']) && !empty($data['schedule_end_date'])) {
             $scheduleData['end_date'] = $data['schedule_end_date'];
+            error_log('reconstructScheduleData: Captured end_date from schedule_end_date: ' . $data['schedule_end_date']);
+        } elseif (isset($data['schedule_data']['end_date']) && !empty($data['schedule_data']['end_date'])) {
+            $scheduleData['end_date'] = $data['schedule_data']['end_date'];
+            error_log('reconstructScheduleData: Captured end_date from schedule_data.end_date: ' . $data['schedule_data']['end_date']);
+        } elseif (isset($data['schedule_data']['endDate']) && !empty($data['schedule_data']['endDate'])) {
+            $scheduleData['end_date'] = $data['schedule_data']['endDate'];
+            error_log('reconstructScheduleData: Captured end_date from schedule_data.endDate: ' . $data['schedule_data']['endDate']);
+        } else {
+            error_log('reconstructScheduleData: WARNING - No end_date found in any expected location');
         }
         
         // Ensure we have the selected days from the form
@@ -1236,6 +1268,11 @@ class ClassController {
         }
         
         error_log('validateScheduleDataV2: Output validated data: ' . json_encode($validated));
+        
+        // Final check for endDate
+        if (empty($validated['endDate'])) {
+            error_log('validateScheduleDataV2: WARNING - endDate is empty in validated output');
+        }
 
         return $validated;
     }
