@@ -31,6 +31,22 @@ defined('ABSPATH') || exit;
 $class = $class ?? null;
 $show_loading = $show_loading ?? true;
 $error_message = $error_message ?? '';
+
+// Process schedule data early for display purposes
+$schedule_data = null;
+$end_date = null;
+$start_date = null;
+
+if (!empty($class['schedule_data'])) {
+    $schedule_data = is_string($class['schedule_data']) 
+        ? json_decode($class['schedule_data'], true) 
+        : $class['schedule_data'];
+    
+    if (!empty($schedule_data)) {
+        $start_date = $schedule_data['startDate'] ?? $class['original_start_date'] ?? null;
+        $end_date = $schedule_data['endDate'] ?? null;
+    }
+}
 ?>
 
 <div class="wecoza-single-class-display">
@@ -314,6 +330,25 @@ $error_message = $error_message ?? '';
                     <div class="col-sm-12 col-xxl-6 border-bottom py-3">
                         <table class="w-100 table-stats table table-hover table-sm fs-9 mb-0">
                             <tbody>
+                                <tr>
+                                    <td class="py-2 ydcoza-w-150">
+                                        <div class="d-inline-flex align-items-center">
+                                            <div class="d-flex bg-success-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
+                                                <i class="bi bi-calendar-check text-success" style="font-size: 12px;"></i>
+                                            </div>
+                                            <p class="fw-bold mb-0">End Date : </p>
+                                        </div>
+                                    </td>
+                                    <td class="py-2">
+                                        <p class="fw-semibold mb-0">
+                                            <?php if (!empty($end_date)): ?>
+                                                <?php echo esc_html(date('M j, Y', strtotime($end_date))); ?>
+                                            <?php else: ?>
+                                                <span class="text-muted">N/A</span>
+                                            <?php endif; ?>
+                                        </p>
+                                    </td>
+                                </tr>
                                 <tr>
                                     <td class="py-2 ydcoza-w-150">
                                         <div class="d-inline-flex align-items-center">
