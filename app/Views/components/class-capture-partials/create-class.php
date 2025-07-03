@@ -704,7 +704,7 @@
                   <option value="<?php echo $agent['id']; ?>"><?php echo $agent['name']; ?></option>
                   <?php endforeach; ?>
                </select>
-               <div class="invalid-feedback">Please select a backup agent.</div>
+               <div class="invalid-feedback">Please s elect a backup agent.</div>
                <div class="valid-feedback">Looks good!</div>
             </div>
             <!-- Backup Date -->
