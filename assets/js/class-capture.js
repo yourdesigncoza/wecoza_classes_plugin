@@ -152,10 +152,11 @@ function showCustomAlert(message) {
         $('#class_start_date').on('change', function() {
             const newDate = $(this).val();
             if (newDate) {
+                const today = new Date().toISOString().split('T')[0];
+                
                 // Update schedule start date if it's empty or still has default value
                 const $scheduleStartDate = $('#schedule_start_date');
                 const currentScheduleDate = $scheduleStartDate.val();
-                const today = new Date().toISOString().split('T')[0];
                 
                 if (!currentScheduleDate || currentScheduleDate === today) {
                     $scheduleStartDate.val(newDate);
@@ -166,6 +167,46 @@ function showCustomAlert(message) {
                         setTimeout(updateScheduleData, 100);
                     }
                 }
+                
+                // Auto-populate initial agent start date
+                const $initialAgentStartDate = $('#initial_agent_start_date');
+                const currentInitialAgentDate = $initialAgentStartDate.val();
+                
+                if (!currentInitialAgentDate || currentInitialAgentDate === today) {
+                    $initialAgentStartDate.val(newDate);
+                    console.log('Updated initial agent start date from class start date:', newDate);
+                }
+                
+                // Auto-populate delivery date
+                const $deliveryDate = $('#delivery_date');
+                const currentDeliveryDate = $deliveryDate.val();
+                
+                if (!currentDeliveryDate || currentDeliveryDate === today) {
+                    $deliveryDate.val(newDate);
+                    console.log('Updated delivery date from class start date:', newDate);
+                }
+                
+                // Auto-populate backup agent dates
+                $('input[name="backup_agent_dates[]"]').each(function() {
+                    const $backupDate = $(this);
+                    const currentBackupDate = $backupDate.val();
+                    
+                    if (!currentBackupDate || currentBackupDate === today) {
+                        $backupDate.val(newDate);
+                        console.log('Updated backup agent date from class start date:', newDate);
+                    }
+                });
+                
+                // Auto-populate exception dates
+                $('input[name="exception_dates[]"]').each(function() {
+                    const $exceptionDate = $(this);
+                    const currentExceptionDate = $exceptionDate.val();
+                    
+                    if (!currentExceptionDate || currentExceptionDate === today) {
+                        $exceptionDate.val(newDate);
+                        console.log('Updated exception date from class start date:', newDate);
+                    }
+                });
             }
         });
     }

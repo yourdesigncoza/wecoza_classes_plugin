@@ -112,7 +112,7 @@
          <h6 class="mb-2">Class Schedule</h6>
          <!-- Date Range -->
          <div class="row ">
-            <div class="col-md-4">
+            <div class="col-md-4 d-none">
                <label for="schedule_start_date" class="form-label">Schedule Start Date <span class="text-danger">*</span></label>
                <input type="date" id="schedule_start_date" name="schedule_start_date" class="form-control" placeholder="YYYY-MM-DD" required>
                <div class="invalid-feedback">Please select a start date.</div>
@@ -399,8 +399,10 @@
          <div class="col-md-4 ">
             <h6>Class End Date</h6>
             <small class="text-muted mb-1">If you make any changes to the schedule, you will need to recalculate the end date.</small>
-            <label for="schedule_end_date" class="form-label">Estimated End Date</label>
-            <input type="date" id="schedule_end_date" name="schedule_end_date" class="form-control readonly-field" placeholder="YYYY-MM-DD" readonly>
+            <label for="schedule_end_date" class="form-label">Estimated End Date <span class="text-danger">*</span></label>
+            <input type="date" id="schedule_end_date" name="schedule_end_date" class="form-control readonly-field" placeholder="YYYY-MM-DD" required>
+            <div class="invalid-feedback">Please generate the end date.</div>
+            <div class="valid-feedback">Looks good!</div>
             <button type="button" class="btn btn-subtle-warning mb-2 mt-2" id="calculate_schedule_end_date-btn">
                Calculate Estimated End Date
             </button>
@@ -653,7 +655,7 @@
       <p class="text-muted small mb-1">Assign the primary class agent. If the agent changes during the class, the history will be tracked.</p>
       <!-- Initial Class Agent -->
       <div class="row mb-2">
-         <div class="col-md-5 ">
+         <div class="col-md-4 ">
             <label for="initial_class_agent" class="form-label">Initial Class Agent <span class="text-danger">*</span></label>
             <select id="initial_class_agent" name="initial_class_agent" class="form-select" required>
                <option value="">Select</option>
@@ -664,16 +666,16 @@
             <div class="invalid-feedback">Please select the initial class agent.</div>
             <div class="valid-feedback">Looks good!</div>
          </div>
-         <div class="col-md-5 ">
+         <div class="col-md-4 ">
             <label for="initial_agent_start_date" class="form-label">Start Date <span class="text-danger">*</span></label>
             <input type="date" id="initial_agent_start_date" name="initial_agent_start_date" class="form-control" placeholder="YYYY-MM-DD" required>
             <div class="invalid-feedback">Please select the start date.</div>
             <div class="valid-feedback">Looks good!</div>
          </div>
       </div>
-      <!-- Project Supervisor and Delivery Date -->
+      <!-- Project Supervisor -->
       <div class="row mb-4">
-         <div class="col-md-5 ">
+         <div class="col-md-4 ">
             <label for="project_supervisor" class="form-label">Project Supervisor <span class="text-danger">*</span></label>
             <select id="project_supervisor" name="project_supervisor" class="form-select" required>
                <option value="">Select</option>
@@ -682,12 +684,6 @@
                <?php endforeach; ?>
             </select>
             <div class="invalid-feedback">Please select a project supervisor.</div>
-            <div class="valid-feedback">Looks good!</div>
-         </div>
-         <div class="col-md-5 ">
-            <label for="delivery_date" class="form-label">Delivery Date <span class="text-danger">*</span></label>
-            <input type="date" id="delivery_date" name="delivery_date" class="form-control" placeholder="YYYY-MM-DD" required>
-            <div class="invalid-feedback">Please select the delivery date.</div>
             <div class="valid-feedback">Looks good!</div>
          </div>
       </div>
@@ -700,7 +696,7 @@
          <!-- Hidden Template Row (initially d-none) -->
          <div class="row backup-agent-row align-items-center d-none" id="backup-agent-row-template">
             <!-- Backup Agent -->
-            <div class="col-md-5 mb-2">
+            <div class="col-md-4 mb-2">
                <label class="form-label">Backup Agent</label>
                <select name="backup_agent_ids[]" class="form-select backup-agent-select">
                   <option value="">Select</option>
@@ -712,7 +708,7 @@
                <div class="valid-feedback">Looks good!</div>
             </div>
             <!-- Backup Date -->
-            <div class="col-md-5 mb-2">
+            <div class="col-md-4 mb-2">
                <label class="form-label">Backup Date</label>
                <input type="date" name="backup_agent_dates[]" class="form-control" placeholder="YYYY-MM-DD">
                <div class="invalid-feedback">Please select a valid date.</div>
@@ -731,6 +727,18 @@
          </button>
       </div>
       <?php echo section_divider(); ?>
+
+      <!-- Delivery Date -->
+      <div class="row mb-4">
+         <div class="col-md-4 ">
+            <label for="delivery_date" class="form-label">Delivery Date <span class="text-danger">*</span></label>
+            <input type="date" id="delivery_date" name="delivery_date" class="form-control" placeholder="YYYY-MM-DD" required>
+            <div class="invalid-feedback">Please select the delivery date.</div>
+            <div class="valid-feedback">Looks good!</div>
+         </div>
+      </div>
+      <?php echo section_divider(); ?>
+
       <!-- Submit Button - Mode-aware text -->
       <div class="row mt-4">
          <div class="col-md-3">
