@@ -289,3 +289,98 @@ The `reference/` directory contains detailed analysis reports for complex featur
 - **Development Context**: Essential information for understanding complex implementations
 
 Use these reports when working on related features or debugging complex functionality.
+
+### Task Management
+
+#### Core Workflow
+1. First think through the problem, read the codebase for relevant files, and write a plan to `/tasks/YYYY-MM-DD-task-name.md`.
+2. The plan should have a list of todo items that you can check off as you complete them.
+3. Before you begin working, check in with me and I will verify the plan (see Verification Guidelines below).
+4. Then, begin working on the todo items, marking them as complete as you go.
+5. Please every step of the way just give me a high level explanation of what changes you made.
+6. Make every task and code change you do as simple as possible. We want to avoid making any massive or complex changes. Every change should impact as little code as possible. Everything is about simplicity.
+
+#### Tool Integration
+- **TodoWrite/Read**: Use for real-time tracking during task execution
+- **Markdown files**: Serve as permanent project documentation
+- **Workflow**: TodoWrite mirrors the plan from markdown file, then tracks live progress
+- **Sequential Thinking**: Use for complex tasks with 5+ subtasks or architectural decisions
+
+#### Task Categories
+- **Research**: Codebase exploration, feasibility analysis (use Task/Agent tools)
+- **Implementation**: Code writing and modifications
+- **Testing**: Validation and verification
+- **Refactoring**: Code improvement without changing functionality
+- **Documentation**: README updates, inline comments (only when explicitly requested)
+
+#### Task Phases
+1. **Discovery Phase**: Use Task/Agent tools, no file modifications
+2. **Planning Phase**: Create markdown plan with Sequential Thinking if complex
+3. **Implementation Phase**: Execute with TodoWrite tracking
+4. **Review Phase**: Update markdown with outcomes and lessons learned
+
+### Task Creation
+
+#### Format Guidelines
+- Use checkbox format for all tasks and subtasks
+- Auto-update task completion status as work progresses
+- Even when user provides a task list, construct your own improved version with better structure and detail
+- Mark dependencies: `- [ ] Task name [depends on: #1, #3]`
+- Mark blocked tasks: `- [ ] Task name [BLOCKED: reason]`
+- Mark failed attempts: `- [ ] Task name [FAILED: reason]`
+
+#### Time Estimation
+- **Simple (< 15 min)**: Single file, < 50 lines of code
+- **Medium (15-45 min)**: 2-3 files, < 200 lines of code
+- **Complex (45+ min)**: Multiple files, architectural changes
+- Use these estimates to determine subtask breakdown
+
+#### Subtask Criteria
+- Create subtasks when a main task has 3+ distinct steps
+- Create subtasks when a task involves multiple technologies/files
+- Create subtasks when a task could take 15+ minutes to complete
+- Keep simple, single-step tasks as main tasks only
+
+#### Priority Levels
+- **Critical**: Blocking issues, security fixes
+- **High**: User-requested features, major bugs
+- **Medium**: Enhancements, non-critical bugs
+- **Low**: Refactoring, optimizations
+
+### Task Execution
+
+#### Verification Guidelines
+- **Auto-proceed**: Simple refactoring, bug fixes < 3 files
+- **Check-in required**: New features, database changes, 3+ files
+- **Always verify**: Breaking changes, deletions, API modifications
+
+#### Git Safety Checkpoints
+- Before 3+ file changes: "Reminder: Commit current work?"
+- After major feature: "Ready to commit these changes?"
+- Add git status check to task completion review
+
+#### Progress Communication Template
+```
+✓ Completed: [what was done]
+→ Next: [what's coming]
+⚠ Issue: [any blockers/concerns]
+```
+
+#### Error Recovery
+- Document failed attempts in task with `[FAILED: reason]`
+- Create rollback task if changes need reverting
+- Add "Lessons Learned" to review section
+
+#### Quick Actions
+- **Quick fix**: For < 5 line changes, skip formal planning
+- **Exploratory mode**: For research without formal planning
+- **Emergency rollback**: Procedure for critical issues
+
+### Task Completion
+1. Mark all TodoWrite items as completed
+2. Add a review section to the current `/tasks/YYYY-MM-DD-task-name.md` file with:
+   - Summary of changes made
+   - Any issues encountered and how they were resolved
+   - Lessons learned
+   - Git status if multiple files changed
+   - Next steps or follow-up tasks if applicable

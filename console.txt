@@ -1,0 +1,152 @@
+jquery-migrate.min.js?ver=3.4.1:2 JQMIGRATE: Migrate is installed, version 3.4.1
+class-capture.js?ver=20250703162800:598 Date history functionality initialized (placeholder)
+class-capture.js?ver=20250703162800:603 QA visits functionality initialized (placeholder)
+class-capture.js?ver=20250703162800:608 Class learners functionality initialized (placeholder)
+class-capture.js?ver=20250703162800:613 Backup agents functionality initialized (placeholder)
+class-capture.js?ver=20250703162800:618 Agent replacements functionality initialized (placeholder)
+class-schedule-form.js?ver=20250703162800:2168 === Schedule Data Collection ===
+class-schedule-form.js?ver=20250703162800:2169 Pattern: weekly
+class-schedule-form.js?ver=20250703162800:2170 Start Date: 2025-07-07
+class-schedule-form.js?ver=20250703162800:2171 End Date: 2027-04-13
+class-schedule-form.js?ver=20250703162800:2172 Selected Days: (2) ['Tuesday', 'Wednesday']
+class-schedule-form.js?ver=20250703162800:2173 Time Data: {mode: 'per-day', perDayTimes: {…}}
+class-schedule-form.js?ver=20250703162800:2174 Full collected data: {
+  "pattern": "weekly",
+  "startDate": "2025-07-07",
+  "endDate": "2027-04-13",
+  "dayOfMonth": null,
+  "timeData": {
+    "mode": "per-day",
+    "perDayTimes": {}
+  },
+  "selectedDays": [
+    "Tuesday",
+    "Wednesday"
+  ],
+  "exceptionDates": [
+    {
+      "date": "2025-07-22",
+      "reason": "Other"
+    }
+  ],
+  "holidayOverrides": {},
+  "lastUpdated": "2025-07-03T16:28:04.887Z",
+  "version": "2.0",
+  "metadata": {
+    "lastUpdated": "2025-07-03T16:28:04.887Z",
+    "validatedAt": "2025-07-03T16:28:04.887Z"
+  }
+}
+class-schedule-form.js?ver=20250703162800:2223 === Creating Hidden Fields for Schedule Data ===
+class-schedule-form.js?ver=20250703162800:2224 Container found: true
+class-schedule-form.js?ver=20250703162800:2310 Created hidden field: schedule_data[pattern] = weekly
+class-schedule-form.js?ver=20250703162800:2310 Created hidden field: schedule_data[start_date] = 2025-07-07
+class-schedule-form.js?ver=20250703162800:2310 Created hidden field: schedule_data[end_date] = 2027-04-13
+class-schedule-form.js?ver=20250703162800:2312 Skipped empty hidden field: schedule_data[day_of_month]
+createHiddenField @ class-schedule-form.js?ver=20250703162800:2312
+updateHiddenFormFields @ class-schedule-form.js?ver=20250703162800:2233
+updateScheduleData @ class-schedule-form.js?ver=20250703162800:2114
+(anonymous) @ class-schedule-form.js?ver=20250703162800:156
+dispatch @ jquery.min.js?ver=3.7.1:2
+(anonymous) @ jquery.min.js?ver=3.7.1:2
+trigger @ jquery.min.js?ver=3.7.1:2
+(anonymous) @ jquery.min.js?ver=3.7.1:2
+each @ jquery.min.js?ver=3.7.1:2
+each @ jquery.min.js?ver=3.7.1:2
+trigger @ jquery.min.js?ver=3.7.1:2
+initSchedulePatternSelection @ class-schedule-form.js?ver=20250703162800:210
+initClassScheduleForm @ class-schedule-form.js?ver=20250703162800:19
+(anonymous) @ class-schedule-form.js?ver=20250703162800:3251
+e @ jquery.min.js?ver=3.7.1:2
+(anonymous) @ jquery.min.js?ver=3.7.1:2
+setTimeout
+(anonymous) @ jquery.min.js?ver=3.7.1:2
+c @ jquery.min.js?ver=3.7.1:2
+fireWith @ jquery.min.js?ver=3.7.1:2
+fire @ jquery.min.js?ver=3.7.1:2
+c @ jquery.min.js?ver=3.7.1:2
+fireWith @ jquery.min.js?ver=3.7.1:2
+ready @ jquery.min.js?ver=3.7.1:2
+P @ jquery.min.js?ver=3.7.1:2
+class-schedule-form.js?ver=20250703162800:2310 Created hidden field: schedule_data[version] = 2.0
+class-schedule-form.js?ver=20250703162800:2310 Created hidden field: schedule_data[last_updated] = 2025-07-03T16:28:04.887Z
+class-schedule-form.js?ver=20250703162800:2310 Created hidden field: schedule_data[time_mode] = per_day
+class-schedule-form.js?ver=20250703162800:2310 Created hidden field: schedule_data[selected_days][0] = Tuesday
+class-schedule-form.js?ver=20250703162800:2310 Created hidden field: schedule_data[selected_days][1] = Wednesday
+class-schedule-form.js?ver=20250703162800:2310 Created hidden field: schedule_data[exception_dates][0][date] = 2025-07-22
+class-schedule-form.js?ver=20250703162800:2310 Created hidden field: schedule_data[exception_dates][0][reason] = Other
+class-schedule-form.js?ver=20250703162800:2284 Total hidden fields created: 10
+jquery.min.js?ver=3.7.1:2 jQuery.Deferred exception: Cannot read properties of undefined (reading '2025-09-24') TypeError: Cannot read properties of undefined (reading '2025-09-24')
+    at http://localhost/wecoza/wp-content/plugins/wecoza-classes-plugin/assets/js/class-schedule-form.js?ver=20250703162800:1713:40
+    at Array.forEach (<anonymous>)
+    at updateHolidaysDisplay (http://localhost/wecoza/wp-content/plugins/wecoza-classes-plugin/assets/js/class-schedule-form.js?ver=20250703162800:1684:29)
+    at checkForHolidays (http://localhost/wecoza/wp-content/plugins/wecoza-classes-plugin/assets/js/class-schedule-form.js?ver=20250703162800:1645:9)
+    at HTMLSelectElement.<anonymous> (http://localhost/wecoza/wp-content/plugins/wecoza-classes-plugin/assets/js/class-schedule-form.js?ver=20250703162800:162:17)
+    at HTMLSelectElement.dispatch (http://localhost/wecoza/wp-includes/js/jquery/jquery.min.js?ver=3.7.1:2:40035)
+    at HTMLSelectElement.<anonymous> (http://localhost/wecoza/wp-includes/js/jquery/jquery.min.js?ver=3.7.1:2:38006)
+    at Object.trigger (http://localhost/wecoza/wp-includes/js/jquery/jquery.min.js?ver=3.7.1:2:70124)
+    at HTMLSelectElement.<anonymous> (http://localhost/wecoza/wp-includes/js/jquery/jquery.min.js?ver=3.7.1:2:70726)
+    at ce.each (http://localhost/wecoza/wp-includes/js/jquery/jquery.min.js?ver=3.7.1:2:3129) undefined
+ce.Deferred.exceptionHook @ jquery.min.js?ver=3.7.1:2
+(anonymous) @ jquery.min.js?ver=3.7.1:2
+setTimeout
+(anonymous) @ jquery.min.js?ver=3.7.1:2
+c @ jquery.min.js?ver=3.7.1:2
+fireWith @ jquery.min.js?ver=3.7.1:2
+fire @ jquery.min.js?ver=3.7.1:2
+c @ jquery.min.js?ver=3.7.1:2
+fireWith @ jquery.min.js?ver=3.7.1:2
+ready @ jquery.min.js?ver=3.7.1:2
+P @ jquery.min.js?ver=3.7.1:2
+jquery.min.js?ver=3.7.1:2 Uncaught TypeError: Cannot read properties of undefined (reading '2025-09-24')
+    at class-schedule-form.js?ver=20250703162800:1713:40
+    at Array.forEach (<anonymous>)
+    at updateHolidaysDisplay (class-schedule-form.js?ver=20250703162800:1684:29)
+    at checkForHolidays (class-schedule-form.js?ver=20250703162800:1645:9)
+    at HTMLSelectElement.<anonymous> (class-schedule-form.js?ver=20250703162800:162:17)
+    at HTMLSelectElement.dispatch (jquery.min.js?ver=3.7.1:2:40035)
+    at HTMLSelectElement.<anonymous> (jquery.min.js?ver=3.7.1:2:38006)
+    at Object.trigger (jquery.min.js?ver=3.7.1:2:70124)
+    at HTMLSelectElement.<anonymous> (jquery.min.js?ver=3.7.1:2:70726)
+    at ce.each (jquery.min.js?ver=3.7.1:2:3129)
+(anonymous) @ class-schedule-form.js?ver=20250703162800:1713
+updateHolidaysDisplay @ class-schedule-form.js?ver=20250703162800:1684
+checkForHolidays @ class-schedule-form.js?ver=20250703162800:1645
+(anonymous) @ class-schedule-form.js?ver=20250703162800:162
+dispatch @ jquery.min.js?ver=3.7.1:2
+(anonymous) @ jquery.min.js?ver=3.7.1:2
+trigger @ jquery.min.js?ver=3.7.1:2
+(anonymous) @ jquery.min.js?ver=3.7.1:2
+each @ jquery.min.js?ver=3.7.1:2
+each @ jquery.min.js?ver=3.7.1:2
+trigger @ jquery.min.js?ver=3.7.1:2
+initSchedulePatternSelection @ class-schedule-form.js?ver=20250703162800:210
+initClassScheduleForm @ class-schedule-form.js?ver=20250703162800:19
+(anonymous) @ class-schedule-form.js?ver=20250703162800:3251
+e @ jquery.min.js?ver=3.7.1:2
+(anonymous) @ jquery.min.js?ver=3.7.1:2
+setTimeout
+(anonymous) @ jquery.min.js?ver=3.7.1:2
+c @ jquery.min.js?ver=3.7.1:2
+fireWith @ jquery.min.js?ver=3.7.1:2
+fire @ jquery.min.js?ver=3.7.1:2
+c @ jquery.min.js?ver=3.7.1:2
+fireWith @ jquery.min.js?ver=3.7.1:2
+ready @ jquery.min.js?ver=3.7.1:2
+P @ jquery.min.js?ver=3.7.1:2
+classes-table-search.js?ver=20250703162800:67 WeCoza Classes: Search input not found
+classes_init_table_search @ classes-table-search.js?ver=20250703162800:67
+(anonymous) @ classes-table-search.js?ver=20250703162800:499
+setTimeout
+(anonymous) @ classes-table-search.js?ver=20250703162800:498
+e @ jquery.min.js?ver=3.7.1:2
+(anonymous) @ jquery.min.js?ver=3.7.1:2
+setTimeout
+(anonymous) @ jquery.min.js?ver=3.7.1:2
+c @ jquery.min.js?ver=3.7.1:2
+fireWith @ jquery.min.js?ver=3.7.1:2
+fire @ jquery.min.js?ver=3.7.1:2
+c @ jquery.min.js?ver=3.7.1:2
+fireWith @ jquery.min.js?ver=3.7.1:2
+ready @ jquery.min.js?ver=3.7.1:2
+P @ jquery.min.js?ver=3.7.1:2

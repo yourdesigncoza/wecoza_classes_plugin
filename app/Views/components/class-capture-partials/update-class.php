@@ -406,6 +406,12 @@ if (isset($data['class_data']) && $data['class_data']):
          <?php
          // Extract schedule data for pre-population
          $scheduleData = $data['class_data']['schedule_data'] ?? [];
+         
+         // Handle both string and array formats for schedule data
+         if (is_string($scheduleData)) {
+             $scheduleData = json_decode($scheduleData, true) ?? [];
+         }
+         
          $schedulePattern = $scheduleData['pattern'] ?? '';
          $scheduleDays = $scheduleData['selectedDays'] ?? $scheduleData['days'] ?? [];
          $scheduleStartTime = $scheduleData['start_time'] ?? '';
@@ -428,6 +434,74 @@ if (isset($data['class_data']) && $data['class_data']):
              echo "Per Day Times: " . print_r($perDayTimes, true) . "\n";
              echo "Full Schedule Data: " . print_r($scheduleData, true) . "\n";
              echo "-->\n";
+         }
+         
+         // Normalize perDayTimes to JavaScript expected format (camelCase) and filter corrupt data
+         if (!empty($perDayTimes)) {
+             $validDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+             $normalizedPerDayTimes = [];
+             
+             foreach ($perDayTimes as $day => $times) {
+                 // Only process valid day names, skip numeric keys
+                 if (in_array($day, $validDays) && is_array($times)) {
+                     $normalizedPerDayTimes[$day] = [
+                         'startTime' => $times['start_time'] ?? $times['startTime'] ?? '',
+                         'endTime' => $times['end_time'] ?? $times['endTime'] ?? '',
+                         'duration' => $times['duration'] ?? ''
+                     ];
+                 }
+             }
+             
+             $perDayTimes = $normalizedPerDayTimes;
+             
+             // Update the schedule data with normalized format
+             if (!isset($scheduleData['timeData'])) {
+                 $scheduleData['timeData'] = [];
+             }
+             $scheduleData['timeData']['perDayTimes'] = $perDayTimes;
+             
+             if (isset($_GET['debug']) && $_GET['debug'] === '1') {
+                 echo "<!-- Cleaned Per Day Times: " . print_r($perDayTimes, true) . " -->\n";
+             }
+         }
+         
+         // Handle legacy data or missing perDayTimes
+         if (empty($perDayTimes) && !empty($scheduleDays)) {
+             // Check if we have individual day times in the schedule data
+             $foundDayTimes = false;
+             foreach ($scheduleDays as $day) {
+                 if (isset($scheduleData[$day])) {
+                     $foundDayTimes = true;
+                     $perDayTimes[$day] = [
+                         'startTime' => $scheduleData[$day]['start_time'] ?? $scheduleData[$day]['start'] ?? '',
+                         'endTime' => $scheduleData[$day]['end_time'] ?? $scheduleData[$day]['end'] ?? '',
+                         'duration' => $scheduleData[$day]['duration'] ?? ''
+                     ];
+                 }
+             }
+             
+             // If no individual day times found, use the general start/end times
+             if (!$foundDayTimes && (!empty($scheduleStartTime) || !empty($scheduleEndTime))) {
+                 foreach ($scheduleDays as $day) {
+                     $perDayTimes[$day] = [
+                         'startTime' => $scheduleStartTime ?: '',
+                         'endTime' => $scheduleEndTime ?: ''
+                     ];
+                 }
+             }
+             
+             // Update the schedule data structure
+             if (!empty($perDayTimes)) {
+                 if (!isset($scheduleData['timeData'])) {
+                     $scheduleData['timeData'] = [];
+                 }
+                 $scheduleData['timeData']['mode'] = 'per-day';
+                 $scheduleData['timeData']['perDayTimes'] = $perDayTimes;
+                 
+                 if (isset($_GET['debug']) && $_GET['debug'] === '1') {
+                     echo "<!-- Migrated Per Day Times: " . print_r($perDayTimes, true) . " -->\n";
+                 }
+             }
          }
          ?>
 
@@ -787,6 +861,33 @@ if (isset($data['class_data']) && $data['class_data']):
          </div>
 
       </div>
+
+      <!-- Pass existing schedule data to JavaScript for form population -->
+      <script>
+      <?php if (!empty($scheduleData)): ?>
+      window.existingScheduleData = <?php echo json_encode($scheduleData); ?>;
+      <?php endif; ?>
+      
+      <?php 
+      // Load public holidays data for the schedule form
+      try {
+          $publicHolidaysController = \WeCozaClasses\Controllers\PublicHolidaysController::getInstance();
+          $currentYear = date('Y');
+          $nextYear = $currentYear + 1;
+          
+          // Get holidays for current and next year to cover class schedules
+          $currentYearHolidays = $publicHolidaysController->getHolidaysForCalendar($currentYear);
+          $nextYearHolidays = $publicHolidaysController->getHolidaysForCalendar($nextYear);
+          $allHolidays = array_merge($currentYearHolidays, $nextYearHolidays);
+          
+          // Make holidays available to JavaScript
+          echo "window.wecozaPublicHolidays = " . json_encode(['events' => $allHolidays]) . ";\n";
+      } catch (\Exception $e) {
+          error_log('WeCoza Classes Plugin: Error loading public holidays in update form: ' . $e->getMessage());
+          echo "window.wecozaPublicHolidays = { events: [] }; // Error loading holidays\n";
+      }
+      ?>
+      </script>
 
       <!-- Class Date History Section -->
       <div class="mb-4 mt-3">
@@ -1586,11 +1687,49 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize schedule data for update mode
     <?php if (isset($data['class_data']['schedule_data']) && !empty($data['class_data']['schedule_data'])): ?>
+    <?php
+    // Use the normalized schedule data that was processed above
+    // This ensures we pass the cleaned data with proper camelCase format
+    $scheduleDataForJS = $scheduleData; // This now contains the normalized perDayTimes
+    
+    // Additional debug to verify the data structure
+    if (isset($_GET['debug']) && $_GET['debug'] === '1') {
+        echo "<!-- Schedule Data for JS (PHP side): " . print_r($scheduleDataForJS, true) . " -->\n";
+    }
+    ?>
     // Pass schedule data to the scheduling JavaScript
-    window.existingScheduleData = <?php echo json_encode($data['class_data']['schedule_data']); ?>;
+    window.existingScheduleData = <?php echo json_encode($scheduleDataForJS); ?>;
+    
+    // Enhanced debug logging
     <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
-    console.log('Existing Schedule Data:', window.existingScheduleData);
+    console.log('=== Schedule Data Debug ===');
+    console.log('Raw Schedule Data from PHP:', window.existingScheduleData);
+    console.log('Schedule Pattern:', window.existingScheduleData?.pattern);
+    console.log('Selected Days:', window.existingScheduleData?.selectedDays);
+    console.log('Time Data:', window.existingScheduleData?.timeData);
+    console.log('Per Day Times:', window.existingScheduleData?.timeData?.perDayTimes);
+    
+    // Check if perDayTimes exists and has data
+    if (window.existingScheduleData?.timeData?.perDayTimes) {
+        const perDayTimes = window.existingScheduleData.timeData.perDayTimes;
+        console.log('Per Day Times Object:', perDayTimes);
+        console.log('Per Day Times Keys:', Object.keys(perDayTimes));
+        
+        // Log each day's time data
+        Object.entries(perDayTimes).forEach(([day, times]) => {
+            console.log(`${day} times:`, times);
+        });
+    } else {
+        console.warn('No perDayTimes data found in schedule!');
+    }
+    console.log('=== End Schedule Data Debug ===');
     <?php endif; ?>
+    
+    // Ensure the schedule form JavaScript can access this data
+    if (window.existingScheduleData && typeof window.loadExistingScheduleData === 'function') {
+        // The schedule form JS will handle loading this data
+        console.log('Schedule data is ready for loading');
+    }
     <?php endif; ?>
     
     // Log form submission data in debug mode
