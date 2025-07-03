@@ -233,95 +233,100 @@ if (!empty($class['schedule_data'])) {
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td class="py-2 ydcoza-w-150">
+                                    <td class="py-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="d-flex bg-primary-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
+                                                <i class="bi bi-layers text-primary" style="font-size: 12px;"></i>
+                                            </div>
+                                            <p class="fw-bold mb-0">Class Type : </p>
+                                        </div>
+                                    </td>
+                                    <td class="py-2">
+                                        <p class="fw-semibold mb-0"><?php echo esc_html($class['class_type'] ?? 'N/A'); ?></p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="py-2">
                                         <div class="d-flex align-items-center">
                                             <div class="d-flex bg-success-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
-                                                <i class="bi bi-person-badge text-success" style="font-size: 12px;"></i>
+                                                <i class="bi bi-book text-success" style="font-size: 12px;"></i>
                                             </div>
-                                            <p class="fw-bold mb-0">Agent : </p>
+                                            <p class="fw-bold mb-0">Class Subject : </p>
+                                        </div>
+                                    </td>
+                                    <td class="py-2">
+                                        <p class="fw-semibold mb-0"><?php echo esc_html($class['class_subject'] ?? 'N/A'); ?></p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="py-2 ydcoza-w-150">
+                                        <div class="d-inline-flex align-items-center">
+                                            <div class="d-flex bg-success-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
+                                                <i class="bi bi-check-circle text-success" style="font-size: 12px;"></i>
+                                            </div>
+                                            <p class="fw-bold mb-0">SETA Funded : </p>
                                         </div>
                                     </td>
                                     <td class="py-2">
                                         <div class="fw-semibold mb-0">
-                                            <?php if (!empty($class['agent_name'])): ?>
-                                                <?php echo esc_html($class['agent_name']); ?>
-                                                <div class="fs-9 text-muted">ID: <?php echo esc_html($class['class_agent']); ?></div>
+                                            <?php if ($class['seta_funded']): ?>
+                                                <span>Yes</span>
                                             <?php else: ?>
-                                                <span class="text-muted">N/A</span>
+                                                <span>No</span>
                                             <?php endif; ?>
                                         </div>
                                     </td>
                                 </tr>
-                                <!-- Backup Agents -->
-                                <?php if (!empty($class['backup_agent_names']) && is_array($class['backup_agent_names'])): ?>
                                 <tr>
                                     <td class="py-2">
                                         <div class="d-flex align-items-center">
                                             <div class="d-flex bg-info-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
-                                                <i class="bi bi-people text-info" style="font-size: 12px;"></i>
+                                                <i class="bi bi-building-gear text-info" style="font-size: 12px;"></i>
                                             </div>
-                                            <p class="fw-bold mb-0">Backup Agents : </p>
+                                            <p class="fw-bold mb-0">SETA Name : </p>
                                         </div>
                                     </td>
                                     <td class="py-2">
                                         <div class="fw-semibold mb-0">
-                                            <span class="badge badge-phoenix fs-10 badge-phoenix-info me-2"><?php echo count($class['backup_agent_names']); ?> Backup<?php echo count($class['backup_agent_names']) !== 1 ? 's' : ''; ?></span>
-                                            <div class="mt-1">
-                                                <?php foreach ($class['backup_agent_names'] as $backupAgent): ?>
-                                                    <div class="fs-9 mb-1">
-                                                        <i class="bi bi-person me-1"></i>
-                                                        <?php echo esc_html($backupAgent['name']); ?>
-                                                        <span class="text-muted">(ID: <?php echo esc_html($backupAgent['id']); ?>)</span>
-                                                    </div>
-                                                <?php endforeach; ?>
-                                            </div>
+                                            <?php echo esc_html($class['seta'] ?? 'N/A'); ?>
                                         </div>
                                     </td>
                                 </tr>
-                                <?php endif; ?>
-                                <!-- Initial Agent History - Only show if different from current agent -->
-                                <?php if (!empty($class['initial_class_agent']) && 
-                                         $class['initial_class_agent'] != $class['class_agent'] &&
-                                         !empty($class['initial_agent_name'])): ?>
-                                <tr>
-                                    <td class="py-2">
-                                        <div class="d-flex align-items-center">
-                                            <div class="d-flex bg-secondary-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
-                                                <i class="bi bi-clock-history text-secondary" style="font-size: 12px;"></i>
-                                            </div>
-                                            <p class="fw-bold mb-0">Original Agent : </p>
-                                        </div>
-                                    </td>
-                                    <td class="py-2">
-                                        <div class="fw-semibold mb-0">
-                                            <?php echo esc_html($class['initial_agent_name']); ?>
-                                            <div class="fs-9 text-muted">
-                                                Started: <?php echo !empty($class['initial_agent_start_date']) ? date('M j, Y', strtotime($class['initial_agent_start_date'])) : 'N/A'; ?>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <?php endif; ?>
                                 <tr>
                                     <td class="py-2">
                                         <div class="d-flex align-items-center">
                                             <div class="d-flex bg-warning-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
-                                                <i class="bi bi-person-gear text-warning" style="font-size: 12px;"></i>
+                                                <i class="bi bi-mortarboard text-warning" style="font-size: 12px;"></i>
                                             </div>
-                                            <p class="fw-bold mb-0">Supervisor : </p>
+                                            <p class="fw-bold mb-0">Exam Class : </p>
                                         </div>
                                     </td>
                                     <td class="py-2">
                                         <div class="fw-semibold mb-0">
-                                            <?php if (!empty($class['supervisor_name'])): ?>
-                                                <?php echo esc_html($class['supervisor_name']); ?>
-                                                <div class="fs-9 text-muted">ID: <?php echo esc_html($class['project_supervisor_id']); ?></div>
+                                            <?php if ($class['exam_class']): ?>
+                                                <span>Yes</span>
                                             <?php else: ?>
-                                                <span class="text-muted">N/A</span>
+                                                <span>No</span>
                                             <?php endif; ?>
                                         </div>
                                     </td>
                                 </tr>
+                                <tr>
+                                    <td class="py-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="d-flex bg-primary-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
+                                                <i class="bi bi-clipboard-check text-primary" style="font-size: 12px;"></i>
+                                            </div>
+                                            <p class="fw-bold mb-0">Exam Type : </p>
+                                        </div>
+                                    </td>
+                                    <td class="py-2">
+                                        <div class="fw-semibold mb-0">
+                                            <?php echo esc_html($class['exam_type'] ?? 'N/A'); ?>
+                                        </div>
+                                    </td>
+                                </tr>
+
                             </tbody>
                         </table>
                     </div>
@@ -486,6 +491,96 @@ if (!empty($class['schedule_data'])) {
                                     </td>
                                 </tr>
                                 <?php endif; ?>
+                                <tr>
+                                    <td class="py-2 ydcoza-w-150">
+                                        <div class="d-flex align-items-center">
+                                            <div class="d-flex bg-success-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
+                                                <i class="bi bi-person-badge text-success" style="font-size: 12px;"></i>
+                                            </div>
+                                            <p class="fw-bold mb-0">Agent : </p>
+                                        </div>
+                                    </td>
+                                    <td class="py-2">
+                                        <div class="fw-semibold mb-0">
+                                            <?php if (!empty($class['agent_name'])): ?>
+                                                <?php echo esc_html($class['agent_name']); ?>
+                                                <div class="fs-9 text-muted">ID: <?php echo esc_html($class['class_agent']); ?></div>
+                                            <?php else: ?>
+                                                <span class="text-muted">N/A</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- Backup Agents -->
+                                <?php if (!empty($class['backup_agent_names']) && is_array($class['backup_agent_names'])): ?>
+                                <tr>
+                                    <td class="py-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="d-flex bg-info-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
+                                                <i class="bi bi-people text-info" style="font-size: 12px;"></i>
+                                            </div>
+                                            <p class="fw-bold mb-0">Backup Agents : </p>
+                                        </div>
+                                    </td>
+                                    <td class="py-2">
+                                        <div class="fw-semibold mb-0">
+                                            <span class="badge badge-phoenix fs-10 badge-phoenix-info me-2"><?php echo count($class['backup_agent_names']); ?> Backup<?php echo count($class['backup_agent_names']) !== 1 ? 's' : ''; ?></span>
+                                            <div class="mt-1">
+                                                <?php foreach ($class['backup_agent_names'] as $backupAgent): ?>
+                                                    <div class="fs-9 mb-1">
+                                                        <i class="bi bi-person me-1"></i>
+                                                        <?php echo esc_html($backupAgent['name']); ?>
+                                                        <span class="text-muted">(ID: <?php echo esc_html($backupAgent['id']); ?>)</span>
+                                                    </div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php endif; ?>
+                                <!-- Initial Agent History - Only show if different from current agent -->
+                                <?php if (!empty($class['initial_class_agent']) && 
+                                         $class['initial_class_agent'] != $class['class_agent'] &&
+                                         !empty($class['initial_agent_name'])): ?>
+                                <tr>
+                                    <td class="py-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="d-flex bg-secondary-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
+                                                <i class="bi bi-clock-history text-secondary" style="font-size: 12px;"></i>
+                                            </div>
+                                            <p class="fw-bold mb-0">Original Agent : </p>
+                                        </div>
+                                    </td>
+                                    <td class="py-2">
+                                        <div class="fw-semibold mb-0">
+                                            <?php echo esc_html($class['initial_agent_name']); ?>
+                                            <div class="fs-9 text-muted">
+                                                Started: <?php echo !empty($class['initial_agent_start_date']) ? date('M j, Y', strtotime($class['initial_agent_start_date'])) : 'N/A'; ?>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php endif; ?>
+                                <tr>
+                                    <td class="py-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="d-flex bg-warning-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
+                                                <i class="bi bi-person-gear text-warning" style="font-size: 12px;"></i>
+                                            </div>
+                                            <p class="fw-bold mb-0">Supervisor : </p>
+                                        </div>
+                                    </td>
+                                    <td class="py-2">
+                                        <div class="fw-semibold mb-0">
+                                            <?php if (!empty($class['supervisor_name'])): ?>
+                                                <?php echo esc_html($class['supervisor_name']); ?>
+                                                <div class="fs-9 text-muted">ID: <?php echo esc_html($class['project_supervisor_id']); ?></div>
+                                            <?php else: ?>
+                                                <span class="text-muted">N/A</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -594,76 +689,7 @@ if (!empty($class['schedule_data'])) {
                     <!-- Bottom Right - SETA & Exam Information -->
                     <div class="col-sm-12 col-xxl-6 py-3">
                         <table class="w-100 table-stats table table-hover table-sm fs-9 mb-0">
-                            <tbody>
-                                <tr>
-                                    <td class="py-2 ydcoza-w-150">
-                                        <div class="d-inline-flex align-items-center">
-                                            <div class="d-flex bg-success-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
-                                                <i class="bi bi-check-circle text-success" style="font-size: 12px;"></i>
-                                            </div>
-                                            <p class="fw-bold mb-0">SETA Funded : </p>
-                                        </div>
-                                    </td>
-                                    <td class="py-2">
-                                        <div class="fw-semibold mb-0">
-                                            <?php if ($class['seta_funded']): ?>
-                                                <span>Yes</span>
-                                            <?php else: ?>
-                                                <span>No</span>
-                                            <?php endif; ?>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="py-2">
-                                        <div class="d-flex align-items-center">
-                                            <div class="d-flex bg-info-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
-                                                <i class="bi bi-building-gear text-info" style="font-size: 12px;"></i>
-                                            </div>
-                                            <p class="fw-bold mb-0">SETA Name : </p>
-                                        </div>
-                                    </td>
-                                    <td class="py-2">
-                                        <div class="fw-semibold mb-0">
-                                            <?php echo esc_html($class['seta'] ?? 'N/A'); ?>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="py-2">
-                                        <div class="d-flex align-items-center">
-                                            <div class="d-flex bg-warning-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
-                                                <i class="bi bi-mortarboard text-warning" style="font-size: 12px;"></i>
-                                            </div>
-                                            <p class="fw-bold mb-0">Exam Class : </p>
-                                        </div>
-                                    </td>
-                                    <td class="py-2">
-                                        <div class="fw-semibold mb-0">
-                                            <?php if ($class['exam_class']): ?>
-                                                <span>Yes</span>
-                                            <?php else: ?>
-                                                <span>No</span>
-                                            <?php endif; ?>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="py-2">
-                                        <div class="d-flex align-items-center">
-                                            <div class="d-flex bg-primary-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
-                                                <i class="bi bi-clipboard-check text-primary" style="font-size: 12px;"></i>
-                                            </div>
-                                            <p class="fw-bold mb-0">Exam Type : </p>
-                                        </div>
-                                    </td>
-                                    <td class="py-2">
-                                        <div class="fw-semibold mb-0">
-                                            <?php echo esc_html($class['exam_type'] ?? 'N/A'); ?>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
+                            &nbsp;
                         </table>
                     </div>
                 </div>

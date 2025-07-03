@@ -1,4 +1,10 @@
 <!-- Class Details Display Section -->
+<style>
+.ydcoza-w-150 {
+    width: 150px;
+    min-width: 150px;
+}
+</style>
 <?php
 // Validate and prepare data for update mode
 if (isset($data['class_data']) && $data['class_data']):
@@ -31,6 +37,33 @@ if (isset($data['class_data']) && $data['class_data']):
                 }
             }
         }
+    }
+
+    // Find agent name if not already in class data
+    if (empty($classData['agent_name']) && !empty($classData['class_agent'])) {
+        $agents = $data['agents'] ?? [];
+        foreach ($agents as $agent) {
+            if ((int)$agent['id'] === (int)$classData['class_agent']) {
+                $classData['agent_name'] = $agent['name'];
+                break;
+            }
+        }
+    }
+
+    // Find supervisor name if not already in class data
+    if (empty($classData['supervisor_name']) && !empty($classData['project_supervisor_id'])) {
+        $supervisors = $data['supervisors'] ?? [];
+        foreach ($supervisors as $supervisor) {
+            if ((int)$supervisor['id'] === (int)$classData['project_supervisor_id']) {
+                $classData['supervisor_name'] = $supervisor['name'];
+                break;
+            }
+        }
+    }
+
+    // Process backup agents if needed
+    if (!empty($classData['backup_agent_ids']) && is_string($classData['backup_agent_ids'])) {
+        $classData['backup_agent_ids'] = json_decode($classData['backup_agent_ids'], true);
     }
 
     // Update the class data with enriched information
@@ -107,110 +140,268 @@ if (isset($data['class_data']) && $data['class_data']):
    <input type="hidden" id="class_id" name="class_id" value="<?php echo esc_attr($data['class_id'] ?? $_GET['class_id'] ?? ''); ?>">
    <input type="hidden" id="redirect_url" name="redirect_url" value="<?php echo esc_attr($data['redirect_url'] ?? $_GET['redirect_url'] ?? ''); ?>">
    <input type="hidden" id="nonce" name="nonce" value="<?php echo wp_create_nonce('wecoza_class_nonce'); ?>">
+   <!-- Debug mode indicator -->
+   <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
+   <input type="hidden" id="debug_mode" name="debug_mode" value="1">
+   <?php endif; ?>
 
    <!-- ===== Section: Basic Details ===== -->
    <div class="container container-md classes-form ps-0">
-      <!-- ===== Section: Basic Details ===== -->
-         <!-- UPDATE MODE: Client/site selection with database integration -->
-         <!-- Uses the new database-driven client/site data structure with proper integer IDs -->
-         <div class="row">
-            <!-- Client Name (ID) -->
-            <div class="col-md-3 mb-3">
-               <div class="mb-3">
-                  <label for="client_id" class="form-label">Client Name (ID) <span class="text-danger">*</span></label>
-                  <select id="client_id" name="client_id" class="form-select" required>
-                     <option value="">Select</option>
-                     <?php foreach ($data['clients'] as $client): ?>
-                        <option value="<?php echo esc_attr($client['id']); ?>" <?php echo (isset($data['class_data']['client_id']) && (int)$data['class_data']['client_id'] === (int)$client['id']) ? 'selected' : ''; ?>><?php echo esc_html($client['name']); ?></option>
-                     <?php endforeach; ?>
-                  </select>
-                  <div class="invalid-feedback">Please select a client.</div>
-                  <div class="valid-feedback">Looks good!</div>
-               </div>
+      <!-- Basic Information Display Table -->
+      <div class="px-xl-4 mb-4">
+         <h5 class="mb-3">Basic Information</h5>
+         <div class="row mx-0">
+            <!-- Left Column -->
+            <div class="col-sm-12 col-xxl-6 border-bottom border-end-xxl py-3">
+               <table class="w-100 table-stats table table-hover table-sm fs-9 mb-0">
+                  <tbody>
+                     <!-- Class ID -->
+                     <tr>
+                        <td class="py-2 ydcoza-w-150">
+                           <div class="d-inline-flex align-items-center">
+                              <div class="d-flex bg-primary-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
+                                 <i class="bi bi-hash text-primary" style="font-size: 12px;"></i>
+                              </div>
+                              <p class="fw-bold mb-0">Class ID : </p>
+                           </div>
+                        </td>
+                        <td class="py-2">
+                           <p class="fw-semibold mb-0">#<?php echo esc_html($data['class_data']['class_id'] ?? $data['class_id'] ?? 'N/A'); ?></p>
+                        </td>
+                     </tr>
+                     <!-- Client -->
+                     <tr>
+                        <td class="py-2">
+                           <div class="d-flex align-items-center">
+                              <div class="d-flex bg-primary-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
+                                 <i class="bi bi-building text-primary" style="font-size: 12px;"></i>
+                              </div>
+                              <p class="fw-bold mb-0">Client :</p>
+                           </div>
+                        </td>
+                        <td class="py-2">
+                           <div class="fw-semibold mb-0">
+                              <?php echo esc_html($data['class_data']['client_name'] ?? 'N/A'); ?>
+                              <?php if (!empty($data['class_data']['client_id'])): ?>
+                                 <div class="fs-9 text-muted">ID: <?php echo esc_html($data['class_data']['client_id']); ?></div>
+                              <?php endif; ?>
+                           </div>
+                        </td>
+                     </tr>
+                     <!-- Site/Location -->
+                     <tr>
+                        <td class="py-2">
+                           <div class="d-flex align-items-center">
+                              <div class="d-flex bg-info-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
+                                 <i class="bi bi-pin-map text-info" style="font-size: 12px;"></i>
+                              </div>
+                              <p class="fw-bold mb-0">Site/Location :</p>
+                           </div>
+                        </td>
+                        <td class="py-2">
+                           <div class="fw-semibold mb-0">
+                              <?php echo esc_html($data['class_data']['site_name'] ?? 'N/A'); ?>
+                              <?php if (!empty($data['class_data']['site_id'])): ?>
+                                 <div class="fs-9 text-muted">ID: <?php echo esc_html($data['class_data']['site_id']); ?></div>
+                              <?php endif; ?>
+                           </div>
+                        </td>
+                     </tr>
+                     <!-- Address -->
+                     <tr>
+                        <td class="py-2">
+                           <div class="d-flex align-items-center">
+                              <div class="d-flex bg-success-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
+                                 <i class="bi bi-geo-alt text-success" style="font-size: 12px;"></i>
+                              </div>
+                              <p class="fw-bold mb-0">Address : </p>
+                           </div>
+                        </td>                                    
+                        <td class="py-2">
+                           <p class="fw-semibold mb-0"><?php echo esc_html($data['class_data']['class_address_line'] ?? 'N/A'); ?></p>
+                        </td>
+                     </tr>
+                     <!-- Class Type -->
+                     <tr>
+                        <td class="py-2">
+                           <div class="d-flex align-items-center">
+                              <div class="d-flex bg-primary-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
+                                 <i class="bi bi-layers text-primary" style="font-size: 12px;"></i>
+                              </div>
+                              <p class="fw-bold mb-0">Class Type :</p>
+                           </div>
+                        </td>
+                        <td class="py-2">
+                           <p class="fw-semibold mb-0"><?php echo esc_html($data['class_data']['class_type'] ?? 'N/A'); ?></p>
+                        </td>
+                     </tr>
+                     <!-- Class Subject -->
+                     <tr>
+                        <td class="py-2">
+                           <div class="d-flex align-items-center">
+                              <div class="d-flex bg-success-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
+                                 <i class="bi bi-book text-success" style="font-size: 12px;"></i>
+                              </div>
+                              <p class="fw-bold mb-0">Class Subject :</p>
+                           </div>
+                        </td>
+                        <td class="py-2">
+                           <p class="fw-semibold mb-0"><?php echo esc_html($data['class_data']['class_subject'] ?? 'N/A'); ?></p>
+                        </td>
+                     </tr>
+                  </tbody>
+               </table>
             </div>
-
-            <!-- Class/Site Name -->
-            <div class="col-md-3 mb-3">
-               <div class="mb-3">
-                  <label for="site_id" class="form-label">Class/Site Name <span class="text-danger">*</span></label>
-                  <select id="site_id" name="site_id" class="form-select" required>
-                     <option value="">Select Site</option>
-                     <?php foreach ($data['clients'] as $client): ?>
-                        <optgroup label="<?php echo esc_attr($client['name']); ?>">
-                           <?php if (isset($data['sites'][$client['id']])): ?>
-                              <?php foreach ($data['sites'][$client['id']] as $site): ?>
-                                 <option value="<?php echo esc_attr($site['id']); ?>"
-                                    <?php echo (isset($data['class_data']['site_id']) && (int)$data['class_data']['site_id'] === (int)$site['id']) ? 'selected' : ''; ?>
-                                    data-address="<?php echo esc_attr($site['address'] ?? ''); ?>">
-                                    <?php echo esc_html($site['name']); ?>
-                                 </option>
-                              <?php endforeach; ?>
-                           <?php endif; ?>
-                        </optgroup>
-                     <?php endforeach; ?>
-                  </select>
-                  <div class="invalid-feedback">Please select a class/site name.</div>
-                  <div class="valid-feedback">Looks good!</div>
-               </div>
-            </div>
-
-            <!-- Single Address Field -->
-            <div class="col-md-6 mb-3" id="address-wrapper" style="<?php echo !empty($data['class_data']['class_address_line']) ? 'display:block;' : 'display:none;'; ?>">
-               <div class="mb-3">
-                  <label for="site_address" class="form-label">Address</label>
-                  <input
-                     type="text"
-                     id="site_address"
-                     name="site_address"
-                     class="form-control"
-                     placeholder="Street, Suburb, Town, Postal Code"
-                     value="<?php
-                        // Try to get address from class data first, then from site data if available
-                        $address = $data['class_data']['class_address_line'] ?? '';
-
-                        // If no address in class data, try to get it from site data
-                        if (empty($address) && !empty($data['class_data']['site_id'])) {
-                            $siteId = (int)$data['class_data']['site_id'];
-                            // Look through sites data to find the address
-                            foreach ($data['sites'] as $clientSites) {
-                                foreach ($clientSites as $site) {
-                                    if ((int)$site['id'] === $siteId && !empty($site['address'])) {
-                                        $address = $site['address'];
-                                        break 2;
-                                    }
-                                }
-                            }
-                        }
-
-                        echo esc_attr($address);
-                     ?>"
-                     readonly
-                     />
-               </div>
+            
+            <!-- Right Column -->
+            <div class="col-sm-12 col-xxl-6 border-bottom py-3">
+               <table class="w-100 table-stats table table-hover table-sm fs-9 mb-0">
+                  <tbody>
+                     <!-- Duration -->
+                     <tr>
+                        <td class="py-2 ydcoza-w-150">
+                           <div class="d-flex align-items-center">
+                              <div class="d-flex bg-warning-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
+                                 <i class="bi bi-clock text-warning" style="font-size: 12px;"></i>
+                              </div>
+                              <p class="fw-bold mb-0">Duration :</p>
+                           </div>
+                        </td>
+                        <td class="py-2">
+                           <p class="fw-semibold mb-0">
+                              <?php if (!empty($data['class_data']['class_duration'])): ?>
+                                 <?php echo esc_html($data['class_data']['class_duration']); ?> hours
+                              <?php else: ?>
+                                 <span class="text-muted">N/A</span>
+                              <?php endif; ?>
+                           </p>
+                        </td>
+                     </tr>
+                     <!-- Class Code -->
+                     <tr>
+                        <td class="py-2">
+                           <div class="d-flex align-items-center">
+                              <div class="d-flex bg-info-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
+                                 <i class="bi bi-tag text-info" style="font-size: 12px;"></i>
+                              </div>
+                              <p class="fw-bold mb-0">Class Code :</p>
+                           </div>
+                        </td>
+                        <td class="py-2">
+                           <p class="fw-semibold mb-0"><?php echo esc_html($data['class_data']['class_code'] ?? 'N/A'); ?></p>
+                        </td>
+                     </tr>
+                     <!-- Original Start Date -->
+                     <tr>
+                        <td class="py-2">
+                           <div class="d-flex align-items-center">
+                              <div class="d-flex bg-info-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
+                                 <i class="bi bi-calendar-plus text-info" style="font-size: 12px;"></i>
+                              </div>
+                              <p class="fw-bold mb-0">Original Start Date :</p>
+                           </div>
+                        </td>
+                        <td class="py-2">
+                           <p class="fw-semibold mb-0">
+                              <?php if (!empty($data['class_data']['original_start_date'])): ?>
+                                 <?php echo esc_html(date('M j, Y', strtotime($data['class_data']['original_start_date']))); ?>
+                              <?php else: ?>
+                                 <span class="text-muted">N/A</span>
+                              <?php endif; ?>
+                           </p>
+                        </td>
+                     </tr>
+                     <!-- Current Agent -->
+                     <?php if (!empty($data['class_data']['agent_name']) || !empty($data['class_data']['class_agent'])): ?>
+                     <tr>
+                        <td class="py-2">
+                           <div class="d-flex align-items-center">
+                              <div class="d-flex bg-success-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
+                                 <i class="bi bi-person-badge text-success" style="font-size: 12px;"></i>
+                              </div>
+                              <p class="fw-bold mb-0">Current Agent :</p>
+                           </div>
+                        </td>
+                        <td class="py-2">
+                           <div class="fw-semibold mb-0">
+                              <?php echo esc_html($data['class_data']['agent_name'] ?? 'N/A'); ?>
+                              <?php if (!empty($data['class_data']['class_agent'])): ?>
+                                 <div class="fs-9 text-muted">ID: <?php echo esc_html($data['class_data']['class_agent']); ?></div>
+                              <?php endif; ?>
+                           </div>
+                        </td>
+                     </tr>
+                     <?php endif; ?>
+                     <!-- Backup Agents -->
+                     <?php if (!empty($data['class_data']['backup_agent_names']) && is_array($data['class_data']['backup_agent_names'])): ?>
+                     <tr>
+                        <td class="py-2">
+                           <div class="d-flex align-items-center">
+                              <div class="d-flex bg-info-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
+                                 <i class="bi bi-people text-info" style="font-size: 12px;"></i>
+                              </div>
+                              <p class="fw-bold mb-0">Backup Agents :</p>
+                           </div>
+                        </td>
+                        <td class="py-2">
+                           <div class="fw-semibold mb-0">
+                              <span class="badge badge-phoenix fs-10 badge-phoenix-info me-2"><?php echo count($data['class_data']['backup_agent_names']); ?> Backup<?php echo count($data['class_data']['backup_agent_names']) !== 1 ? 's' : ''; ?></span>
+                              <div class="mt-1">
+                                 <?php foreach ($data['class_data']['backup_agent_names'] as $backupAgent): ?>
+                                    <div class="fs-9 mb-1">
+                                       <i class="bi bi-person me-1"></i>
+                                       <?php echo esc_html($backupAgent['name'] ?? $backupAgent); ?>
+                                       <?php if (isset($backupAgent['id'])): ?>
+                                          <span class="text-muted">(ID: <?php echo esc_html($backupAgent['id']); ?>)</span>
+                                       <?php endif; ?>
+                                    </div>
+                                 <?php endforeach; ?>
+                              </div>
+                           </div>
+                        </td>
+                     </tr>
+                     <?php endif; ?>
+                     <!-- Supervisor -->
+                     <?php if (!empty($data['class_data']['supervisor_name']) || !empty($data['class_data']['project_supervisor_id'])): ?>
+                     <tr>
+                        <td class="py-2">
+                           <div class="d-flex align-items-center">
+                              <div class="d-flex bg-warning-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
+                                 <i class="bi bi-person-gear text-warning" style="font-size: 12px;"></i>
+                              </div>
+                              <p class="fw-bold mb-0">Supervisor :</p>
+                           </div>
+                        </td>
+                        <td class="py-2">
+                           <div class="fw-semibold mb-0">
+                              <?php echo esc_html($data['class_data']['supervisor_name'] ?? 'N/A'); ?>
+                              <?php if (!empty($data['class_data']['project_supervisor_id'])): ?>
+                                 <div class="fs-9 text-muted">ID: <?php echo esc_html($data['class_data']['project_supervisor_id']); ?></div>
+                              <?php endif; ?>
+                           </div>
+                        </td>
+                     </tr>
+                     <?php endif; ?>
+                  </tbody>
+               </table>
             </div>
          </div>
+      </div>
+
+      <!-- Hidden fields for form submission -->
+      <input type="hidden" name="client_id" value="<?php echo esc_attr($data['class_data']['client_id'] ?? ''); ?>">
+      <input type="hidden" name="site_id" value="<?php echo esc_attr($data['class_data']['site_id'] ?? ''); ?>">
+      <input type="hidden" name="class_type" value="<?php echo esc_attr($data['class_data']['class_type'] ?? ''); ?>">
+      <input type="hidden" name="class_code_hidden" value="<?php echo esc_attr($data['class_data']['class_code'] ?? ''); ?>">
+      <input type="hidden" name="class_duration" value="<?php echo esc_attr($data['class_data']['class_duration'] ?? ''); ?>">
+      <input type="hidden" name="class_start_date" value="<?php echo esc_attr($data['class_data']['original_start_date'] ?? ''); ?>">
 
       <?php echo section_divider(); ?>
 
-      <!-- ===== Section: Scheduling & Class Info ===== -->
+      <!-- ===== Section: Editable Fields ===== -->
       <div class="row mt-3">
-         <!-- Class Type (Main Category) -->
-         <div class="col-md-4 mb-3">
-            <div class="mb-3">
-               <label for="class_type" class="form-label">Class Type <span class="text-danger">*</span></label>
-               <select id="class_type" name="class_type" class="form-select" required>
-                  <option value="">Select</option>
-                  <?php foreach ($data['class_types'] as $class_type): ?>
-                     <option value="<?php echo esc_attr($class_type['id']); ?>" <?php echo (isset($data['class_data']['class_type']) && $data['class_data']['class_type'] == $class_type['id']) ? 'selected' : ''; ?>><?php echo esc_html($class_type['name']); ?></option>
-                  <?php endforeach; ?>
-               </select>
-               <div class="invalid-feedback">Please select the class type.</div>
-               <div class="valid-feedback">Looks good!</div>
-            </div>
-         </div>
-
-         <!-- Class Subject (Specific Subject/Level/Module) -->
-         <div class="col-md-4 mb-3">
+         <!-- Class Subject (Editable) -->
+         <div class="col-md-6 mb-3">
             <div class="mb-3">
                <label for="class_subject" class="form-label">Class Subject <span class="text-danger">*</span></label>
                <select id="class_subject" name="class_subject" class="form-select" required>
@@ -224,43 +415,11 @@ if (isset($data['class_data']) && $data['class_data']):
                <div class="valid-feedback">Looks good!</div>
             </div>
          </div>
-
-         <!-- Class Duration (Auto-calculated) -->
-         <div class="col-md-4 mb-3">
-            <div class="mb-3">
-               <label for="class_duration" class="form-label">Duration (Hours)</label>
-               <input type="number" id="class_duration" name="class_duration" class="form-control" placeholder="Duration" value="<?php echo esc_attr($data['class_data']['class_duration'] ?? ''); ?>" readonly>
-               <div class="form-text">Automatically calculated based on class type and subject.</div>
-            </div>
-         </div>
-      </div>
-
-      <div class="row">
-         <!-- Class Code (Auto-generated) -->
-         <div class="col-md-4 mb-3">
-            <div class="mb-3">
-               <label for="class_code" class="form-label">Class Code</label>
-               <input type="text" id="class_code" name="class_code" class="form-control" placeholder="Class Code" value="<?php echo esc_attr($data['class_data']['class_code'] ?? ''); ?>" readonly>
-               <div class="form-text">Auto generated [ClientID]-[ClassType]-[SubjectID]-[YYYY]-[MM]-[DD]-[HH]-[MM] </div>
-            </div>
-         </div>
-
-         <!-- Class Original Start Date -->
-         <div class="col-md-4 mb-3">
-            <div class="mb-3">
-               <label for="class_start_date" class="form-label">Class Original Start Date <span class="text-danger">*</span></label>
-               <input type="date" id="class_start_date" name="class_start_date" class="form-control" placeholder="YYYY-MM-DD" value="<?php echo esc_attr($data['class_data']['original_start_date'] ?? ''); ?>" required>
-               <div class="invalid-feedback">Please select the start date.</div>
-               <div class="valid-feedback">Looks good!</div>
-            </div>
-         </div>
       </div>
 
       <!-- Class Schedule Form Section -->
       <div class="mb-4 mt-3">
-         <h5 class="mb-3">Class Schedule</h5>
-            <!-- UPDATE MODE: Display existing schedule info -->
-            <p class="text-muted small mb-3">Update the recurring schedule for this class.</p>
+         <?php echo section_header('Class Schedule', 'Update the recurring schedule for this class.'); ?>
 
          <?php
          // Extract schedule data for pre-population
@@ -446,8 +605,7 @@ if (isset($data['class_data']) && $data['class_data']):
 
          <!-- Exception Dates -->
          <div class="mb-4">
-            <h6 class="mb-2">Exception Dates</h6>
-            <p class="text-muted small mb-3">Add dates when classes will not occur (e.g. client closed).</p>
+            <?php echo section_header('Exception Dates', 'Add dates when classes will not occur (e.g. client closed).', 'h6'); ?>
 
             <!-- Container for all exception date rows -->
             <div id="exception-dates-container"></div>
@@ -490,14 +648,13 @@ if (isset($data['class_data']) && $data['class_data']):
 
             <!-- Add Exception Button -->
             <button type="button" class="btn btn-outline-primary btn-sm" id="add-exception-date-btn">
-            + Add Exception Date
+            <i class="bi bi-plus-circle me-1"></i> Add Exception Date
             </button>
          </div>
 
          <!-- Public Holidays Section -->
          <div class="mb-4">
-            <h6 class="mb-2">Public Holidays in Schedule</h6>
-            <p class="text-muted small mb-3">By default, classes are not scheduled on public holidays. The system will only show holidays that conflict with your class schedule (when a holiday falls on a scheduled class day). You can override specific holidays to include them in the schedule.</p>
+            <?php echo section_header('Public Holidays in Schedule', 'By default, classes are not scheduled on public holidays. The system will only show holidays that conflict with your class schedule (when a holiday falls on a scheduled class day). You can override specific holidays to include them in the schedule.', 'h6'); ?>
 
             <!-- No holidays message -->
             <div id="no-holidays-message" class="bd-callout bd-callout-info">
@@ -651,8 +808,7 @@ if (isset($data['class_data']) && $data['class_data']):
 
       <!-- Class Date History Section -->
       <div class="mb-4 mt-3">
-         <h5 class="mb-3">Class Date History</h5>
-         <p class="text-muted small mb-3">Add stop and restart dates for this class. A class can have multiple stop and restart dates.</p>
+         <?php echo section_header('Class Date History', 'Add stop and restart dates for this class. A class can have multiple stop and restart dates.'); ?>
 
          <!-- Container for all date history rows -->
          <div id="date-history-container"></div>
@@ -684,7 +840,7 @@ if (isset($data['class_data']) && $data['class_data']):
 
          <!-- Add Row Button -->
          <button type="button" class="btn btn-outline-primary btn-sm" id="add-date-history-btn">
-         + Add Stop/Restart Dates
+         <i class="bi bi-plus-circle me-1"></i> Add Stop/Restart Dates
          </button>
       </div>
 
@@ -776,7 +932,7 @@ if (isset($data['class_data']) && $data['class_data']):
                <div class="form-text">Select multiple learners to add to this class. Hold Ctrl/Cmd to select multiple.</div>
                <div class="invalid-feedback">Please select at least one learner.</div>
                <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-selected-learners-btn">
-                  Add Selected Learners
+                  <i class="bi bi-person-plus me-1"></i> Add Selected Learners
                </button>
             </div>
          </div>
@@ -813,8 +969,7 @@ if (isset($data['class_data']) && $data['class_data']):
       <div class="row mt-5" id="exam_learners_container" style="display: none;">
       <?php echo section_divider(); ?>
          <div class="col-12">
-            <h5 class="mb-3">Select Learners Taking Exams</h5>
-            <p class="text-muted small mb-3">Not all learners in an exam class necessarily take exams. Select which learners will take exams.</p>
+            <?php echo section_header('Select Learners Taking Exams', 'Not all learners in an exam class necessarily take exams. Select which learners will take exams.'); ?>
 
             <div class="row mb-4">
                <!-- Exam Learner Selection -->
@@ -829,7 +984,7 @@ if (isset($data['class_data']) && $data['class_data']):
                      <div class="invalid-feedback">Please select at least one learner for exams.</div>
                      <div class="valid-feedback">Looks good!</div>
                      <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-selected-exam-learners-btn">
-                        Add Selected Exam Learners
+                        <i class="bi bi-person-plus me-1"></i> Add Selected Exam Learners
                      </button>
                   </div>
                </div>
@@ -902,8 +1057,7 @@ if (isset($data['class_data']) && $data['class_data']):
 
       <!-- QA Visit Dates and Reports Section -->
       <div class="mt-4">
-         <h6 class="mb-3">QA Visit Dates & Reports</h6>
-         <p class="text-muted small mb-3">Add QA visit dates and upload corresponding reports for each visit.</p>
+         <?php echo section_header('QA Visit Dates & Reports', 'Add QA visit dates and upload corresponding reports for each visit.', 'h6'); ?>
 
          <!-- Container for all QA visit date rows -->
          <div id="qa-visits-container"></div>
@@ -940,8 +1094,11 @@ if (isset($data['class_data']) && $data['class_data']):
 
          <!-- Add Row Button -->
          <button type="button" class="btn btn-outline-primary btn-sm" id="add-qa-visit-btn">
-         + Add QA Visit Date
+         <i class="bi bi-plus-circle me-1"></i> Add QA Visit Date
          </button>
+         
+         <!-- Hidden field to store QA reports metadata -->
+         <input type="hidden" id="qa_reports_metadata" name="qa_reports_metadata" value="<?php echo esc_attr(json_encode($data['class_data']['qa_reports'] ?? [])); ?>">
       </div>
 
       <?php echo section_divider(); ?>
@@ -951,8 +1108,7 @@ if (isset($data['class_data']) && $data['class_data']):
 
       <!-- Class Agents Section -->
       <div class="mb-4">
-         <h5 class="mb-3">Class Agents</h5>
-         <p class="text-muted small mb-3">Assign the primary class agent. If the agent changes during the class, the history will be tracked.</p>
+         <?php echo section_header('Class Agents', 'Assign the primary class agent. If the agent changes during the class, the history will be tracked.'); ?>
 
          <!-- Initial Class Agent -->
          <div class="row mb-3">
@@ -980,8 +1136,7 @@ if (isset($data['class_data']) && $data['class_data']):
          </div>
 
          <!-- Agent Replacements -->
-         <h6 class="mb-3">Agent Replacements</h6>
-         <p class="text-muted small mb-3">If the class agent changes, add the replacement agent and takeover date here.</p>
+         <?php echo section_header('Agent Replacements', 'If the class agent changes, add the replacement agent and takeover date here.', 'h6'); ?>
 
          <!-- Container for all agent replacement rows -->
          <div id="agent-replacements-container"></div>
@@ -1023,7 +1178,7 @@ if (isset($data['class_data']) && $data['class_data']):
 
          <!-- Add Row Button -->
          <button type="button" class="btn btn-outline-primary btn-sm" id="add-agent-replacement-btn">
-         + Add Agent Replacement
+         <i class="bi bi-plus-circle me-1"></i> Add Agent Replacement
          </button>
       </div>
 
@@ -1055,8 +1210,7 @@ if (isset($data['class_data']) && $data['class_data']):
 
       <!-- Backup Agents Section -->
       <div class="mt-4 mb-4">
-         <h5 class="mb-3">Backup Agents</h5>
-         <p class="text-muted small mb-3">Add backup agents with specific dates when they will be available.</p>
+         <?php echo section_header('Backup Agents', 'Add backup agents with specific dates when they will be available.'); ?>
 
          <!-- Container for all backup agent rows -->
          <div id="backup-agents-container"></div>
@@ -1098,7 +1252,7 @@ if (isset($data['class_data']) && $data['class_data']):
 
          <!-- Add Row Button -->
          <button type="button" class="btn btn-outline-primary btn-sm" id="add-backup-agent-btn">
-         + Add Backup Agent
+         <i class="bi bi-plus-circle me-1"></i> Add Backup Agent
          </button>
       </div>
 
@@ -1106,7 +1260,7 @@ if (isset($data['class_data']) && $data['class_data']):
       <!-- Submit Button - Mode-aware text -->
       <div class="row mt-4">
          <div class="col-md-3">
-               <?php echo button('Update Class', 'submit', 'primary'); ?>
+               <?php echo button('<i class="bi bi-save me-1"></i> Update Class', 'submit', 'primary', ['class' => 'btn-lg']); ?>
          </div>
       </div>
    </div>
@@ -1114,6 +1268,69 @@ if (isset($data['class_data']) && $data['class_data']):
 
 <!-- Alert container for form messages -->
 <div id="form-messages" class="mt-3"></div>
+
+<!-- Form Validation Script -->
+<script>
+// Enhanced form validation for update mode
+function validateUpdateForm() {
+    const form = document.getElementById('classes-form');
+    const errors = [];
+    
+    // Validate learners (at least one required)
+    const learnersData = document.getElementById('class_learners_data');
+    if (!learnersData || !learnersData.value || learnersData.value === '[]') {
+        errors.push('At least one learner must be added to the class.');
+    }
+    
+    // Validate schedule data
+    const schedulePattern = document.getElementById('schedule_pattern');
+    if (schedulePattern && !schedulePattern.value) {
+        errors.push('Schedule pattern is required.');
+    }
+    
+    // Validate exam learners if exam class
+    const examClass = document.getElementById('exam_class');
+    const examLearners = document.getElementById('exam_learners');
+    if (examClass && (examClass.value === 'Yes' || examClass.value === '1')) {
+        if (!examLearners || !examLearners.value || examLearners.value === '[]') {
+            errors.push('Exam classes must have at least one exam learner selected.');
+        }
+    }
+    
+    // Validate date consistency
+    const startDate = document.getElementById('class_start_date');
+    const scheduleStartDate = document.getElementById('schedule_start_date');
+    if (startDate && scheduleStartDate && startDate.value && scheduleStartDate.value) {
+        if (new Date(scheduleStartDate.value) < new Date(startDate.value)) {
+            errors.push('Schedule start date cannot be before class original start date.');
+        }
+    }
+    
+    // Show errors if any
+    if (errors.length > 0) {
+        const messageContainer = document.getElementById('form-messages');
+        messageContainer.innerHTML = '<div class="alert alert-danger" role="alert"><strong>Validation Errors:</strong><ul>' + 
+            errors.map(e => '<li>' + e + '</li>').join('') + '</ul></div>';
+        messageContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+    }
+    
+    return true;
+}
+
+// Attach validation to form submission
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('classes-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (!validateUpdateForm()) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        });
+    }
+});
+</script>
 
 <!-- Pre-populate form data for update mode -->
 <script>
@@ -1125,6 +1342,13 @@ console.log('Update Form - Available Yes/No Options:', <?php echo json_encode($d
 <?php endif; ?>
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Debug logging for update form
+    <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
+    console.log('Update Form Debug Mode Active');
+    <?php endif; ?>
+    
+    // Note: Read-only fields have been replaced with a visual display table
+    // The form now only contains editable fields
     // Pre-populate learner data if available
     <?php if (isset($data['class_data']['learner_ids']) && !empty($data['class_data']['learner_ids'])): ?>
     const learnerData = <?php echo json_encode($data['class_data']['learner_ids']); ?>;
@@ -1174,23 +1398,42 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     <?php endif; ?>
 
-    // Pre-populate QA visit dates if available
+    // Pre-populate QA visit dates and reports if available
     <?php if (isset($data['class_data']['qa_visit_dates']) && !empty($data['class_data']['qa_visit_dates'])): ?>
     const qaVisitDates = <?php echo json_encode($data['class_data']['qa_visit_dates']); ?>;
+    const qaReportsMetadata = <?php echo json_encode($data['class_data']['qa_reports'] ?? []); ?>;
+    <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
+    console.log('QA Visit Dates:', qaVisitDates);
+    console.log('QA Reports Metadata:', qaReportsMetadata);
+    <?php endif; ?>
 
     if (qaVisitDates && Array.isArray(qaVisitDates)) {
         const qaVisitsContainer = document.getElementById('qa-visits-container');
         const qaVisitTemplate = document.getElementById('qa-visit-row-template');
 
         if (qaVisitsContainer && qaVisitTemplate) {
-            qaVisitDates.forEach(function(date) {
+            qaVisitDates.forEach(function(date, index) {
                 const newRow = qaVisitTemplate.cloneNode(true);
                 newRow.classList.remove('d-none');
                 newRow.removeAttribute('id');
 
                 const dateInput = newRow.querySelector('input[name="qa_visit_dates[]"]');
+                const fileInput = newRow.querySelector('input[name="qa_reports[]"]');
+                
                 if (dateInput) {
                     dateInput.value = date;
+                }
+                
+                // If we have report metadata, show the filename
+                if (qaReportsMetadata && qaReportsMetadata[index]) {
+                    const reportInfo = qaReportsMetadata[index];
+                    if (reportInfo.filename && fileInput) {
+                        // Create a display element for existing file
+                        const fileDisplay = document.createElement('div');
+                        fileDisplay.className = 'text-muted small mt-1';
+                        fileDisplay.innerHTML = '<i class="bi bi-file-pdf"></i> ' + reportInfo.filename;
+                        fileInput.parentNode.appendChild(fileDisplay);
+                    }
                 }
 
                 qaVisitsContainer.appendChild(newRow);
@@ -1231,14 +1474,37 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Pre-populate backup agent data if available
     <?php if (isset($data['class_data']['backup_agent_ids']) && !empty($data['class_data']['backup_agent_ids'])): ?>
-    const backupAgentIds = <?php echo json_encode($data['class_data']['backup_agent_ids']); ?>;
+    const backupAgentData = <?php echo json_encode($data['class_data']['backup_agent_ids']); ?>;
+    <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
+    console.log('Backup Agent Data:', backupAgentData);
+    <?php endif; ?>
 
-    if (backupAgentIds && Array.isArray(backupAgentIds)) {
+    if (backupAgentData) {
         const backupAgentsContainer = document.getElementById('backup-agents-container');
         const backupAgentTemplate = document.getElementById('backup-agent-row-template');
 
         if (backupAgentsContainer && backupAgentTemplate) {
-            backupAgentIds.forEach(function(agentId) {
+            // Normalize data structure - ensure we have an array of objects
+            let normalizedData = [];
+            if (Array.isArray(backupAgentData)) {
+                normalizedData = backupAgentData.map(function(item) {
+                    if (typeof item === 'object' && item !== null) {
+                        return {
+                            agent_id: item.agent_id || item.id || '',
+                            date: item.date || item.backup_date || ''
+                        };
+                    } else if (typeof item === 'string' || typeof item === 'number') {
+                        // Legacy format - just agent ID
+                        return {
+                            agent_id: item,
+                            date: ''
+                        };
+                    }
+                    return null;
+                }).filter(Boolean);
+            }
+
+            normalizedData.forEach(function(agentData) {
                 const newRow = backupAgentTemplate.cloneNode(true);
                 newRow.classList.remove('d-none');
                 newRow.removeAttribute('id');
@@ -1246,20 +1512,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 const agentSelect = newRow.querySelector('select[name="backup_agent_ids[]"]');
                 const dateInput = newRow.querySelector('input[name="backup_agent_dates[]"]');
                 
-                // Handle both formats: simple ID or object with agent_id and date
-                let agentIdValue = agentId;
-                let dateValue = '';
-                
-                if (typeof agentId === 'object' && agentId !== null) {
-                    agentIdValue = agentId.agent_id || agentId.id || '';
-                    dateValue = agentId.date || '';
+                if (agentSelect && agentData.agent_id) {
+                    agentSelect.value = agentData.agent_id;
                 }
-                
-                if (agentSelect && agentIdValue) {
-                    agentSelect.value = agentIdValue;
-                }
-                if (dateInput && dateValue) {
-                    dateInput.value = dateValue;
+                if (dateInput && agentData.date) {
+                    dateInput.value = agentData.date;
                 }
 
                 backupAgentsContainer.appendChild(newRow);
@@ -1300,14 +1557,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Pre-populate agent replacements if available
     <?php if (isset($data['class_data']['agent_replacements']) && !empty($data['class_data']['agent_replacements'])): ?>
-    const agentReplacements = <?php echo json_encode($data['class_data']['agent_replacements']); ?>;
+    const agentReplacementData = <?php echo json_encode($data['class_data']['agent_replacements']); ?>;
+    <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
+    console.log('Agent Replacement Data:', agentReplacementData);
+    <?php endif; ?>
     
-    if (agentReplacements && Array.isArray(agentReplacements)) {
+    if (agentReplacementData) {
         const agentReplacementsContainer = document.getElementById('agent-replacements-container');
         const agentReplacementTemplate = document.getElementById('agent-replacement-row-template');
         
         if (agentReplacementsContainer && agentReplacementTemplate) {
-            agentReplacements.forEach(function(replacement) {
+            // Normalize data structure
+            let normalizedData = [];
+            if (Array.isArray(agentReplacementData)) {
+                normalizedData = agentReplacementData.map(function(item) {
+                    if (typeof item === 'object' && item !== null) {
+                        return {
+                            agent_id: item.agent_id || item.replacement_agent_id || '',
+                            date: item.date || item.takeover_date || ''
+                        };
+                    }
+                    return null;
+                }).filter(Boolean);
+            }
+
+            normalizedData.forEach(function(replacement) {
                 const newRow = agentReplacementTemplate.cloneNode(true);
                 newRow.classList.remove('d-none');
                 newRow.removeAttribute('id');
@@ -1332,87 +1606,40 @@ document.addEventListener('DOMContentLoaded', function() {
     <?php if (isset($data['class_data']['schedule_data']) && !empty($data['class_data']['schedule_data'])): ?>
     // Pass schedule data to the scheduling JavaScript
     window.existingScheduleData = <?php echo json_encode($data['class_data']['schedule_data']); ?>;
+    <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
+    console.log('Existing Schedule Data:', window.existingScheduleData);
+    <?php endif; ?>
     <?php endif; ?>
     
-    // Initialize client/site selection
-    <?php if (isset($data['class_data']['client_id']) && isset($data['class_data']['site_id'])): ?>
-    setTimeout(function() {
-        // Trigger client change to load sites
-        const clientSelect = document.getElementById('client_id');
-        if (clientSelect) {
-            const event = new Event('change', { bubbles: true });
-            clientSelect.dispatchEvent(event);
-            
-            // After sites are loaded, select the correct one
-            setTimeout(function() {
-                const siteSelect = document.getElementById('site_id');
-                const currentSiteId = '<?php echo esc_js($data['class_data']['site_id'] ?? ''); ?>';
-                if (siteSelect && currentSiteId) {
-                    siteSelect.value = currentSiteId;
-                    // Trigger site change to update address
-                    const siteEvent = new Event('change', { bubbles: true });
-                    siteSelect.dispatchEvent(siteEvent);
-                }
-            }, 300);
-        }
-    }, 50);
-    <?php endif; ?>
-    
-    // Trigger class type change to load subjects
-    <?php if (isset($data['class_data']['class_type']) && !empty($data['class_data']['class_type'])): ?>
-    setTimeout(function() {
-        const classTypeSelect = document.getElementById('class_type');
-        if (classTypeSelect && classTypeSelect.value) {
-            // Trigger change event to load subjects
-            const event = new Event('change', { bubbles: true });
-            classTypeSelect.dispatchEvent(event);
-            
-            // Wait for subjects to be loaded and select the correct one
-            const currentSubject = '<?php echo esc_js($data['class_data']['class_subject'] ?? ''); ?>';
-            if (currentSubject) {
-                // Use MutationObserver to wait for options to be loaded
-                const classSubjectSelect = document.getElementById('class_subject');
-                if (classSubjectSelect) {
-                    const observer = new MutationObserver(function(mutations, obs) {
-                        // Check if options have been loaded
-                        if (classSubjectSelect.options.length > 1) {
-                            // Options loaded, now select the correct one
-                            for (let i = 0; i < classSubjectSelect.options.length; i++) {
-                                if (classSubjectSelect.options[i].value === currentSubject) {
-                                    classSubjectSelect.value = currentSubject;
-                                    // Trigger change event to update duration
-                                    const subjectEvent = new Event('change', { bubbles: true });
-                                    classSubjectSelect.dispatchEvent(subjectEvent);
-                                    break;
-                                }
-                            }
-                            // Stop observing
-                            obs.disconnect();
-                        }
-                    });
-                    
-                    // Start observing
-                    observer.observe(classSubjectSelect, {
-                        childList: true,
-                        subtree: true
-                    });
-                    
-                    // Fallback timeout in case observer doesn't trigger
-                    setTimeout(function() {
-                        observer.disconnect();
-                        if (classSubjectSelect.value !== currentSubject) {
-                            for (let i = 0; i < classSubjectSelect.options.length; i++) {
-                                if (classSubjectSelect.options[i].value === currentSubject) {
-                                    classSubjectSelect.value = currentSubject;
-                                    const subjectEvent = new Event('change', { bubbles: true });
-                                    classSubjectSelect.dispatchEvent(subjectEvent);
-                                    break;
-                                }
-                            }
-                        }
-                    }, 2000);
-                }
+    // Log form submission data in debug mode
+    <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
+    const form = document.getElementById('classes-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            console.log('Form Submission Data:');
+            const formData = new FormData(form);
+            for (let [key, value] of formData.entries()) {
+                console.log(key + ':', value);
             }
+        });
+    }
+    <?php endif; ?>
+    
+    // Initialize class subject dropdown with proper type data
+    <?php if (isset($data['class_data']['class_type']) && !empty($data['class_data']['class_type'])): ?>
+    // Since class type is now fixed, we need to load subjects for that type
+    setTimeout(function() {
+        const classType = '<?php echo esc_js($data['class_data']['class_type']); ?>';
+        const currentSubject = '<?php echo esc_js($data['class_data']['class_subject'] ?? ''); ?>';
+        const classSubjectSelect = document.getElementById('class_subject');
+        
+        if (classSubjectSelect && classType) {
+            // Trigger loading of subjects for the fixed class type
+            // This should be handled by the existing class-capture.js script
+            // We just need to ensure the current subject remains selected
+            
+            // If the subject dropdown needs to be populated based on class type
+            // the existing JavaScript should handle it
         }
     }, 100);
     <?php endif; ?>
