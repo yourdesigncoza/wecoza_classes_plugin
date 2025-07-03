@@ -425,15 +425,16 @@ if (isset($data['class_data']) && $data['class_data']):
          // Convert holiday overrides to JSON string for the hidden field
          $holidayOverridesJson = !empty($holidayOverrides) ? json_encode($holidayOverrides) : '';
          
-         // Debug schedule data
+         // Debug schedule data - output to console
          if (isset($_GET['debug']) && $_GET['debug'] === '1') {
-             echo "<!-- Schedule Debug Data:\n";
-             echo "Pattern: " . print_r($schedulePattern, true) . "\n";
-             echo "Days: " . print_r($scheduleDays, true) . "\n";
-             echo "Time Data: " . print_r($timeData, true) . "\n";
-             echo "Per Day Times: " . print_r($perDayTimes, true) . "\n";
-             echo "Full Schedule Data: " . print_r($scheduleData, true) . "\n";
-             echo "-->\n";
+             echo "<script>\n";
+             echo "console.log('=== PHP Schedule Debug Data ===');\n";
+             echo "console.log('Pattern:', " . json_encode($schedulePattern) . ");\n";
+             echo "console.log('Days:', " . json_encode($scheduleDays) . ");\n";
+             echo "console.log('Time Data:', " . json_encode($timeData) . ");\n";
+             echo "console.log('Per Day Times:', " . json_encode($perDayTimes) . ");\n";
+             echo "console.log('Full Schedule Data:', " . json_encode($scheduleData) . ");\n";
+             echo "</script>\n";
          }
          
          // Normalize perDayTimes to JavaScript expected format (camelCase) and filter corrupt data
@@ -461,7 +462,10 @@ if (isset($data['class_data']) && $data['class_data']):
              $scheduleData['timeData']['perDayTimes'] = $perDayTimes;
              
              if (isset($_GET['debug']) && $_GET['debug'] === '1') {
-                 echo "<!-- Cleaned Per Day Times: " . print_r($perDayTimes, true) . " -->\n";
+                 echo "<script>\n";
+                 echo "console.log('=== Cleaned Per Day Times ===');\n";
+                 echo "console.log('Normalized perDayTimes:', " . json_encode($perDayTimes) . ");\n";
+                 echo "</script>\n";
              }
          }
          
@@ -499,7 +503,10 @@ if (isset($data['class_data']) && $data['class_data']):
                  $scheduleData['timeData']['perDayTimes'] = $perDayTimes;
                  
                  if (isset($_GET['debug']) && $_GET['debug'] === '1') {
-                     echo "<!-- Migrated Per Day Times: " . print_r($perDayTimes, true) . " -->\n";
+                     echo "<script>\n";
+                     echo "console.log('=== Migrated Per Day Times ===');\n";
+                     echo "console.log('Migrated perDayTimes:', " . json_encode($perDayTimes) . ");\n";
+                     echo "</script>\n";
                  }
              }
          }
@@ -1694,7 +1701,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Additional debug to verify the data structure
     if (isset($_GET['debug']) && $_GET['debug'] === '1') {
-        echo "<!-- Schedule Data for JS (PHP side): " . print_r($scheduleDataForJS, true) . " -->\n";
+        echo "<script>\n";
+        echo "console.log('=== Schedule Data for JS (PHP side) ===');\n";
+        echo "console.log('scheduleDataForJS:', " . json_encode($scheduleDataForJS) . ");\n";
+        echo "</script>\n";
     }
     ?>
     // Pass schedule data to the scheduling JavaScript
