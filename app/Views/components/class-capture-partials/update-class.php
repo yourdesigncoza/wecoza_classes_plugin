@@ -395,27 +395,9 @@ if (isset($data['class_data']) && $data['class_data']):
       <input type="hidden" name="class_code_hidden" value="<?php echo esc_attr($data['class_data']['class_code'] ?? ''); ?>">
       <input type="hidden" name="class_duration" value="<?php echo esc_attr($data['class_data']['class_duration'] ?? ''); ?>">
       <input type="hidden" name="class_start_date" value="<?php echo esc_attr($data['class_data']['original_start_date'] ?? ''); ?>">
+      <input type="hidden" name="class_subject" value="<?php echo esc_attr($data['class_data']['class_subject'] ?? ''); ?>">
 
       <?php echo section_divider(); ?>
-
-      <!-- ===== Section: Editable Fields ===== -->
-      <div class="row mt-3">
-         <!-- Class Subject (Editable) -->
-         <div class="col-md-6 mb-3">
-            <div class="mb-3">
-               <label for="class_subject" class="form-label">Class Subject <span class="text-danger">*</span></label>
-               <select id="class_subject" name="class_subject" class="form-select" required>
-                  <option value="">Select Class Type First</option>
-                  <!-- Will be populated dynamically based on class type, but pre-populate current value -->
-                  <?php if (isset($data['class_data']['class_subject']) && !empty($data['class_data']['class_subject'])): ?>
-                     <option value="<?php echo esc_attr($data['class_data']['class_subject']); ?>" selected><?php echo esc_html($data['class_data']['class_subject']); ?></option>
-                  <?php endif; ?>
-               </select>
-               <div class="invalid-feedback">Please select the class subject.</div>
-               <div class="valid-feedback">Looks good!</div>
-            </div>
-         </div>
-      </div>
 
       <!-- Class Schedule Form Section -->
       <div class="mb-4 mt-3">
