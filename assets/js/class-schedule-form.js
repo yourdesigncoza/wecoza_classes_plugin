@@ -7,6 +7,11 @@
 (function($) {
     'use strict';
 
+    // Initialize holidayOverrides object globally to prevent undefined errors
+    if (typeof window.holidayOverrides !== 'object' || window.holidayOverrides === null) {
+        window.holidayOverrides = {};
+    }
+
     /**
      * Initialize the class schedule form
      */
@@ -92,13 +97,7 @@
      * Initialize auto-population of schedule start date on page load
      */
     function initAutoPopulateScheduleStartDate() {
-        const $classStartDate = $('#class_start_date');
-        const $scheduleStartDate = $('#schedule_start_date');
-        const $originalStartDate = $('#original_start_date');
 
-        const classStartDate = $classStartDate.val();
-        const scheduleStartDate = $scheduleStartDate.val();
-        const originalStartDate = $originalStartDate.val();
 
         // Don't auto-populate schedule start date - let user choose
         // User can manually copy from class start date if needed
@@ -338,8 +337,6 @@
             $section.find('.day-end-time').attr('data-day', day).attr('name', 'day_end_time[' + day + ']');
             
             // Don't set default times - let user choose
-            const $startTime = $section.find('.day-start-time');
-            const $endTime = $section.find('.day-end-time');
 
             // Show copy button only on first day
             if (index === 0) {
@@ -415,7 +412,6 @@
         // Handle copy to all days functionality
         $('.copy-to-all-btn').off('click.perday').on('click.perday', function() {
             const $section = $(this).closest('.per-day-time-section');
-            const sourceDay = $section.attr('data-day');
             const startTime = $section.find('.day-start-time').val();
             const endTime = $section.find('.day-end-time').val();
 
@@ -993,8 +989,6 @@
         // Use the actual value from class_duration field instead of hard-coded values
         const duration = $('#class_duration').val();
         
-        // Log for debugging
-        console.log('getClassTypeHours called - using class_duration value:', duration);
         
         // Return the parsed float value, or 0 if not set
         return duration ? parseFloat(duration) : 0;
@@ -1106,10 +1100,8 @@
         // Handle exam class selection change
         $examClass.on('change', function() {
             const examClassValue = $(this).val();
-            console.log('Exam class changed to:', examClassValue);
 
             if (examClassValue === 'Yes' || examClassValue === '1' || examClassValue === 1) {
-                console.log('Showing exam type container');
                 // Show exam type field and make it required
                 $examTypeContainer.show();
                 if ($examType.length) {
@@ -1121,7 +1113,6 @@
                     $examLearnersContainer.show();
                 }
             } else {
-                console.log('Hiding exam type container');
                 // Hide exam type field and remove required attribute
                 $examTypeContainer.hide();
                 if ($examType.length) {
@@ -1158,11 +1149,9 @@
 
         // Check if required elements exist
         if (!$addLearnerSelect.length || !$addSelectedLearnersBtn.length || !$classLearnersContainer.length) {
-            console.log('Learner selection elements not found, skipping initialization');
             return;
         }
 
-        console.log('Initializing learner selection functionality');
 
         // Handle add selected learners button click
         $addSelectedLearnersBtn.on('click', function() {
@@ -1173,7 +1162,6 @@
                 return;
             }
 
-            console.log('Adding', selectedOptions.length, 'selected learners');
 
             // Add each selected learner
             selectedOptions.each(function() {
@@ -1185,7 +1173,6 @@
 
                 // Check if learner is already added - ensure both IDs are strings for comparison
                 if (classLearners.some(learner => String(learner.id) === learnerIdStr)) {
-                    console.log('Learner', learnerName, 'already added, skipping');
                     return;
                 }
 
@@ -1198,7 +1185,6 @@
                 };
 
                 classLearners.push(learnerData);
-                console.log('Added learner:', learnerData);
             });
 
             // Update the display and data
@@ -1252,14 +1238,11 @@
                 $classLearnersTbody.append(row);
             });
 
-            console.log('Updated learners display with', classLearners.length, 'learners');
 
             // Debug: Check if remove buttons were created correctly
             const removeButtons = $classLearnersTbody.find('.remove-learner-btn');
-            console.log('Created', removeButtons.length, 'remove buttons for class learners');
             removeButtons.each(function(index) {
                 const learnerId = $(this).data('learner-id');
-                console.log('Remove button', index + 1, 'has learner-id:', learnerId);
             });
 
             // Auto-populate learner levels if a class subject is already selected
@@ -1284,7 +1267,6 @@
             // Trigger custom event for learner data change
             $(document).trigger('classLearnersChanged', [classLearners]);
 
-            console.log('Updated learners data:', jsonData);
         }
 
         // Handle level/status changes
@@ -1301,7 +1283,6 @@
             if (learner) {
                 learner[field] = value;
                 updateLearnersData();
-                console.log('Updated learner', learnerIdStr, field, 'to', value);
             } else {
                 console.warn('Learner not found for ID:', learnerIdStr);
             }
@@ -1313,7 +1294,6 @@
             e.stopPropagation();
 
             const learnerId = $(this).data('learner-id');
-            console.log('Remove learner button clicked for learner ID:', learnerId, 'Type:', typeof learnerId);
 
             if (!learnerId) {
                 console.error('No learner ID found on remove button');
@@ -1324,25 +1304,20 @@
             const learnerIdStr = String(learnerId);
 
             // Debug: Log current classLearners array
-            console.log('Current classLearners array:', classLearners);
-            console.log('Looking for learner with ID:', learnerIdStr);
 
             // Remove from array - ensure both IDs are strings for comparison
             const initialLength = classLearners.length;
             classLearners = classLearners.filter(learner => {
                 const learnerIdInArray = String(learner.id);
                 const shouldKeep = learnerIdInArray !== learnerIdStr;
-                console.log('Comparing:', learnerIdInArray, '!==', learnerIdStr, '=', shouldKeep);
                 return shouldKeep;
             });
 
             if (classLearners.length === initialLength) {
                 console.warn('Learner', learnerIdStr, 'was not found in classLearners array');
-                console.log('Available learner IDs in array:', classLearners.map(l => String(l.id)));
                 return;
             }
 
-            console.log('Successfully removed learner', learnerIdStr, 'from classLearners array');
 
             // Update display and data
             updateLearnersDisplay();
@@ -1358,7 +1333,6 @@
                 window.classes_sync_exam_learner_options();
             }
 
-            console.log('Removed learner', learnerIdStr, 'from class learners with cascading removal');
         });
 
         // Load existing learner data if available (for editing)
@@ -1367,7 +1341,6 @@
             try {
                 classLearners = JSON.parse(existingData);
                 updateLearnersDisplay();
-                console.log('Loaded existing learners:', classLearners);
 
                 // Synchronize exam learner options after loading existing data
                 setTimeout(function() {
@@ -1405,15 +1378,12 @@
 
         // Check if required elements exist
         if (!$container.length || !$template.length || !$addButton.length) {
-            console.log('Backup agents elements not found, skipping initialization');
             return;
         }
 
-        console.log('Initializing backup agents functionality');
 
         // Handle add backup agent button click
         $addButton.on('click', function() {
-            console.log('Adding new backup agent row');
 
             // Clone the template
             const $newRow = $template.clone();
@@ -1426,7 +1396,6 @@
 
             // Initialize remove button for this row
             $newRow.find('.remove-backup-agent-btn, .date-remove-btn').on('click', function() {
-                console.log('Removing backup agent row');
                 $newRow.remove();
 
                 // Update any form data if needed
@@ -1443,7 +1412,6 @@
             // Check if this is a backup agent row (should always be true due to selector)
             const $row = $(this).closest('.backup-agent-row');
             if ($row.length && !$row.is('#backup-agent-row-template')) {
-                console.log('Removing existing backup agent row');
                 $row.remove();
                 updateScheduleData();
             }
@@ -1710,7 +1678,7 @@
 
             // Check if this holiday has an existing override
             let isOverridden = false;
-            if (window.holidayOverrides[holiday.date]) {
+            if (typeof window.holidayOverrides === 'object' && window.holidayOverrides !== null && window.holidayOverrides[holiday.date]) {
                 isOverridden = window.holidayOverrides[holiday.date].override;
 
                 // Update checkbox
@@ -1922,7 +1890,6 @@
      */
     function populateFormWithScheduleData(data) {
         try {
-            console.log('Populating form with schedule data:', data);
             
             // Set basic schedule fields
             if (data.pattern) {
@@ -1975,15 +1942,12 @@
 
             // Set selected days for weekly/biweekly patterns (handle both selectedDays and days)
             const days = data.selectedDays || data.days || [];
-            console.log('Days to populate:', days);
-            console.log('Available checkboxes:', $('.schedule-day-checkbox').map(function() { return $(this).val(); }).get());
             
             if (days.length > 0) {
                 days.forEach(day => {
                     const checkbox = $(`.schedule-day-checkbox[value="${day}"]`);
                     if (checkbox.length > 0) {
                         checkbox.prop('checked', true);
-                        console.log(`Checked day: ${day}`);
                     } else {
                         console.warn(`Checkbox not found for day: ${day}`);
                     }
@@ -1995,13 +1959,11 @@
 
                     // Apply pending per-day times if available
                     if (window.pendingPerDayTimes) {
-                        console.log('Applying pending per-day times:', window.pendingPerDayTimes);
                         applyPerDayTimes(window.pendingPerDayTimes);
                         delete window.pendingPerDayTimes;
                     }
                 }, 100);
             } else {
-                console.log('No days found to populate');
             }
 
             // Set exception dates
@@ -2038,7 +2000,6 @@
      * Apply per-day times to the generated sections
      */
     function applyPerDayTimes(perDayTimes) {
-        console.log('Applying per-day times to form:', perDayTimes);
         
         if (!perDayTimes || typeof perDayTimes !== 'object') {
             console.warn('Invalid perDayTimes data:', perDayTimes);
@@ -2049,7 +2010,6 @@
             const dayData = perDayTimes[day];
             const $section = $(`.per-day-time-section[data-day="${day}"]`);
 
-            console.log(`Looking for section for ${day}:`, $section.length > 0 ? 'Found' : 'Not found');
             
             if ($section.length > 0) {
                 const $startTime = $section.find('.day-start-time');
@@ -2057,12 +2017,10 @@
                 
                 if ($startTime.length && dayData.startTime) {
                     $startTime.val(dayData.startTime);
-                    console.log(`Set ${day} start time to:`, dayData.startTime);
                 }
                 
                 if ($endTime.length && dayData.endTime) {
                     $endTime.val(dayData.endTime);
-                    console.log(`Set ${day} end time to:`, dayData.endTime);
                 }
 
                 // Trigger change events to update duration and validation
@@ -2131,7 +2089,6 @@
         if (!startDate) {
             startDate = new Date().toISOString().split('T')[0];
             $('#schedule_start_date').val(startDate);
-            console.log('Set fallback start date in collectScheduleData:', startDate);
         }
         
         const data = {
@@ -2165,13 +2122,6 @@
         };
         
         // Debug logging
-        console.log('=== Schedule Data Collection ===');
-        console.log('Pattern:', data.pattern);
-        console.log('Start Date:', data.startDate);
-        console.log('End Date:', data.endDate);
-        console.log('Selected Days:', data.selectedDays);
-        console.log('Time Data:', data.timeData);
-        console.log('Full collected data:', JSON.stringify(data, null, 2));
 
         return data;
     }
@@ -2220,8 +2170,6 @@
     function updateHiddenFormFields(scheduleData) {
         const $container = $('#schedule-data-container');
         
-        console.log('=== Creating Hidden Fields for Schedule Data ===');
-        console.log('Container found:', $container.length > 0);
 
         // Clear existing hidden fields
         $container.empty();
@@ -2281,7 +2229,6 @@
         
         // Log final hidden field count
         const hiddenFieldCount = $container.find('input[type="hidden"]').length;
-        console.log(`Total hidden fields created: ${hiddenFieldCount}`);
         
         // Verify critical fields exist and show status
         const criticalFields = ['schedule_data[pattern]', 'schedule_data[start_date]'];
@@ -2307,7 +2254,6 @@
                 value: value
             });
             $container.append($field);
-            console.log(`Created hidden field: ${name} = ${value}`);
         } else {
             console.warn(`Skipped empty hidden field: ${name}`);
         }
@@ -2598,7 +2544,6 @@
                 // Get exception dates
                 const exceptionDates = [];
                 const $exceptionRows = $('#exception-dates-container .exception-date-row');
-                console.log('All exception date rows found:', $exceptionRows.length);
 
                 $exceptionRows.each(function() {
                     const $row = $(this);
@@ -2608,14 +2553,11 @@
                     }
 
                     const date = $row.find('input[name="exception_dates[]"]').val();
-                    console.log('Exception date value:', date, 'Row classes:', $row.attr('class'));
                     if (date) {
-                        console.log('Adding exception date:', date);
                         exceptionDates.push(date);
                     }
                 });
 
-                console.log('Exception dates found:', exceptionDates);
 
                 // Get stop/restart dates
                 const stopRestartPeriods = [];
@@ -2636,15 +2578,6 @@
                 
                 // Create session tracking array for debugging
                 const sessionLog = [];
-                let debugInfo = {
-                    startDate: startDate,
-                    classHours: classHours,
-                    sessionDuration: sessionDuration,
-                    sessionsNeeded: sessionsNeeded,
-                    pattern: pattern,
-                    exceptionDatesCount: exceptionDates.length,
-                    stopPeriodsCount: stopRestartPeriods.length
-                };
 
                 // Calculate end date based on schedule pattern and exception dates
                 if (pattern && startDate) {
@@ -2663,14 +2596,6 @@
                         const dayIndices = selectedDays.map(day => getDayIndex(day));
 
                         // Enhanced debug logging
-                        console.log('🔴 === START END DATE CALCULATION DEBUG ===');
-                        console.log('🗓️ End Date Calculation - Weekly Pattern');
-                        console.log('📅 Selected days:', selectedDays);
-                        console.log('🔢 Day indices:', dayIndices);
-                        console.log('⏰ Sessions needed:', sessionsNeeded);
-                        console.log('📊 Class hours:', classHours, 'Session duration:', sessionDuration);
-                        console.log('🚫 Exception dates:', exceptionDates);
-                        console.log('⏸️ Stop periods:', stopRestartPeriods);
 
                         // Set start date to the first occurrence of any selected day
                         const currentDayIndex = date.getDay();
@@ -2718,7 +2643,6 @@
                             const isInStopPeriod = isDateInStopPeriod(dateStr, stopRestartPeriods);
 
                             if (isExceptionDate) {
-                                console.log('Skipping exception date:', dateStr);
                             }
 
                             if (dayIndices.includes(currentDayIndex) &&
@@ -2739,11 +2663,9 @@
                                     status: 'scheduled'
                                 });
                                 
-                                console.log('✅ Session #' + sessionsScheduled + ' scheduled on:', dateStr, 'Day:', getDayName(currentDayIndex));
                                 
                                 // Safety check - break if we've reached our target
                                 if (sessionsScheduled >= sessionsNeeded) {
-                                    console.log('🎯 TARGET REACHED! Breaking loop at session', sessionsScheduled);
                                     break;
                                 }
                             } else {
@@ -2764,7 +2686,6 @@
                                     });
                                 }
                                 
-                                console.log('❌ Day skipped:', dateStr, 'Day:', dayName, 'Selected:', isSelectedDay, 'Exception:', isExceptionDate, 'Stop period:', isInStopPeriod, 'Holiday:', isPublicHoliday);
                             }
 
                             // Move to next day
@@ -2789,10 +2710,6 @@
                         const dayIndices = selectedDays.map(day => getDayIndex(day));
 
                         // Debug logging for multiple day selection
-                        console.log('🗓️ End Date Calculation - Bi-weekly Pattern');
-                        console.log('📅 Selected days:', selectedDays);
-                        console.log('🔢 Day indices:', dayIndices);
-                        console.log('⏰ Sessions needed:', sessionsNeeded);
 
                         // Set start date to the first occurrence of any selected day
                         const currentDayIndex = date.getDay();
@@ -2845,13 +2762,7 @@
                                 !isDateInStopPeriod(dateStr, stopRestartPeriods) &&
                                 (!isPublicHoliday || isHolidayOverridden)) {
                                 sessionsScheduled++;
-                                console.log('✅ Bi-weekly session scheduled on:', dateStr, 'Day:', getDayName(currentDayIndex), 'Week:', weekCounter, 'Sessions so far:', sessionsScheduled);
                             } else {
-                                // Debug why this day was skipped
-                                const dayName = getDayName(currentDayIndex);
-                                const isSelectedDay = dayIndices.includes(currentDayIndex);
-                                const isFirstWeek = weekCounter === 0;
-                                console.log('❌ Bi-weekly day skipped:', dateStr, 'Day:', dayName, 'Selected:', isSelectedDay, 'First week:', isFirstWeek, 'Week counter:', weekCounter);
                             }
 
                             // Move to next day
@@ -2927,11 +2838,9 @@
                     const lastScheduledSession = sessionLog.filter(s => s.status === 'scheduled').pop();
                     if (lastScheduledSession) {
                         finalEndDate = new Date(lastScheduledSession.date);
-                        console.log('📍 Adjusting end date to last scheduled session:', lastScheduledSession.date);
                     } else {
                         // If no sessions in log, move back one day as we've advanced past the end
                         finalEndDate.setDate(finalEndDate.getDate() - 1);
-                        console.log('📍 Moving end date back one day (no session log available)');
                     }
                     
                     // Format date as YYYY-MM-DD
@@ -2943,42 +2852,6 @@
                     const expectedHours = parseFloat($('#class_duration').val()) || 0;
                     const hoursDifference = Math.abs(calculatedHours - expectedHours);
                     
-                    // Debug summary with session log
-                    console.log('🎯 End Date Calculation Complete');
-                    console.log('📊 Total sessions scheduled:', sessionsScheduled, 'of', sessionsNeeded, 'needed');
-                    console.log('📅 Final end date:', endDate);
-                    console.log('🗓️ Selected days used in calculation:', getSelectedDays());
-                    console.log('⏰ Hours validation: Calculated', calculatedHours, 'vs Expected', expectedHours);
-                    
-                    // Output session log details
-                    console.log('📋 === SESSION LOG ANALYSIS ===');
-                    console.log('Total entries in log:', sessionLog.length);
-                    console.log('Scheduled sessions:', sessionLog.filter(s => s.status === 'scheduled').length);
-                    console.log('Skipped sessions:', sessionLog.filter(s => s.status === 'skipped').length);
-                    
-                    // Show first 10 sessions
-                    console.log('🔍 First 10 sessions:');
-                    sessionLog.slice(0, 10).forEach((session, index) => {
-                        console.log(`  ${index + 1}. ${session.date} (${session.dayName}) - ${session.status}` + 
-                                   (session.status === 'skipped' ? ` - Reason: ${session.reason}` : ` - Session #${session.sessionNumber}`));
-                    });
-                    
-                    // Show last 10 sessions
-                    console.log('🔍 Last 10 sessions:');
-                    const scheduledOnly = sessionLog.filter(s => s.status === 'scheduled');
-                    scheduledOnly.slice(-10).forEach((session, index) => {
-                        const actualIndex = scheduledOnly.length - 10 + index;
-                        console.log(`  ${actualIndex + 1}. ${session.date} (${session.dayName}) - Session #${session.sessionNumber}`);
-                    });
-                    
-                    // Analyze stop periods
-                    const stopPeriodSessions = sessionLog.filter(s => s.reason === 'stop_period');
-                    if (stopPeriodSessions.length > 0) {
-                        console.log('⏸️ Sessions skipped due to stop periods:', stopPeriodSessions.length);
-                        stopPeriodSessions.forEach(s => {
-                            console.log(`  - ${s.date} (${s.dayName})`);
-                        });
-                    }
                     
                     // Show warning if there's a significant mismatch (more than 0.1 hours difference)
                     if (hoursDifference > 0.1) {
@@ -2986,13 +2859,10 @@
                         console.warn('Expected hours:', expectedHours);
                         console.warn('Calculated hours:', calculatedHours);
                         console.warn('Difference:', hoursDifference.toFixed(2), 'hours');
-                        console.warn('Sessions difference:', sessionsScheduled - sessionsNeeded);
                         
                         // You could also show a visual warning to the user here if needed
                         // For example: $('#hours-warning').show().text('Warning: Calculated hours (' + calculatedHours + ') do not match expected hours (' + expectedHours + ')');
                     }
-                    
-                    console.log('🔴 === END DEBUG OUTPUT ===');
 
                     // Update schedule tables
                     updateScheduleTables();

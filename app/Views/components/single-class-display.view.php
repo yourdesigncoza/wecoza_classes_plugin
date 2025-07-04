@@ -327,6 +327,68 @@ if (!empty($class['schedule_data'])) {
                                     </td>
                                 </tr>
 
+                                <!-- Class Schedule Row -->
+                                <tr>
+                                    <td class="py-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="d-flex bg-info-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
+                                                <i class="bi bi-calendar-week text-info" style="font-size: 12px;"></i>
+                                            </div>
+                                            <p class="fw-bold mb-0">Class Schedule : </p>
+                                        </div>
+                                    </td>
+                                    <td class="py-2">
+                                        <div class="fw-semibold mb-0">
+                                            <?php 
+                                            // Display class schedule (days and times)
+                                            if (!empty($schedule_data) && isset($schedule_data['selectedDays'])) {
+                                                $schedule_output = [];
+                                                $selected_days = $schedule_data['selectedDays'];
+                                                $time_data = $schedule_data['timeData'] ?? [];
+                                                
+                                                foreach ($selected_days as $day) {
+                                                    $day_display = $day;
+                                                    
+                                                    // Check if we have per-day times
+                                                    if (isset($time_data['mode']) && $time_data['mode'] === 'per-day' && 
+                                                        isset($time_data['perDayTimes'][$day])) {
+                                                        $day_times = $time_data['perDayTimes'][$day];
+                                                        
+                                                        // Handle both camelCase and snake_case field names
+                                                        $start_field = isset($day_times['startTime']) ? 'startTime' : 'start_time';
+                                                        $end_field = isset($day_times['endTime']) ? 'endTime' : 'end_time';
+                                                        
+                                                        if (isset($day_times[$start_field], $day_times[$end_field])) {
+                                                            $start_time = date('g:i A', strtotime($day_times[$start_field]));
+                                                            $end_time = date('g:i A', strtotime($day_times[$end_field]));
+                                                            $day_display .= ": {$start_time} - {$end_time}";
+                                                        }
+                                                    } 
+                                                    // Check if we have single time mode
+                                                    elseif (isset($time_data['mode']) && $time_data['mode'] === 'single' && 
+                                                            isset($time_data['startTime'], $time_data['endTime'])) {
+                                                        $start_time = date('g:i A', strtotime($time_data['startTime']));
+                                                        $end_time = date('g:i A', strtotime($time_data['endTime']));
+                                                        $day_display .= ": {$start_time} - {$end_time}";
+                                                    }
+                                                    
+                                                    $schedule_output[] = $day_display;
+                                                }
+                                                
+                                                // Display each day in a clean list format for better readability
+                                                echo '<div class="schedule-days-list">';
+                                                foreach ($schedule_output as $day_info) {
+                                                    echo '<div class="schedule-day-item mb-1">' . esc_html($day_info) . '</div>';
+                                                }
+                                                echo '</div>';
+                                            } else {
+                                                echo 'Schedule not available';
+                                            }
+                                            ?>
+                                        </div>
+                                    </td>
+                                </tr>
+
                             </tbody>
                         </table>
                     </div>
