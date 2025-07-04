@@ -1139,26 +1139,26 @@ if (!empty($class['schedule_data'])) {
                                                         <?php if (isset($month_data['calculation_breakdown'])): 
                                                             $breakdown = $month_data['calculation_breakdown']; ?>
                                                             <div class="fs-9 mt-1">
-                                                                <div>• Potential sessions: <?php echo $breakdown['potential_sessions']; ?></div>
+                                                                <div>• Potential sessions: <?php echo $breakdown['potential_sessions'] ?? 0; ?></div>
                                                                 
-                                                                <?php if ($breakdown['holiday_removals'] > 0): ?>
-                                                                <div>• Minus holidays: -<?php echo $breakdown['holiday_removals']; ?></div>
+                                                                <?php if (($breakdown['holiday_removals'] ?? 0) > 0): ?>
+                                                                <div>• Minus holidays: -<?php echo $breakdown['holiday_removals'] ?? 0; ?></div>
                                                                 <?php endif; ?>
                                                                 
-                                                                <?php if ($breakdown['exception_removals'] > 0): ?>
-                                                                <div>• Minus exceptions: -<?php echo $breakdown['exception_removals']; ?></div>
+                                                                <?php if (($breakdown['exception_removals'] ?? 0) > 0): ?>
+                                                                <div>• Minus exceptions: -<?php echo $breakdown['exception_removals'] ?? 0; ?></div>
                                                                 <?php endif; ?>
                                                                 
-                                                                <?php if ($breakdown['stop_removals'] > 0): ?>
-                                                                <div>• Minus stop periods: -<?php echo $breakdown['stop_removals']; ?></div>
+                                                                <?php if (($breakdown['stop_removals'] ?? 0) > 0): ?>
+                                                                <div>• Minus stop periods: -<?php echo $breakdown['stop_removals'] ?? 0; ?></div>
                                                                 <?php endif; ?>
                                                                 
-                                                                <?php if ($breakdown['override_additions'] > 0): ?>
-                                                                <div>• Plus holiday overrides: +<?php echo $breakdown['override_additions']; ?></div>
+                                                                <?php if (($breakdown['override_additions'] ?? 0) > 0): ?>
+                                                                <div>• Plus holiday overrides: +<?php echo $breakdown['override_additions'] ?? 0; ?></div>
                                                                 <?php endif; ?>
                                                                 
-                                                                <div class="fw-medium">• Final sessions: <?php echo $breakdown['final_sessions']; ?></div>
-                                                                <div class="fw-medium">• Hours: <?php echo $breakdown['final_sessions']; ?> × <?php echo number_format($breakdown['daily_hours'], 2); ?> = <?php echo number_format($breakdown['calculated_hours'], 2); ?>h</div>
+                                                                <div class="fw-medium">• Final sessions: <?php echo $breakdown['final_sessions'] ?? 0; ?></div>
+                                                                <div class="fw-medium">• Hours: <?php echo $breakdown['final_sessions'] ?? 0; ?> × <?php echo number_format($breakdown['daily_hours'] ?? 0, 2); ?> = <?php echo number_format(($breakdown['calculated_hours'] ?? 0), 2); ?>h</div>
                                                             </div>
                                                         <?php else: ?>
                                                             <div class="fs-9 text-muted mt-1">

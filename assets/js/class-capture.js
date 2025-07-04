@@ -127,23 +127,8 @@ function showCustomAlert(message) {
         // Initialize the SETA field toggle
         initializeSetaToggle();
 
-        // Initialize the date history functionality
-        initializeDateHistory();
-
-        // Initialize the QA visit dates functionality
-        initializeQAVisits();
-
-        // Initialize the class learners functionality
-        initializeClassLearners();
-
-        // Initialize the backup agents functionality
-        initializeBackupAgents();
-
         // Set up synchronization listeners for exam learner options
         classes_setup_synchronization_listeners();
-
-        // Initialize the agent replacements functionality
-        initializeAgentReplacements();
 
         // Initialize form submission
         initializeFormSubmission();
@@ -590,33 +575,6 @@ function showCustomAlert(message) {
         }
     }
 
-    /**
-     * Initialize placeholder functions for features not yet implemented
-     */
-    function initializeDateHistory() {
-        // Placeholder for date history functionality
-        console.log('Date history functionality initialized (placeholder)');
-    }
-
-    function initializeQAVisits() {
-        // Placeholder for QA visits functionality
-        console.log('QA visits functionality initialized (placeholder)');
-    }
-
-    function initializeClassLearners() {
-        // Placeholder for class learners functionality
-        console.log('Class learners functionality initialized (placeholder)');
-    }
-
-    function initializeBackupAgents() {
-        // Placeholder for backup agents functionality
-        console.log('Backup agents functionality initialized (placeholder)');
-    }
-
-    function initializeAgentReplacements() {
-        // Placeholder for agent replacements functionality
-        console.log('Agent replacements functionality initialized (placeholder)');
-    }
 
     /**
      * Validate schedule data before submission
@@ -875,7 +833,7 @@ function showCustomAlert(message) {
             }
         });
 
-        console.log('Synchronized exam learner options with', classLearnersData.length, 'class learners');
+        // console.log('Synchronized exam learner options with', classLearnersData.length, 'class learners');
     };
 
     /**

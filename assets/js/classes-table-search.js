@@ -64,7 +64,7 @@
 
         // Validate elements exist
         if ($searchInput.length === 0) {
-            console.warn('WeCoza Classes: Search input not found');
+            // console.warn('WeCoza Classes: Search input not found');
             return;
         }
 

@@ -35,7 +35,7 @@ class DatabaseService {
             }
             
             // Log connection attempt (without password)
-            error_log("WeCoza Classes Plugin: Attempting PostgreSQL connection to $pgHost:$pgPort/$pgName as $pgUser");
+            // error_log("WeCoza Classes Plugin: Attempting PostgreSQL connection to $pgHost:$pgPort/$pgName as $pgUser");
 
             // Create PDO instance for PostgreSQL
             $this->pdo = new \PDO(
@@ -49,7 +49,7 @@ class DatabaseService {
                 ]
             );
             
-            error_log('WeCoza Classes Plugin: PostgreSQL connection successful');
+            // error_log('WeCoza Classes Plugin: PostgreSQL connection successful');
 
         } catch (\PDOException $e) {
             // Log error

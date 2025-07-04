@@ -1015,44 +1015,49 @@
     }
 
     /**
-     * Initialize exception dates
+     * Initialize exception dates with event delegation
      */
     function initExceptionDates() {
         const $container = $('#exception-dates-container');
         const $template = $('#exception-date-row-template');
         const $addButton = $('#add-exception-date-btn');
 
-        // Add exception date row
+        // Set up event delegation for remove buttons (works for all rows, including PHP-populated ones)
+        $container.on('click', '.remove-exception-btn', function() {
+            console.log('Exception date remove button clicked - event delegation working');
+            $(this).closest('.exception-date-row').remove();
+            updateScheduleData();
+        });
+
+        // Set up event delegation for input/select changes
+        $container.on('change', '.exception-date-row input, .exception-date-row select', function() {
+            const $row = $(this).closest('.exception-date-row');
+            
+            // Validate exception date against class start date
+            const exceptionDate = $row.find('input[name="exception_dates[]"]').val();
+            const startDate = $('#schedule_start_date').val();
+
+            if (exceptionDate && startDate && exceptionDate < startDate) {
+                // Show validation error
+                $row.find('input[name="exception_dates[]"]').addClass('is-invalid');
+                $row.find('.invalid-feedback').text('Exception date cannot be before the class start date');
+            } else {
+                // Clear validation error
+                $row.find('input[name="exception_dates[]"]').removeClass('is-invalid');
+                $row.find('.invalid-feedback').text('Please select a valid date.');
+            }
+
+            updateScheduleData();
+        });
+
+        // Add exception date row (simplified - no individual event binding needed)
         $addButton.on('click', function() {
             const $newRow = $template.clone();
             $newRow.removeClass('d-none').removeAttr('id');
             $container.append($newRow);
-
-            // Initialize remove button
-            $newRow.find('.remove-exception-btn').on('click', function() {
-                $newRow.remove();
-                updateScheduleData();
-            });
-
-            // Update schedule data when date or reason changes
-            $newRow.find('input, select').on('change', function() {
-
-                // Validate exception date against class start date
-                const exceptionDate = $newRow.find('input[name="exception_dates[]"]').val();
-                const startDate = $('#schedule_start_date').val();
-
-                if (exceptionDate && startDate && exceptionDate < startDate) {
-                    // Show validation error
-                    $newRow.find('input[name="exception_dates[]"]').addClass('is-invalid');
-                    $newRow.find('.invalid-feedback').text('Exception date cannot be before the class start date');
-                } else {
-                    // Clear validation error
-                    $newRow.find('input[name="exception_dates[]"]').removeClass('is-invalid');
-                    $newRow.find('.invalid-feedback').text('Please select a valid date.');
-                }
-
-                updateScheduleData();
-            });
+            
+            // Event handlers are automatically available via delegation above
+            // No need to manually attach them to new rows
         });
     }
 
@@ -1966,11 +1971,21 @@
             } else {
             }
 
-            // Set exception dates
+            // Set exception dates (with duplicate prevention)
             if (data.exceptionDates && data.exceptionDates.length > 0) {
-                data.exceptionDates.forEach(exception => {
-                    addExceptionDateRow(exception.date, exception.reason);
-                });
+                const exceptionDatesContainer = $('#exception-dates-container');
+                const isAlreadyPopulated = exceptionDatesContainer.attr('data-populated');
+                
+                if (isAlreadyPopulated === 'php') {
+                    console.log('JS: Exception dates already populated by PHP, skipping JavaScript population');
+                } else {
+                    console.log('JS: Populating exception dates from JavaScript');
+                    data.exceptionDates.forEach(exception => {
+                        addExceptionDateRow(exception.date, exception.reason);
+                    });
+                    // Mark as populated by JavaScript
+                    exceptionDatesContainer.attr('data-populated', 'javascript');
+                }
             }
 
             // Set holiday overrides (handle both holidayOverrides and holiday_overrides)
@@ -2034,8 +2049,22 @@
 
     /**
      * Add an exception date row with pre-filled data
+     * Includes duplicate prevention to avoid adding the same date twice
      */
     function addExceptionDateRow(date, reason) {
+        // Check if this date already exists to prevent duplicates
+        const existingDates = [];
+        $('#exception-dates-container input[name="exception_dates[]"]').each(function() {
+            if ($(this).val()) {
+                existingDates.push($(this).val());
+            }
+        });
+        
+        if (existingDates.includes(date)) {
+            console.log(`JS: Exception date ${date} already exists, skipping duplicate`);
+            return;
+        }
+        
         // Trigger the add button to create a new row
         $('#add-exception-date-btn').trigger('click');
 
@@ -2254,9 +2283,10 @@
                 value: value
             });
             $container.append($field);
-        } else {
-            console.warn(`Skipped empty hidden field: ${name}`);
-        }
+        } 
+        // else {
+        //             console.warn(`Skipped empty hidden field: ${name}`);
+        //         }
     }
 
     /**

@@ -298,7 +298,7 @@ if (isset($data['class_data']) && $data['class_data']):
                               <div class="d-flex bg-info-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
                                  <i class="bi bi-calendar-plus text-info" style="font-size: 12px;"></i>
                               </div>
-                              <p class="fw-bold mb-0">Original Start Date :</p>
+                              <p class="fw-bold mb-0">Original Start :</p>
                            </div>
                         </td>
                         <td class="py-2">
@@ -397,12 +397,6 @@ if (isset($data['class_data']) && $data['class_data']):
       <input type="hidden" name="class_start_date" value="<?php echo esc_attr($data['class_data']['original_start_date'] ?? ''); ?>">
       <input type="hidden" name="class_subject" value="<?php echo esc_attr($data['class_data']['class_subject'] ?? ''); ?>">
 
-      <?php echo section_divider(); ?>
-
-      <!-- Class Schedule Form Section -->
-      <div class="mb-4 mt-3">
-         <?php echo section_header('Class Schedule', 'Update the recurring schedule for this class.'); ?>
-
          <?php
          // Extract schedule data for pre-population
          $scheduleData = $data['class_data']['schedule_data'] ?? [];
@@ -424,18 +418,6 @@ if (isset($data['class_data']) && $data['class_data']):
 
          // Convert holiday overrides to JSON string for the hidden field
          $holidayOverridesJson = !empty($holidayOverrides) ? json_encode($holidayOverrides) : '';
-         
-         // Debug schedule data - output to console
-         if (isset($_GET['debug']) && $_GET['debug'] === '1') {
-             echo "<script>\n";
-             echo "console.log('=== PHP Schedule Debug Data ===');\n";
-             echo "console.log('Pattern:', " . json_encode($schedulePattern) . ");\n";
-             echo "console.log('Days:', " . json_encode($scheduleDays) . ");\n";
-             echo "console.log('Time Data:', " . json_encode($timeData) . ");\n";
-             echo "console.log('Per Day Times:', " . json_encode($perDayTimes) . ");\n";
-             echo "console.log('Full Schedule Data:', " . json_encode($scheduleData) . ");\n";
-             echo "</script>\n";
-         }
          
          // Normalize perDayTimes to JavaScript expected format (camelCase) and filter corrupt data
          if (!empty($perDayTimes)) {
@@ -512,6 +494,36 @@ if (isset($data['class_data']) && $data['class_data']):
          }
          ?>
 
+      <!-- Class Schedule Form Section -->
+         <!-- Date Range -->
+         <div class="row">
+            <div class="col-md-4 mb-3">
+               <div class="mb-3">
+                  <label for="schedule_start_date" class="form-label">Start Date <span class="text-danger">*</span></label>
+                  <input type="date" id="schedule_start_date" name="schedule_start_date" class="form-control" placeholder="YYYY-MM-DD" value="<?php echo esc_attr($scheduleStartDate); ?>" required>
+                  <div class="invalid-feedback">Please select a start date.</div>
+                  <div class="valid-feedback">Looks good!</div>
+               </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+               <div class="mb-3">
+                  <label for="schedule_end_date" class="form-label">End Date</label>
+                  <input type="date" id="schedule_end_date" name="schedule_end_date" class="form-control readonly-field" placeholder="YYYY-MM-DD" value="<?php echo esc_attr($scheduleEndDate); ?>" readonly>
+                  <small class="text-muted">Automatically calculated based on class duration</small>
+               </div>
+            </div>
+
+            <div class="col-md-4 d-none">
+               <div class="mb-3">
+                  <label for="schedule_total_hours" class="form-label">Total Hours</label>
+                  <input type="text" id="schedule_total_hours" name="schedule_total_hours" class="form-control readonly-field" placeholder="Total Hours" readonly>
+                  <small class="text-muted">Based on class type</small>
+               </div>
+            </div>
+         </div>
+         <?php echo section_divider(); ?>
+         <?php echo section_header('Class Schedule', 'Update the recurring schedule for this class.'); ?>
          <!-- Schedule Pattern Selection -->
          <div class="row mb-3">
             <div class="col-md-4 mb-3">
@@ -577,7 +589,7 @@ if (isset($data['class_data']) && $data['class_data']):
          </div>
          
          <!-- Per-Day Time Controls (shown when multiple days selected) -->
-         <div id="per-day-time-controls" class="d-none mt-3">
+         <div id="per-day-time-controls" class="d-none mt-3 mb-4">
             <div class="">
                <h6 class="mb-2">Set Times for Each Day</h6>
                <p class="text-muted small mb-2">Configure individual start and end times for each selected day.</p>
@@ -637,47 +649,20 @@ if (isset($data['class_data']) && $data['class_data']):
                </div>
             </div>
          </div>
-
-         <!-- Date Range -->
-         <div class="row mb-3">
-            <div class="col-md-4 mb-3">
-               <div class="mb-3">
-                  <label for="schedule_start_date" class="form-label">Start Date <span class="text-danger">*</span></label>
-                  <input type="date" id="schedule_start_date" name="schedule_start_date" class="form-control" placeholder="YYYY-MM-DD" value="<?php echo esc_attr($scheduleStartDate); ?>" required>
-                  <div class="invalid-feedback">Please select a start date.</div>
-                  <div class="valid-feedback">Looks good!</div>
-               </div>
-            </div>
-
-            <div class="col-md-4 mb-3">
-               <div class="mb-3">
-                  <label for="schedule_end_date" class="form-label">End Date</label>
-                  <input type="date" id="schedule_end_date" name="schedule_end_date" class="form-control readonly-field" placeholder="YYYY-MM-DD" value="<?php echo esc_attr($scheduleEndDate); ?>" readonly>
-                  <small class="text-muted">Automatically calculated based on class duration</small>
-               </div>
-            </div>
-
-            <div class="col-md-4 d-none">
-               <div class="mb-3">
-                  <label for="schedule_total_hours" class="form-label">Total Hours</label>
-                  <input type="text" id="schedule_total_hours" name="schedule_total_hours" class="form-control readonly-field" placeholder="Total Hours" readonly>
-                  <small class="text-muted">Based on class type</small>
-               </div>
-            </div>
-         </div>
-
+         <?php echo section_divider(); ?>
          <!-- Exception Dates -->
          <div class="mb-4">
-            <?php echo section_header('Exception Dates', 'Add dates when classes will not occur (e.g. client closed).', 'h6'); ?>
+            <h6>Exception Dates</h6>
+            <p class="text-muted small mb-3">Add dates when classes will not occur (e.g. client closed).</p>
 
             <!-- Container for all exception date rows -->
-            <div id="exception-dates-container"></div>
+            <div id="exception-dates-container" data-populated="false"></div>
 
             <!-- Hidden Template Row (initially d-none) -->
             <div class="row exception-date-row align-items-center d-none" id="exception-date-row-template">
                <!-- Exception Date -->
-               <div class="col-md-4 mb-2">
-                  <div class="mb-3">
+               <div class="col-md-3 mb-2">
+                  <div class="mb-1">
                      <label class="form-label">Date</label>
                      <input type="date" name="exception_dates[]" class="form-control" placeholder="YYYY-MM-DD">
                      <div class="invalid-feedback">Please select a valid date.</div>
@@ -686,8 +671,8 @@ if (isset($data['class_data']) && $data['class_data']):
                </div>
 
                <!-- Reason -->
-               <div class="col-md-6 mb-2">
-                  <div class="mb-3">
+               <div class="col-md-3 mb-2">
+                  <div class="mb-1">
                      <label class="form-label">Reason</label>
                      <select name="exception_reasons[]" class="form-select">
                         <option value="">Select</option>
@@ -702,7 +687,7 @@ if (isset($data['class_data']) && $data['class_data']):
                </div>
 
                <!-- Remove Button -->
-               <div class="col-md-2 mb-2">
+               <div class="col-md-2 mt-2">
                   <div class="d-flex h-100 align-items-end">
                      <button type="button" class="btn btn-outline-danger btn-sm remove-exception-btn form-control date-remove-btn">Remove</button>
                   </div>
@@ -1615,7 +1600,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     <?php endif; ?>
 
-    // Pre-populate exception dates if available
+    // Pre-populate exception dates if available (with duplicate prevention)
     <?php if (isset($data['class_data']['schedule_data']['exceptionDates']) && !empty($data['class_data']['schedule_data']['exceptionDates'])): ?>
     const exceptionDates = <?php echo json_encode($data['class_data']['schedule_data']['exceptionDates']); ?>;
     
@@ -1623,7 +1608,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const exceptionDatesContainer = document.getElementById('exception-dates-container');
         const exceptionDateTemplate = document.getElementById('exception-date-row-template');
         
-        if (exceptionDatesContainer && exceptionDateTemplate) {
+        // Check if container is already populated to prevent duplication
+        if (exceptionDatesContainer && exceptionDateTemplate && exceptionDatesContainer.getAttribute('data-populated') === 'false') {
+            <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
+            console.log('PHP: Populating exception dates:', exceptionDates);
+            <?php endif; ?>
+            
             exceptionDates.forEach(function(exception) {
                 const newRow = exceptionDateTemplate.cloneNode(true);
                 newRow.classList.remove('d-none');
@@ -1641,6 +1631,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 exceptionDatesContainer.appendChild(newRow);
             });
+            
+            // Mark container as populated by PHP
+            exceptionDatesContainer.setAttribute('data-populated', 'php');
+            
+            <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
+            console.log('PHP: Exception dates container marked as populated');
+            <?php endif; ?>
+        } else {
+            <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
+            console.log('PHP: Skipping exception dates population - already populated or no container');
+            <?php endif; ?>
         }
     }
     <?php endif; ?>
