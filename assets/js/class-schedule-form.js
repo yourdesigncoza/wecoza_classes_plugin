@@ -1441,9 +1441,14 @@
         // Load existing overrides if available
         try {
             const existingOverrides = $holidayOverridesInput.val();
+            console.log('=== initHolidayOverrides Debug ===');
+            console.log('Holiday overrides input value:', existingOverrides);
+            
             if (existingOverrides) {
                 const overrides = JSON.parse(existingOverrides);
+                console.log('Parsed existing overrides:', overrides);
                 Object.assign(window.holidayOverrides, overrides);
+                console.log('Updated window.holidayOverrides:', window.holidayOverrides);
             }
         } catch (e) {
             console.error('Error parsing existing holiday overrides:', e);
@@ -1457,7 +1462,7 @@
             const $row = $checkbox.closest('tr');
 
             if (isChecked) {
-                window.holidayOverrides[date] = { override: true };
+                window.holidayOverrides[date] = true;
             } else {
                 delete window.holidayOverrides[date];
             }
@@ -1684,7 +1689,11 @@
             // Check if this holiday has an existing override
             let isOverridden = false;
             if (typeof window.holidayOverrides === 'object' && window.holidayOverrides !== null && window.holidayOverrides[holiday.date]) {
-                isOverridden = window.holidayOverrides[holiday.date].override;
+                const overrideValue = window.holidayOverrides[holiday.date];
+                // Handle both direct boolean values and objects with override property
+                isOverridden = typeof overrideValue === 'boolean' ? overrideValue : overrideValue.override;
+                
+                console.log(`Holiday ${holiday.date} (${holiday.name}) override value:`, overrideValue, 'resolved to:', isOverridden);
 
                 // Update checkbox
                 $row.find('.holiday-override-checkbox').prop('checked', isOverridden);
@@ -1990,13 +1999,28 @@
 
             // Set holiday overrides (handle both holidayOverrides and holiday_overrides)
             const holidayOverrides = data.holidayOverrides || data.holiday_overrides;
+            console.log('=== Holiday Overrides JavaScript Debug ===');
+            console.log('Holiday overrides from data:', holidayOverrides);
+            console.log('Available holiday checkboxes:', $('.holiday-override-checkbox').length);
+            
             if (holidayOverrides) {
                 Object.keys(holidayOverrides).forEach(date => {
                     const $checkbox = $(`.holiday-override-checkbox[data-date="${date}"]`);
+                    console.log(`Looking for checkbox with date ${date}: found ${$checkbox.length} elements`);
                     if ($checkbox.length > 0) {
                         $checkbox.prop('checked', true);
+                        console.log(`Set checkbox for ${date} to checked`);
+                    } else {
+                        console.log(`Checkbox for ${date} not found in DOM yet`);
                     }
                 });
+                
+                // Store holiday overrides in global object for later application
+                if (typeof window.holidayOverrides !== 'object' || window.holidayOverrides === null) {
+                    window.holidayOverrides = {};
+                }
+                Object.assign(window.holidayOverrides, holidayOverrides);
+                console.log('Stored holiday overrides in window.holidayOverrides:', window.holidayOverrides);
             }
 
             // Trigger validation and updates
@@ -2436,7 +2460,8 @@
 
             // Check if this holiday has been overridden
             if (typeof window.holidayOverrides === 'object' && window.holidayOverrides[dateStr]) {
-                isOverridden = window.holidayOverrides[dateStr].override === true;
+                const overrideValue = window.holidayOverrides[dateStr];
+                isOverridden = typeof overrideValue === 'boolean' ? overrideValue : overrideValue.override === true;
             }
 
             if (dayIndices.includes(dayOfWeek) && !isOverridden) {
@@ -2661,7 +2686,8 @@
                                 if (matchingHoliday) {
                                     isPublicHoliday = true;
                                     // Check if this holiday has been overridden
-                                    if (typeof window.holidayOverrides === 'object' && window.holidayOverrides[dateStr] && window.holidayOverrides[dateStr].override === true) {
+                                    const overrideValue = window.holidayOverrides[dateStr];
+                                    if (typeof window.holidayOverrides === 'object' && overrideValue && (typeof overrideValue === 'boolean' ? overrideValue : overrideValue.override === true)) {
                                         isHolidayOverridden = true;
                                     }
                                 }
@@ -2778,7 +2804,8 @@
                                 if (matchingHoliday) {
                                     isPublicHoliday = true;
                                     // Check if this holiday has been overridden
-                                    if (typeof window.holidayOverrides === 'object' && window.holidayOverrides[dateStr] && window.holidayOverrides[dateStr].override === true) {
+                                    const overrideValue = window.holidayOverrides[dateStr];
+                                    if (typeof window.holidayOverrides === 'object' && overrideValue && (typeof overrideValue === 'boolean' ? overrideValue : overrideValue.override === true)) {
                                         isHolidayOverridden = true;
                                     }
                                 }
@@ -2841,7 +2868,8 @@
                                 if (matchingHoliday) {
                                     isPublicHoliday = true;
                                     // Check if this holiday has been overridden
-                                    if (typeof window.holidayOverrides === 'object' && window.holidayOverrides[dateStr] && window.holidayOverrides[dateStr].override === true) {
+                                    const overrideValue = window.holidayOverrides[dateStr];
+                                    if (typeof window.holidayOverrides === 'object' && overrideValue && (typeof overrideValue === 'boolean' ? overrideValue : overrideValue.override === true)) {
                                         isHolidayOverridden = true;
                                     }
                                 }
@@ -3122,7 +3150,8 @@
             // Check if this holiday has been overridden
             let isOverridden = false;
             if (typeof window.holidayOverrides === 'object' && window.holidayOverrides[holiday.start]) {
-                isOverridden = window.holidayOverrides[holiday.start].override;
+                const overrideValue = window.holidayOverrides[holiday.start];
+                isOverridden = typeof overrideValue === 'boolean' ? overrideValue : overrideValue.override;
             }
 
             const $row = $('<tr></tr>');

@@ -419,6 +419,17 @@ if (isset($data['class_data']) && $data['class_data']):
          // Convert holiday overrides to JSON string for the hidden field
          $holidayOverridesJson = !empty($holidayOverrides) ? json_encode($holidayOverrides) : '';
          
+         // Debug: Log holiday overrides extraction
+         if (isset($_GET['debug']) && $_GET['debug'] === '1') {
+             echo "<script>\n";
+             echo "console.log('=== Holiday Overrides Debug ===');\n";
+             echo "console.log('Raw schedule data holiday_overrides:', " . json_encode($scheduleData['holiday_overrides'] ?? null) . ");\n";
+             echo "console.log('Raw schedule data holidayOverrides:', " . json_encode($scheduleData['holidayOverrides'] ?? null) . ");\n";
+             echo "console.log('Extracted holidayOverrides:', " . json_encode($holidayOverrides) . ");\n";
+             echo "console.log('Holiday overrides JSON string:', " . json_encode($holidayOverridesJson) . ");\n";
+             echo "</script>\n";
+         }
+         
          // Normalize perDayTimes to JavaScript expected format (camelCase) and filter corrupt data
          if (!empty($perDayTimes)) {
              $validDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -883,7 +894,8 @@ if (isset($data['class_data']) && $data['class_data']):
 
       <!-- Class Date History Section -->
       <div class="mb-4 mt-3">
-         <?php echo section_header('Class Date History', 'Add stop and restart dates for this class. A class can have multiple stop and restart dates.'); ?>
+         <h5>Class Date History</h5>
+         <p class="text-muted small mb-3">Add stop and restart dates for this class. A class can have multiple stop and restart dates.</p>
 
          <!-- Container for all date history rows -->
          <div id="date-history-container"></div>
@@ -991,8 +1003,8 @@ if (isset($data['class_data']) && $data['class_data']):
       </div>
 
       <!-- Class Learners Section -->
-      <?php echo section_header('Class Learners <span class="text-danger">*</span>', 'Select learners for this class and manage their status.'); ?>
-
+         <h5>Class Learners <span class="text-danger">*</span></h5>
+         <p class="text-muted small mb-3">Select learners for this class and manage their status.</p>
       <div class="row mb-4">
          <!-- Learner Selection -->
          <div class="col-md-4">
@@ -1469,6 +1481,63 @@ document.addEventListener('DOMContentLoaded', function() {
             if (noLearnersMessage) {
                 noLearnersMessage.classList.add('d-none');
             }
+        }
+    }
+    <?php endif; ?>
+
+    // Pre-populate exam learners data if available
+    <?php if (isset($data['class_data']['exam_learners']) && !empty($data['class_data']['exam_learners'])): ?>
+    const examLearnerData = <?php echo json_encode($data['class_data']['exam_learners']); ?>;
+
+    // Pre-populate the exam learners table
+    if (examLearnerData && Array.isArray(examLearnerData)) {
+        const examLearnersDataField = document.getElementById('exam_learners');
+        const examLearnersTable = document.getElementById('exam-learners-table');
+        const examLearnersTbody = document.getElementById('exam-learners-tbody');
+        const noExamLearnersMessage = document.getElementById('no-exam-learners-message');
+
+        if (examLearnersDataField && examLearnersTbody) {
+            // Set the hidden field value
+            examLearnersDataField.value = JSON.stringify(examLearnerData);
+
+            // Clear existing rows
+            examLearnersTbody.innerHTML = '';
+
+            // Add each exam learner to the table
+            examLearnerData.forEach(function(learner) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${learner.name || 'Unknown Learner'}</td>
+                    <td>
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-exam-learner-btn" data-learner-id="${learner.id}">
+                            <i data-feather="trash-2" style="height:12.8px;width:12.8px;"></i>
+                            Remove
+                        </button>
+                    </td>
+                `;
+                examLearnersTbody.appendChild(row);
+            });
+
+            // Show the table and hide the no exam learners message
+            if (examLearnersTable) {
+                examLearnersTable.classList.remove('d-none');
+            }
+            if (noExamLearnersMessage) {
+                noExamLearnersMessage.classList.add('d-none');
+            }
+
+            // Re-initialize feather icons for new buttons
+            if (typeof feather !== 'undefined') {
+                feather.replace();
+            }
+
+            // Show the exam learners container if we have exam learners
+            const examLearnersContainer = document.getElementById('exam_learners_container');
+            if (examLearnersContainer && examLearnerData.length > 0) {
+                examLearnersContainer.style.display = 'block';
+            }
+
+            console.log('Pre-populated exam learners:', examLearnerData);
         }
     }
     <?php endif; ?>
