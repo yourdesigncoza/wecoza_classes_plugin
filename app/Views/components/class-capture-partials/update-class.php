@@ -391,9 +391,9 @@ if (isset($data['class_data']) && $data['class_data']):
       <!-- Hidden fields for form submission -->
       <input type="hidden" name="client_id" value="<?php echo esc_attr($data['class_data']['client_id'] ?? ''); ?>">
       <input type="hidden" name="site_id" value="<?php echo esc_attr($data['class_data']['site_id'] ?? ''); ?>">
-      <input type="hidden" name="class_type" value="<?php echo esc_attr($data['class_data']['class_type'] ?? ''); ?>">
+      <input type="hidden" id="class_type" name="class_type" value="<?php echo esc_attr($data['class_data']['class_type'] ?? ''); ?>">
       <input type="hidden" name="class_code_hidden" value="<?php echo esc_attr($data['class_data']['class_code'] ?? ''); ?>">
-      <input type="hidden" name="class_duration" value="<?php echo esc_attr($data['class_data']['class_duration'] ?? ''); ?>">
+      <input type="hidden" id="class_duration" name="class_duration" value="<?php echo esc_attr($data['class_data']['class_duration'] ?? ''); ?>">
       <input type="hidden" name="class_start_date" value="<?php echo esc_attr($data['class_data']['original_start_date'] ?? ''); ?>">
       <input type="hidden" name="class_subject" value="<?php echo esc_attr($data['class_data']['class_subject'] ?? ''); ?>">
 
@@ -642,10 +642,8 @@ if (isset($data['class_data']) && $data['class_data']):
             </div>
          </div>
       <?php echo section_divider(); ?>
-         <div class="col-md-4 ">
+         <div class="col-md-4" id="schedule-update-end-date-container">
             <?php echo section_header('Class End Date', 'If you make any changes to the schedule, you will need to recalculate the end date.'); ?>
-
-
             <label for="schedule_end_date" class="form-label">Estimated End Date <span class="text-danger">*</span></label>
             <input type="date" id="schedule_end_date" name="schedule_end_date" class="form-control readonly-field" placeholder="YYYY-MM-DD" required>
             <div class="invalid-feedback">Please generate the end date.</div>
@@ -1833,5 +1831,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 100);
     <?php endif; ?>
+    
+    // Load holiday overrides from hidden field for recalculation
+    const holidayOverridesInput = document.getElementById('holiday_overrides');
+    if (holidayOverridesInput && holidayOverridesInput.value) {
+        try {
+            const overrides = JSON.parse(holidayOverridesInput.value);
+            window.holidayOverrides = overrides || {};
+            
+            <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
+            console.log('Loaded holiday overrides for recalculation:', window.holidayOverrides);
+            <?php endif; ?>
+        } catch (e) {
+            console.error('Error parsing holiday overrides:', e);
+            window.holidayOverrides = {};
+        }
+    }
 });
 </script>

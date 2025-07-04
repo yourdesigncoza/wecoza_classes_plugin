@@ -2572,47 +2572,88 @@
      * Recalculate end date based on class type, start date, selected days, and per-day durations
      */
     function recalculateEndDate() {
+        console.log('=== END DATE RECALCULATION DEBUG ===');
+        
         const startDate = $('#schedule_start_date').val();
         const classType = $('#class_type').val();
         const pattern = $('#schedule_pattern').val();
+        
+        console.log('Start Date:', startDate);
+        console.log('Class Type:', classType);
+        console.log('Pattern:', pattern);
 
         // Get session duration from per-day time data or fallback
         let sessionDuration = 0;
+        let hoursPerWeek = 0;
+        let useWeeklyCalculation = false;
         const timeData = getAllTimeData();
+        console.log('Time Data:', timeData);
 
-        if (timeData.mode === 'per-day' && timeData.perDayTimes) {
-            // Use average duration from per-day times
+        if (timeData.mode === 'per-day' && timeData.perDayTimes && (pattern === 'weekly' || pattern === 'biweekly')) {
+            // For weekly/biweekly patterns with per-day times, calculate total hours per week
+            const selectedDays = getSelectedDays();
+            selectedDays.forEach(day => {
+                if (timeData.perDayTimes[day] && timeData.perDayTimes[day].duration) {
+                    hoursPerWeek += parseFloat(timeData.perDayTimes[day].duration);
+                }
+            });
+            
+            // For biweekly, this represents hours every two weeks
+            if (pattern === 'biweekly') {
+                hoursPerWeek = hoursPerWeek; // Keep as is - we'll handle biweekly in the main loop
+            }
+            
+            useWeeklyCalculation = true;
+            console.log('Hours per week:', hoursPerWeek);
+            console.log('Using weekly calculation method');
+        } else if (timeData.mode === 'per-day' && timeData.perDayTimes) {
+            // For other patterns, use average duration
             const durations = Object.values(timeData.perDayTimes).map(day => day.duration);
+            console.log('Per-day durations:', durations);
             if (durations.length > 0) {
                 sessionDuration = durations.reduce((sum, duration) => sum + duration, 0) / durations.length;
             }
         } else if (timeData.duration) {
             sessionDuration = parseFloat(timeData.duration);
         }
+        
+        console.log('Session Duration (average):', sessionDuration);
+        console.log('Use Weekly Calculation:', useWeeklyCalculation);
 
-        if (startDate && classType && pattern && sessionDuration > 0) {
+        if (startDate && classType && pattern && (sessionDuration > 0 || hoursPerWeek > 0)) {
             // Get total hours for this class type
             const classHours = getClassTypeHours(classType);
             $('#schedule_total_hours').val(classHours);
+            
+            console.log('Total Class Hours:', classHours);
 
             if (classHours > 0) {
                 // Get exception dates
                 const exceptionDates = [];
                 const $exceptionRows = $('#exception-dates-container .exception-date-row');
+                
+                console.log('Exception date rows found:', $exceptionRows.length);
 
-                $exceptionRows.each(function() {
+                $exceptionRows.each(function(index) {
                     const $row = $(this);
                     // Skip template row (has id)
                     if ($row.attr('id') === 'exception-date-row-template') {
+                        console.log(`Row ${index}: Skipping template row`);
                         return;
                     }
 
                     const date = $row.find('input[name="exception_dates[]"]').val();
+                    const reason = $row.find('select[name="exception_reasons[]"]').val();
                     if (date) {
                         exceptionDates.push(date);
+                        console.log(`Row ${index}: Added exception date ${date} (reason: ${reason})`);
+                    } else {
+                        console.log(`Row ${index}: Empty date field`);
                     }
                 });
 
+                console.log('Exception Dates:', exceptionDates);
+                console.log('Expected exception dates from data:', ['2025-07-22']); // Based on captured.json
 
                 // Get stop/restart dates
                 const stopRestartPeriods = [];
@@ -2627,9 +2668,25 @@
                         });
                     }
                 });
+                
+                console.log('Stop/Restart Periods:', stopRestartPeriods);
+                console.log('Holiday Overrides (window.holidayOverrides):', window.holidayOverrides);
 
-                // Calculate number of sessions needed
-                const sessionsNeeded = Math.ceil(classHours / sessionDuration);
+                // Calculate number of sessions/weeks needed based on calculation method
+                let unitsNeeded = 0;
+                let unitType = 'sessions';
+                
+                if (useWeeklyCalculation && hoursPerWeek > 0) {
+                    // Calculate weeks needed
+                    unitsNeeded = Math.ceil(classHours / hoursPerWeek);
+                    unitType = 'weeks';
+                    console.log('Weeks Needed:', unitsNeeded, '(', classHours, '/', hoursPerWeek, 'hours per week)');
+                } else {
+                    // Calculate sessions needed
+                    unitsNeeded = Math.ceil(classHours / sessionDuration);
+                    unitType = 'sessions';
+                    console.log('Sessions Needed:', unitsNeeded, '(', classHours, '/', sessionDuration, ')');
+                }
                 
                 // Create session tracking array for debugging
                 const sessionLog = [];
@@ -2637,18 +2694,21 @@
                 // Calculate end date based on schedule pattern and exception dates
                 if (pattern && startDate) {
                     let date = new Date(startDate);
-                    let sessionsScheduled = 0;
+                    let unitsScheduled = 0;
 
                     // Weekly pattern
                     if (pattern === 'weekly') {
                         const selectedDays = getSelectedDays();
+                        console.log('Selected Days:', selectedDays);
 
                         if (selectedDays.length === 0) {
+                            console.log('ERROR: No days selected!');
                             return; // Can't calculate without selected days
                         }
 
                         // Convert selected days to day indices
                         const dayIndices = selectedDays.map(day => getDayIndex(day));
+                        console.log('Day Indices:', dayIndices);
 
                         // Enhanced debug logging
 
@@ -2669,8 +2729,12 @@
                             date = nextDate;
                         }
 
-                        // Add days until we have enough sessions
-                        while (sessionsScheduled < sessionsNeeded) {
+                        // Track weeks for weekly calculation
+                        let currentWeekDays = [];
+                        let lastWeekStart = null;
+                        
+                        // Add days until we have enough units (sessions or weeks)
+                        while (unitsScheduled < unitsNeeded) {
                             const dateStr = date.toISOString().split('T')[0];
                             const currentDayIndex = date.getDay();
 
@@ -2699,30 +2763,84 @@
                             const isInStopPeriod = isDateInStopPeriod(dateStr, stopRestartPeriods);
 
                             if (isExceptionDate) {
+                                console.log(`Date ${dateStr}: Exception date`);
                             }
 
                             if (dayIndices.includes(currentDayIndex) &&
                                 !isExceptionDate &&
                                 !isInStopPeriod &&
                                 (!isPublicHoliday || isHolidayOverridden)) {
-                                sessionsScheduled++;
                                 
-                                // Add to session log
-                                sessionLog.push({
-                                    sessionNumber: sessionsScheduled,
-                                    date: dateStr,
-                                    dayName: getDayName(currentDayIndex),
-                                    isHoliday: isPublicHoliday,
-                                    isHolidayOverridden: isHolidayOverridden,
-                                    isException: false,
-                                    isInStopPeriod: false,
-                                    status: 'scheduled'
-                                });
-                                
-                                
-                                // Safety check - break if we've reached our target
-                                if (sessionsScheduled >= sessionsNeeded) {
-                                    break;
+                                if (useWeeklyCalculation) {
+                                    // For weekly calculation, track which days of the week we've scheduled
+                                    const weekStart = new Date(date);
+                                    weekStart.setDate(date.getDate() - date.getDay()); // Get Sunday of this week
+                                    const weekStartStr = weekStart.toISOString().split('T')[0];
+                                    
+                                    // Check if this is a new week
+                                    if (weekStartStr !== lastWeekStart) {
+                                        // New week - check if we completed the previous week
+                                        if (currentWeekDays.length > 0) {
+                                            unitsScheduled++;
+                                            if (unitsScheduled <= 5 || unitsScheduled >= unitsNeeded - 2) {
+                                                console.log(`Week ${unitsScheduled} completed`);
+                                            }
+                                            
+                                            // Check if we've reached our target weeks
+                                            if (unitsScheduled >= unitsNeeded) {
+                                                // We've scheduled enough weeks - use the last scheduled date
+                                                const lastScheduledDate = currentWeekDays[currentWeekDays.length - 1];
+                                                date = new Date(lastScheduledDate);
+                                                console.log(`Target weeks (${unitsNeeded}) reached. Last scheduled date: ${lastScheduledDate}`);
+                                                break;
+                                            }
+                                        }
+                                        currentWeekDays = [];
+                                        lastWeekStart = weekStartStr;
+                                    }
+                                    
+                                    // Add this day to the current week
+                                    currentWeekDays.push(dateStr);
+                                    
+                                    // Add to session log
+                                    sessionLog.push({
+                                        sessionNumber: `Week ${unitsScheduled + 1} - Day ${currentWeekDays.length}`,
+                                        date: dateStr,
+                                        dayName: getDayName(currentDayIndex),
+                                        isHoliday: isPublicHoliday,
+                                        isHolidayOverridden: isHolidayOverridden,
+                                        isException: false,
+                                        isInStopPeriod: false,
+                                        status: 'scheduled'
+                                    });
+                                    
+                                    if (unitsScheduled < 3 || (currentWeekDays.length === 1 && unitsScheduled >= unitsNeeded - 2)) {
+                                        console.log(`${dateStr} (${getDayName(currentDayIndex)}) - SCHEDULED (Week ${unitsScheduled + 1})`);
+                                    }
+                                } else {
+                                    // Regular session-based calculation
+                                    unitsScheduled++;
+                                    
+                                    // Add to session log
+                                    sessionLog.push({
+                                        sessionNumber: unitsScheduled,
+                                        date: dateStr,
+                                        dayName: getDayName(currentDayIndex),
+                                        isHoliday: isPublicHoliday,
+                                        isHolidayOverridden: isHolidayOverridden,
+                                        isException: false,
+                                        isInStopPeriod: false,
+                                        status: 'scheduled'
+                                    });
+                                    
+                                    if (unitsScheduled <= 5 || unitsScheduled >= unitsNeeded - 2) {
+                                        console.log(`Session ${unitsScheduled}: ${dateStr} (${getDayName(currentDayIndex)}) - SCHEDULED`);
+                                    }
+                                    
+                                    // Safety check - break if we've reached our target
+                                    if (unitsScheduled >= unitsNeeded) {
+                                        break;
+                                    }
                                 }
                             } else {
                                 // Debug why this day was skipped
@@ -2740,6 +2858,14 @@
                                         status: 'skipped',
                                         reason: isExceptionDate ? 'exception' : isInStopPeriod ? 'stop_period' : isPublicHoliday ? 'holiday' : 'unknown'
                                     });
+                                    
+                                    // Log important skips
+                                    if (isPublicHoliday) {
+                                        console.log(`Date ${dateStr} (${dayName}): SKIPPED - Holiday (Override: ${isHolidayOverridden})`);
+                                    }
+                                    if (isExceptionDate || isInStopPeriod) {
+                                        console.log(`Date ${dateStr} (${dayName}): SKIPPED - ${isExceptionDate ? 'Exception' : 'Stop Period'}`);
+                                    }
                                 }
                                 
                             }
@@ -2748,9 +2874,22 @@
                             date.setDate(date.getDate() + 1);
                             
                             // Emergency break to prevent infinite loops
-                            if (sessionsScheduled > sessionsNeeded + 100) {
-                                console.error('🚨 EMERGENCY BREAK: Too many sessions scheduled!', sessionsScheduled, 'vs needed:', sessionsNeeded);
+                            if (unitsScheduled > unitsNeeded + 100) {
+                                console.error('🚨 EMERGENCY BREAK: Too many units scheduled!', unitsScheduled, 'vs needed:', unitsNeeded);
                                 break;
+                            }
+                        }
+                        
+                        // For weekly calculation, check if we need to count the last partial week
+                        if (useWeeklyCalculation && currentWeekDays.length > 0 && unitsScheduled < unitsNeeded) {
+                            unitsScheduled++;
+                            console.log(`Week ${unitsScheduled} completed (final week)`);
+                            
+                            // Use the last scheduled date from the current week
+                            if (currentWeekDays.length > 0) {
+                                const lastScheduledDate = currentWeekDays[currentWeekDays.length - 1];
+                                date = new Date(lastScheduledDate);
+                                console.log(`Final week last scheduled date: ${lastScheduledDate}`);
                             }
                         }
                     }
@@ -2788,7 +2927,7 @@
                         let weekCounter = 0;
 
                         // Add days until we have enough sessions
-                        while (sessionsScheduled < sessionsNeeded) {
+                        while (unitsScheduled < unitsNeeded) {
                             const dateStr = date.toISOString().split('T')[0];
                             const currentDayIndex = date.getDay();
 
@@ -2818,7 +2957,7 @@
                                 !exceptionDates.includes(dateStr) &&
                                 !isDateInStopPeriod(dateStr, stopRestartPeriods) &&
                                 (!isPublicHoliday || isHolidayOverridden)) {
-                                sessionsScheduled++;
+                                unitsScheduled++;
                             } else {
                             }
 
@@ -2836,7 +2975,7 @@
                         const dayOfMonth = $('#schedule_day_of_month').val();
 
                         // Add months until we have enough sessions
-                        while (sessionsScheduled < sessionsNeeded) {
+                        while (unitsScheduled < unitsNeeded) {
                             let dateToUse = new Date(date);
 
                             if (dayOfMonth === 'last') {
@@ -2879,7 +3018,7 @@
                             if (!exceptionDates.includes(dateStr) &&
                                 !isDateInStopPeriod(dateStr, stopRestartPeriods) &&
                                 (!isPublicHoliday || isHolidayOverridden)) {
-                                sessionsScheduled++;
+                                unitsScheduled++;
                             }
 
                             // Move to next month
@@ -2904,12 +3043,22 @@
                     // Format date as YYYY-MM-DD
                     const endDate = finalEndDate.toISOString().split('T')[0];
                     $('#schedule_end_date').val(endDate);
+                    
+                    console.log(`Total ${unitType} Scheduled:`, unitsScheduled);
+                    console.log('Final End Date:', endDate);
 
                     // Validate that calculated hours match expected hours
-                    const calculatedHours = sessionsScheduled * sessionDuration;
+                    let calculatedHours = 0;
+                    if (useWeeklyCalculation) {
+                        calculatedHours = unitsScheduled * hoursPerWeek;
+                    } else {
+                        calculatedHours = unitsScheduled * sessionDuration;
+                    }
                     const expectedHours = parseFloat($('#class_duration').val()) || 0;
                     const hoursDifference = Math.abs(calculatedHours - expectedHours);
                     
+                    console.log('Expected hours from class_duration:', expectedHours);
+                    console.log('Calculated hours:', calculatedHours);
                     
                     // Show warning if there's a significant mismatch (more than 0.1 hours difference)
                     if (hoursDifference > 0.1) {
@@ -2921,6 +3070,8 @@
                         // You could also show a visual warning to the user here if needed
                         // For example: $('#hours-warning').show().text('Warning: Calculated hours (' + calculatedHours + ') do not match expected hours (' + expectedHours + ')');
                     }
+                    
+                    console.log('=== END DATE RECALCULATION COMPLETE ===');
 
                     // Update schedule tables
                     updateScheduleTables();
