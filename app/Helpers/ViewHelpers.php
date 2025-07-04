@@ -155,7 +155,7 @@ function section_divider($classes = '') {
  * @param string $title_tag HTML tag for the title (h5, h4, etc.)
  * @return string HTML for the section header
  */
-function section_header($title, $description = '', $title_tag = 'h5') {
+function section_header($title, $description = '', $title_tag = 'h6') {
     $html = "<{$title_tag}>{$title}</{$title_tag}>\n";
     
     if ($description) {

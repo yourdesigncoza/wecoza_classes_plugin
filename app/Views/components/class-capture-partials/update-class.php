@@ -584,8 +584,7 @@ if (isset($data['class_data']) && $data['class_data']):
          <!-- Per-Day Time Controls (shown when multiple days selected) -->
          <div id="per-day-time-controls" class="d-none mt-3 mb-4">
             <div class="">
-               <h6 class="mb-2">Set Times for Each Day</h6>
-               <p class="text-muted small mb-2">Configure individual start and end times for each selected day.</p>
+               <?php echo section_header('Set Times for Each Day', 'Configure individual start and end times for each selected day.'); ?>
             </div>
             <!-- Container for dynamically generated day sections -->
             <div id="per-day-sections-container" class="row g-4">
@@ -644,8 +643,9 @@ if (isset($data['class_data']) && $data['class_data']):
          </div>
       <?php echo section_divider(); ?>
          <div class="col-md-4 ">
-            <h6>Class End Date</h6>
-            <small class="text-muted mb-1">If you make any changes to the schedule, you will need to recalculate the end date.</small>
+            <?php echo section_header('Class End Date', 'If you make any changes to the schedule, you will need to recalculate the end date.'); ?>
+
+
             <label for="schedule_end_date" class="form-label">Estimated End Date <span class="text-danger">*</span></label>
             <input type="date" id="schedule_end_date" name="schedule_end_date" class="form-control readonly-field" placeholder="YYYY-MM-DD" required>
             <div class="invalid-feedback">Please generate the end date.</div>
@@ -657,9 +657,7 @@ if (isset($data['class_data']) && $data['class_data']):
       <?php echo section_divider(); ?>
          <!-- Exception Dates -->
          <div class="mb-4">
-            <h6>Exception Dates</h6>
-            <p class="text-muted small mb-3">Add dates when classes will not occur (e.g. client closed).</p>
-
+            <?php echo section_header('Exception Dates', 'Add dates when classes will not occur (e.g. client closed).'); ?>
             <!-- Container for all exception date rows -->
             <div id="exception-dates-container" data-populated="false"></div>
 
@@ -707,7 +705,7 @@ if (isset($data['class_data']) && $data['class_data']):
 
          <!-- Public Holidays Section -->
          <div class="mb-4">
-            <?php echo section_header('Public Holidays in Schedule', 'By default, classes are not scheduled on public holidays. The system will only show holidays that conflict with your class schedule (when a holiday falls on a scheduled class day). You can override specific holidays to include them in the schedule.', 'h6'); ?>
+            <?php echo section_header('Public Holidays in Schedule', 'By default, classes are not scheduled on public holidays. The system will only show holidays that conflict with your class schedule (when a holiday falls on a scheduled class day). You can override specific holidays to include them in the schedule.'); ?>
 
             <!-- No holidays message -->
             <div id="no-holidays-message" class="bd-callout bd-callout-info">
@@ -997,8 +995,7 @@ if (isset($data['class_data']) && $data['class_data']):
       </div>
 
       <!-- Class Learners Section -->
-         <h5>Class Learners <span class="text-danger">*</span></h5>
-         <p class="text-muted small mb-3">Select learners for this class and manage their status.</p>
+      <?php echo section_header('Class Learners <span class="text-danger">*</span>', 'Select learners for this class and manage their status.'); ?>
       <div class="row mb-4">
          <!-- Learner Selection -->
          <div class="col-md-4">
@@ -1215,7 +1212,7 @@ if (isset($data['class_data']) && $data['class_data']):
          </div>
 
          <!-- Agent Replacements -->
-         <?php echo section_header('Agent Replacements', 'If the class agent changes, add the replacement agent and takeover date here.', 'h6'); ?>
+         <?php echo section_header('Agent Replacements', 'If the class agent changes, add the replacement agent and takeover date here.'); ?>
 
          <!-- Container for all agent replacement rows -->
          <div id="agent-replacements-container"></div>
