@@ -13,11 +13,6 @@ if (!function_exists('\\WeCozaClasses\\Helpers\\section_divider')) {
 }
 
 // Define global function wrappers for the plugin namespace
-if (!function_exists('select_dropdown')) {
-    function select_dropdown($name, $options, $attributes = [], $selected = '', $empty_label = 'Select') {
-        return \WeCozaClasses\Helpers\select_dropdown($name, $options, $attributes, $selected, $empty_label);
-    }
-}
 
 if (!function_exists('select_dropdown_with_optgroups')) {
     function select_dropdown_with_optgroups($name, $optgroups, $attributes = [], $selected = '', $empty_label = 'Select') {
@@ -34,18 +29,6 @@ if (!function_exists('form_input')) {
 if (!function_exists('form_textarea')) {
     function form_textarea($name, $label, $attributes = [], $value = '', $required = false, $invalid_feedback = 'Please fill out this field.', $valid_feedback = 'Looks good!') {
         return \WeCozaClasses\Helpers\form_textarea($name, $label, $attributes, $value, $required, $invalid_feedback, $valid_feedback);
-    }
-}
-
-if (!function_exists('form_group')) {
-    function form_group($type, $name, $label, $col_class = 'col-md-4', $attributes = [], $value = '', $required = false, $invalid_feedback = 'Please fill out this field.', $valid_feedback = 'Looks good!') {
-        return \WeCozaClasses\Helpers\form_group($type, $name, $label, $col_class, $attributes, $value, $required, $invalid_feedback, $valid_feedback);
-    }
-}
-
-if (!function_exists('form_row')) {
-    function form_row($fields) {
-        return \WeCozaClasses\Helpers\form_row($fields);
     }
 }
 

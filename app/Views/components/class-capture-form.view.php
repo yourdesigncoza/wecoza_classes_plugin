@@ -17,10 +17,8 @@
  * - Assignments & Dates: Staff assignments and important dates
  *
  * This form uses various view helpers (from app/Helpers/ViewHelpers.php) to generate consistent UI elements:
- * - select_dropdown(): For dropdown menus
  * - form_input(): For input fields
  * - form_textarea(): For textarea fields
- * - form_row(): For complex form rows
  * - section_divider(): For visual section separators
  * - section_header(): For section titles
  * - button(): For form buttons
