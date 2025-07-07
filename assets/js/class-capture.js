@@ -145,7 +145,6 @@ function showCustomAlert(message) {
                 
                 if (!currentScheduleDate || currentScheduleDate === today) {
                     $scheduleStartDate.val(newDate);
-                    console.log('Updated schedule start date from class start date:', newDate);
                     
                     // Trigger schedule data update
                     if (typeof updateScheduleData === 'function') {
@@ -159,7 +158,6 @@ function showCustomAlert(message) {
                 
                 if (!currentInitialAgentDate || currentInitialAgentDate === today) {
                     $initialAgentStartDate.val(newDate);
-                    console.log('Updated initial agent start date from class start date:', newDate);
                 }
                 
                 // Auto-populate delivery date
@@ -168,7 +166,6 @@ function showCustomAlert(message) {
                 
                 if (!currentDeliveryDate || currentDeliveryDate === today) {
                     $deliveryDate.val(newDate);
-                    console.log('Updated delivery date from class start date:', newDate);
                 }
                 
                 // Auto-populate backup agent dates
@@ -178,7 +175,6 @@ function showCustomAlert(message) {
                     
                     if (!currentBackupDate || currentBackupDate === today) {
                         $backupDate.val(newDate);
-                        console.log('Updated backup agent date from class start date:', newDate);
                     }
                 });
                 
@@ -189,7 +185,6 @@ function showCustomAlert(message) {
                     
                     if (!currentExceptionDate || currentExceptionDate === today) {
                         $exceptionDate.val(newDate);
-                        console.log('Updated exception date from class start date:', newDate);
                     }
                 });
             }
@@ -478,9 +473,7 @@ function showCustomAlert(message) {
 
             // Add each exam learner to the table
             examLearners.forEach(function(learner) {
-                console.log('🎨 Generating UI for exam learner:', learner);
                 const levelSelectHtml = classes_generate_learner_level_select_html(learner.id, learner.level || '');
-                console.log('🎨 Generated level select HTML for level "' + (learner.level || '') + '"');
                 const statusOptions = [
                     { value: 'CIC - Currently in Class', text: 'CIC - Currently in Class' },
                     { value: 'RBE - Removed by Employer', text: 'RBE - Removed by Employer' },
@@ -516,35 +509,25 @@ function showCustomAlert(message) {
                 feather.replace();
             }
 
-            // 🎯 DIRECT AUTO-POPULATION: Set exam learners level to current class subject
-            // This bypasses the broken inheritance chain completely
+            // Auto-populate exam learner levels with current class subject
             const classSubjectSelect = document.getElementById('class_subject');
             if (classSubjectSelect && classSubjectSelect.value) {
                 const selectedSubject = classSubjectSelect.value;
-                console.log('🚀 Auto-populating exam learner levels with subject:', selectedSubject);
                 
                 // Find all exam learner level selects and set them to current subject
                 const examLearnerLevelSelects = $examLearnersTbody.find('.learner-level-select');
-                console.log('🎯 Found', examLearnerLevelSelects.length, 'exam learner level selects to populate');
                 
-                examLearnerLevelSelects.each(function(index) {
+                examLearnerLevelSelects.each(function() {
                     const $select = $(this);
-                    const learnerId = $select.data('learner-id');
                     
                     // Set the select value to current subject
                     $select.val(selectedSubject);
-                    console.log('✅ Set exam learner', learnerId, 'level to:', selectedSubject);
                     
                     // Trigger change event to ensure any handlers fire
                     $select.trigger('change');
                 });
-                
-                console.log('🎉 Completed auto-population of', examLearnerLevelSelects.length, 'exam learner levels');
-            } else {
-                console.log('⚠️ No class subject selected, skipping exam learner auto-population');
             }
 
-            console.log('Updated exam learners display with', examLearners.length, 'learners');
         }
 
         // Handle add selected exam learners button click
@@ -556,7 +539,6 @@ function showCustomAlert(message) {
                 return;
             }
 
-            console.log('Adding', selectedOptions.length, 'selected exam learners');
 
             // Add each selected learner
             selectedOptions.each(function() {
@@ -568,15 +550,12 @@ function showCustomAlert(message) {
 
                 // Check if learner is already added to exam learners - ensure both IDs are strings for comparison
                 if (examLearners.some(learner => String(learner.id) === learnerIdStr)) {
-                    console.log('Exam learner', learnerName, 'already added, skipping');
                     return;
                 }
 
                 // Get learner's level and status from class learners data
                 const classLearnersData = JSON.parse($('#class_learners_data').val() || '[]');
-                console.log('🔍 Class learners data for inheritance:', classLearnersData);
                 const classLearner = classLearnersData.find(cl => String(cl.id) === learnerIdStr);
-                console.log('🔍 Found class learner for ID', learnerIdStr, ':', classLearner);
                 
                 // Add learner to exam learners array (store as string for consistency)
                 const examLearnerData = {
@@ -587,7 +566,6 @@ function showCustomAlert(message) {
                 };
 
                 examLearners.push(examLearnerData);
-                console.log('✅ Added exam learner with inherited data:', examLearnerData);
             });
 
             // Update the display and data
@@ -614,7 +592,6 @@ function showCustomAlert(message) {
             updateExamLearnersData();
             updateExamLearnerOptions(); // Refresh dropdown to add back removed learner
 
-            console.log('Removed exam learner', learnerIdStr);
         });
 
         // Handle exam learner level change
@@ -627,7 +604,6 @@ function showCustomAlert(message) {
             if (learner) {
                 learner.level = newLevel;
                 updateExamLearnersData();
-                console.log('Updated exam learner level:', learnerId, newLevel);
             }
         });
 
@@ -641,7 +617,6 @@ function showCustomAlert(message) {
             if (learner) {
                 learner.status = newStatus;
                 updateExamLearnersData();
-                console.log('Updated exam learner status:', learnerId, newStatus);
             }
         });
 
@@ -651,7 +626,6 @@ function showCustomAlert(message) {
             try {
                 examLearners = JSON.parse(existingExamData);
                 updateExamLearnersDisplay();
-                console.log('Loaded existing exam learners:', examLearners);
             } catch (e) {
                 console.error('Error parsing existing exam learner data:', e);
             }
@@ -968,7 +942,6 @@ function showCustomAlert(message) {
     function classes_setup_synchronization_listeners() {
         // Listen for custom event when class learners change
         $(document).on('classLearnersChanged', function(event, classLearners) {
-            console.log('Class learners changed event received, synchronizing exam learner options');
             if (typeof window.classes_sync_exam_learner_options === 'function') {
                 window.classes_sync_exam_learner_options();
             }

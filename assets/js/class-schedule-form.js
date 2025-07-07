@@ -1199,6 +1199,15 @@
             updateLearnersDisplay();
             updateLearnersData();
 
+            // Auto-populate learner levels with current subject
+            const classSubjectSelect = document.getElementById('class_subject');
+            if (classSubjectSelect && classSubjectSelect.value) {
+                const selectedSubject = classSubjectSelect.value;
+                if (typeof classes_populate_learner_levels === 'function') {
+                    classes_populate_learner_levels(selectedSubject);
+                }
+            }
+
             // Synchronize exam learner options if the function exists
             if (typeof window.classes_sync_exam_learner_options === 'function') {
                 window.classes_sync_exam_learner_options();
@@ -1269,10 +1278,8 @@
 
         // Function to update the hidden field with learner data
         function updateLearnersData() {
-            console.log('💾 updateLearnersData called with:', classLearners);
             const jsonData = JSON.stringify(classLearners);
             $classLearnersData.val(jsonData);
-            console.log('💾 Saved to hidden field:', jsonData);
 
             // Trigger custom event for learner data change
             $(document).trigger('classLearnersChanged', [classLearners]);
@@ -1281,12 +1288,10 @@
 
         // Handle level/status changes
         $(document).on('change', '.learner-level-select, .learner-status-select', function() {
-            console.log('🔥 Change event triggered on:', this, 'Value:', $(this).val());
             const learnerId = $(this).data('learner-id');
             const field = $(this).hasClass('learner-level-select') ? 'level' : 'status';
             const value = $(this).val();
 
-            console.log('🔥 Processing change - Learner ID:', learnerId, 'Field:', field, 'Value:', value);
 
             // Convert to string to ensure consistent comparison
             const learnerIdStr = String(learnerId);
@@ -1294,10 +1299,8 @@
             // Update the learner data - ensure both IDs are strings for comparison
             const learner = classLearners.find(l => String(l.id) === learnerIdStr);
             if (learner) {
-                console.log('🔥 Found learner, updating:', learner, 'Setting', field, 'to:', value);
                 learner[field] = value;
                 updateLearnersData();
-                console.log('🔥 Updated learner data:', learner);
             } else {
                 console.warn('❌ Learner not found for ID:', learnerIdStr);
             }
@@ -1393,23 +1396,7 @@
             return;
         }
 
-        // Handle class subject change to auto-populate learner levels
-        classSubjectSelect.addEventListener('change', function() {
-            const selectedSubject = this.value;
-            
-            console.log('🎯 Class subject changed to:', selectedSubject);
-            
-            if (selectedSubject && selectedSubject.trim() !== '') {
-                // Use setTimeout to ensure any learners already added to the table are processed
-                setTimeout(function() {
-                    if (typeof classes_populate_learner_levels === 'function') {
-                        classes_populate_learner_levels(selectedSubject);
-                    } else if (typeof window.wecoza_auto_populate_learner_levels === 'function') {
-                        window.wecoza_auto_populate_learner_levels(selectedSubject);
-                    }
-                }, 50); // Small delay to ensure DOM is ready
-            }
-        });
+        // Subject change no longer auto-populates levels - only button clicks do that
     }
 
     /**
@@ -1481,14 +1468,10 @@
         // Load existing overrides if available
         try {
             const existingOverrides = $holidayOverridesInput.val();
-            console.log('=== initHolidayOverrides Debug ===');
-            console.log('Holiday overrides input value:', existingOverrides);
             
             if (existingOverrides) {
                 const overrides = JSON.parse(existingOverrides);
-                console.log('Parsed existing overrides:', overrides);
                 Object.assign(window.holidayOverrides, overrides);
-                console.log('Updated window.holidayOverrides:', window.holidayOverrides);
             }
         } catch (e) {
             console.error('Error parsing existing holiday overrides:', e);
@@ -2039,14 +2022,10 @@
 
             // Set holiday overrides (handle both holidayOverrides and holiday_overrides)
             const holidayOverrides = data.holidayOverrides || data.holiday_overrides;
-            console.log('=== Holiday Overrides JavaScript Debug ===');
-            console.log('Holiday overrides from data:', holidayOverrides);
-            console.log('Available holiday checkboxes:', $('.holiday-override-checkbox').length);
             
             if (holidayOverrides) {
                 Object.keys(holidayOverrides).forEach(date => {
                     const $checkbox = $(`.holiday-override-checkbox[data-date="${date}"]`);
-                    console.log(`Looking for checkbox with date ${date}: found ${$checkbox.length} elements`);
                     if ($checkbox.length > 0) {
                         $checkbox.prop('checked', true);
                         console.log(`Set checkbox for ${date} to checked`);
@@ -2060,7 +2039,6 @@
                     window.holidayOverrides = {};
                 }
                 Object.assign(window.holidayOverrides, holidayOverrides);
-                console.log('Stored holiday overrides in window.holidayOverrides:', window.holidayOverrides);
             }
 
             // Trigger validation and updates
@@ -2612,22 +2590,17 @@
      * Recalculate end date based on class type, start date, selected days, and per-day durations
      */
     function recalculateEndDate() {
-        console.log('=== END DATE RECALCULATION DEBUG ===');
         
         const startDate = $('#schedule_start_date').val();
         const classType = $('#class_type').val();
         const pattern = $('#schedule_pattern').val();
         
-        console.log('Start Date:', startDate);
-        console.log('Class Type:', classType);
-        console.log('Pattern:', pattern);
 
         // Get session duration from per-day time data or fallback
         let sessionDuration = 0;
         let hoursPerWeek = 0;
         let useWeeklyCalculation = false;
         const timeData = getAllTimeData();
-        console.log('Time Data:', timeData);
 
         if (timeData.mode === 'per-day' && timeData.perDayTimes && (pattern === 'weekly' || pattern === 'biweekly')) {
             // For weekly/biweekly patterns with per-day times, calculate total hours per week
@@ -2644,12 +2617,9 @@
             }
             
             useWeeklyCalculation = true;
-            console.log('Hours per week:', hoursPerWeek);
-            console.log('Using weekly calculation method');
         } else if (timeData.mode === 'per-day' && timeData.perDayTimes) {
             // For other patterns, use average duration
             const durations = Object.values(timeData.perDayTimes).map(day => day.duration);
-            console.log('Per-day durations:', durations);
             if (durations.length > 0) {
                 sessionDuration = durations.reduce((sum, duration) => sum + duration, 0) / durations.length;
             }
@@ -2657,28 +2627,23 @@
             sessionDuration = parseFloat(timeData.duration);
         }
         
-        console.log('Session Duration (average):', sessionDuration);
-        console.log('Use Weekly Calculation:', useWeeklyCalculation);
 
         if (startDate && classType && pattern && (sessionDuration > 0 || hoursPerWeek > 0)) {
             // Get total hours for this class type
             const classHours = getClassTypeHours(classType);
             $('#schedule_total_hours').val(classHours);
             
-            console.log('Total Class Hours:', classHours);
 
             if (classHours > 0) {
                 // Get exception dates
                 const exceptionDates = [];
                 const $exceptionRows = $('#exception-dates-container .exception-date-row');
                 
-                console.log('Exception date rows found:', $exceptionRows.length);
 
                 $exceptionRows.each(function(index) {
                     const $row = $(this);
                     // Skip template row (has id)
                     if ($row.attr('id') === 'exception-date-row-template') {
-                        console.log(`Row ${index}: Skipping template row`);
                         return;
                     }
 
@@ -2686,14 +2651,10 @@
                     const reason = $row.find('select[name="exception_reasons[]"]').val();
                     if (date) {
                         exceptionDates.push(date);
-                        console.log(`Row ${index}: Added exception date ${date} (reason: ${reason})`);
                     } else {
-                        console.log(`Row ${index}: Empty date field`);
                     }
                 });
 
-                console.log('Exception Dates:', exceptionDates);
-                console.log('Expected exception dates from data:', ['2025-07-22']); // Based on captured.json
 
                 // Get stop/restart dates
                 const stopRestartPeriods = [];
@@ -2709,8 +2670,6 @@
                     }
                 });
                 
-                console.log('Stop/Restart Periods:', stopRestartPeriods);
-                console.log('Holiday Overrides (window.holidayOverrides):', window.holidayOverrides);
 
                 // Calculate number of sessions/weeks needed based on calculation method
                 let unitsNeeded = 0;
@@ -2720,12 +2679,10 @@
                     // Calculate weeks needed
                     unitsNeeded = Math.ceil(classHours / hoursPerWeek);
                     unitType = 'weeks';
-                    console.log('Weeks Needed:', unitsNeeded, '(', classHours, '/', hoursPerWeek, 'hours per week)');
                 } else {
                     // Calculate sessions needed
                     unitsNeeded = Math.ceil(classHours / sessionDuration);
                     unitType = 'sessions';
-                    console.log('Sessions Needed:', unitsNeeded, '(', classHours, '/', sessionDuration, ')');
                 }
                 
                 // Create session tracking array for debugging
@@ -2739,16 +2696,13 @@
                     // Weekly pattern
                     if (pattern === 'weekly') {
                         const selectedDays = getSelectedDays();
-                        console.log('Selected Days:', selectedDays);
 
                         if (selectedDays.length === 0) {
-                            console.log('ERROR: No days selected!');
                             return; // Can't calculate without selected days
                         }
 
                         // Convert selected days to day indices
                         const dayIndices = selectedDays.map(day => getDayIndex(day));
-                        console.log('Day Indices:', dayIndices);
 
                         // Enhanced debug logging
 
@@ -2803,7 +2757,6 @@
                             const isInStopPeriod = isDateInStopPeriod(dateStr, stopRestartPeriods);
 
                             if (isExceptionDate) {
-                                console.log(`Date ${dateStr}: Exception date`);
                             }
 
                             if (dayIndices.includes(currentDayIndex) &&
@@ -2823,7 +2776,6 @@
                                         if (currentWeekDays.length > 0) {
                                             unitsScheduled++;
                                             if (unitsScheduled <= 5 || unitsScheduled >= unitsNeeded - 2) {
-                                                console.log(`Week ${unitsScheduled} completed`);
                                             }
                                             
                                             // Check if we've reached our target weeks
@@ -2831,7 +2783,6 @@
                                                 // We've scheduled enough weeks - use the last scheduled date
                                                 const lastScheduledDate = currentWeekDays[currentWeekDays.length - 1];
                                                 date = new Date(lastScheduledDate);
-                                                console.log(`Target weeks (${unitsNeeded}) reached. Last scheduled date: ${lastScheduledDate}`);
                                                 break;
                                             }
                                         }
@@ -2855,7 +2806,6 @@
                                     });
                                     
                                     if (unitsScheduled < 3 || (currentWeekDays.length === 1 && unitsScheduled >= unitsNeeded - 2)) {
-                                        console.log(`${dateStr} (${getDayName(currentDayIndex)}) - SCHEDULED (Week ${unitsScheduled + 1})`);
                                     }
                                 } else {
                                     // Regular session-based calculation
@@ -2874,7 +2824,6 @@
                                     });
                                     
                                     if (unitsScheduled <= 5 || unitsScheduled >= unitsNeeded - 2) {
-                                        console.log(`Session ${unitsScheduled}: ${dateStr} (${getDayName(currentDayIndex)}) - SCHEDULED`);
                                     }
                                     
                                     // Safety check - break if we've reached our target
@@ -2901,10 +2850,8 @@
                                     
                                     // Log important skips
                                     if (isPublicHoliday) {
-                                        console.log(`Date ${dateStr} (${dayName}): SKIPPED - Holiday (Override: ${isHolidayOverridden})`);
                                     }
                                     if (isExceptionDate || isInStopPeriod) {
-                                        console.log(`Date ${dateStr} (${dayName}): SKIPPED - ${isExceptionDate ? 'Exception' : 'Stop Period'}`);
                                     }
                                 }
                                 
@@ -2923,13 +2870,11 @@
                         // For weekly calculation, check if we need to count the last partial week
                         if (useWeeklyCalculation && currentWeekDays.length > 0 && unitsScheduled < unitsNeeded) {
                             unitsScheduled++;
-                            console.log(`Week ${unitsScheduled} completed (final week)`);
                             
                             // Use the last scheduled date from the current week
                             if (currentWeekDays.length > 0) {
                                 const lastScheduledDate = currentWeekDays[currentWeekDays.length - 1];
                                 date = new Date(lastScheduledDate);
-                                console.log(`Final week last scheduled date: ${lastScheduledDate}`);
                             }
                         }
                     }
@@ -3084,8 +3029,6 @@
                     const endDate = finalEndDate.toISOString().split('T')[0];
                     $('#schedule_end_date').val(endDate);
                     
-                    console.log(`Total ${unitType} Scheduled:`, unitsScheduled);
-                    console.log('Final End Date:', endDate);
 
                     // Validate that calculated hours match expected hours
                     let calculatedHours = 0;
@@ -3097,8 +3040,6 @@
                     const expectedHours = parseFloat($('#class_duration').val()) || 0;
                     const hoursDifference = Math.abs(calculatedHours - expectedHours);
                     
-                    console.log('Expected hours from class_duration:', expectedHours);
-                    console.log('Calculated hours:', calculatedHours);
                     
                     // Show warning if there's a significant mismatch (more than 0.1 hours difference)
                     if (hoursDifference > 0.1) {
@@ -3111,7 +3052,6 @@
                         // For example: $('#hours-warning').show().text('Warning: Calculated hours (' + calculatedHours + ') do not match expected hours (' + expectedHours + ')');
                     }
                     
-                    console.log('=== END DATE RECALCULATION COMPLETE ===');
 
                     // Update schedule tables
                     updateScheduleTables();
