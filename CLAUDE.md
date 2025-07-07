@@ -1,291 +1,417 @@
-# CLAUDE.md
+# Task Master AI - Claude Code Integration Guide
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## Essential Commands
 
-## Development Commands
+### Core Workflow Commands
 
-### WordPress Plugin Testing
 ```bash
-# Test plugin functionality via WordPress admin
-# Activate plugin: WordPress Admin → Plugins → Activate "WeCoza Classes Plugin"
-# Manual testing only - no automated test suite
-# Enable WordPress debug mode: WP_DEBUG=true in wp-config.php
-# Monitor debug logs at wp-content/debug.log
+# Project Setup
+task-master init                                    # Initialize Task Master in current project
+task-master parse-prd .taskmaster/docs/prd.txt      # Generate tasks from PRD document
+task-master models --setup                        # Configure AI models interactively
+
+# Daily Development Workflow
+task-master list                                   # Show all tasks with status
+task-master next                                   # Get next available task to work on
+task-master show <id>                             # View detailed task information (e.g., task-master show 1.2)
+task-master set-status --id=<id> --status=done    # Mark task complete
+
+# Task Management
+task-master add-task --prompt="description" --research        # Add new task with AI assistance
+task-master expand --id=<id> --research --force              # Break task into subtasks
+task-master update-task --id=<id> --prompt="changes"         # Update specific task
+task-master update --from=<id> --prompt="changes"            # Update multiple tasks from ID onwards
+task-master update-subtask --id=<id> --prompt="notes"        # Add implementation notes to subtask
+
+# Analysis & Planning
+task-master analyze-complexity --research          # Analyze task complexity
+task-master complexity-report                      # View complexity analysis
+task-master expand --all --research               # Expand all eligible tasks
+
+# Dependencies & Organization
+task-master add-dependency --id=<id> --depends-on=<id>       # Add task dependency
+task-master move --from=<id> --to=<id>                       # Reorganize task hierarchy
+task-master validate-dependencies                            # Check for dependency issues
+task-master generate                                         # Update task markdown files (usually auto-called)
 ```
 
-### Database Operations
-```bash
-# Check PostgreSQL connection status
-# Database configuration in config/app.php
-# Connection details stored in WordPress options:
-# - wecoza_postgres_host
-# - wecoza_postgres_port  
-# - wecoza_postgres_dbname
-# - wecoza_postgres_user
-# - wecoza_postgres_password
+## Key Files & Project Structure
 
-# Test database connection via plugin functionality
-# Use PostgreSQL client (pgAdmin, psql) for direct database access
-# Never use WordPress $wpdb for classes data - use DatabaseService
+### Core Files
+
+- `.taskmaster/tasks/tasks.json` - Main task data file (auto-managed)
+- `.taskmaster/config.json` - AI model configuration (use `task-master models` to modify)
+- `.taskmaster/docs/prd.txt` - Product Requirements Document for parsing
+- `.taskmaster/tasks/*.txt` - Individual task files (auto-generated from tasks.json)
+- `.env` - API keys for CLI usage
+
+### Claude Code Integration Files
+
+- `CLAUDE.md` - Auto-loaded context for Claude Code (this file)
+- `.claude/settings.json` - Claude Code tool allowlist and preferences
+- `.claude/commands/` - Custom slash commands for repeated workflows
+- `.mcp.json` - MCP server configuration (project-specific)
+
+### Directory Structure
+
+```
+project/
+├── .taskmaster/
+│   ├── tasks/              # Task files directory
+│   │   ├── tasks.json      # Main task database
+│   │   ├── task-1.md      # Individual task files
+│   │   └── task-2.md
+│   ├── docs/              # Documentation directory
+│   │   ├── prd.txt        # Product requirements
+│   ├── reports/           # Analysis reports directory
+│   │   └── task-complexity-report.json
+│   ├── templates/         # Template files
+│   │   └── example_prd.txt  # Example PRD template
+│   └── config.json        # AI models & settings
+├── .claude/
+│   ├── settings.json      # Claude Code configuration
+│   └── commands/         # Custom slash commands
+├── .env                  # API keys
+├── .mcp.json            # MCP configuration
+└── CLAUDE.md            # This file - auto-loaded by Claude Code
 ```
 
-### Asset Management
-```bash
-# Pure PHP approach - no build system (no package.json, composer.json, webpack, etc.)
-# JavaScript files are automatically enqueued via config/app.php
-# Files served directly without compilation
-# Development versioning: date('YmdHis') for cache-busting
-# Production versioning: Should use static version numbers
-# CSS location: /opt/lampp/htdocs/wecoza/wp-content/themes/wecoza_3_child_theme/includes/css/ydcoza-styles.css
+## MCP Integration
+
+Task Master provides an MCP server that Claude Code can connect to. Configure in `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "task-master-ai": {
+      "command": "npx",
+      "args": ["-y", "--package=task-master-ai", "task-master-ai"],
+      "env": {
+        "ANTHROPIC_API_KEY": "your_key_here",
+        "PERPLEXITY_API_KEY": "your_key_here",
+        "OPENAI_API_KEY": "OPENAI_API_KEY_HERE",
+        "GOOGLE_API_KEY": "GOOGLE_API_KEY_HERE",
+        "XAI_API_KEY": "XAI_API_KEY_HERE",
+        "OPENROUTER_API_KEY": "OPENROUTER_API_KEY_HERE",
+        "MISTRAL_API_KEY": "MISTRAL_API_KEY_HERE",
+        "AZURE_OPENAI_API_KEY": "AZURE_OPENAI_API_KEY_HERE",
+        "OLLAMA_API_KEY": "OLLAMA_API_KEY_HERE"
+      }
+    }
+  }
+}
 ```
 
-### Plugin Testing Workflow
-```bash
-# Activate plugin: WordPress Admin → Plugins → Activate "WeCoza Classes Plugin"
-# Test pages with shortcodes:
-# [wecoza_capture_class] - Class creation form
-# [wecoza_display_classes] - Classes table with search
-# [wecoza_display_single_class] - Single class view
+### Essential MCP Tools
 
-# Testing Strategy (Manual Testing Only)
-# 1. Browser Testing: Test functionality through WordPress admin interface
-# 2. Console Monitoring: Check browser console for JavaScript errors
-# 3. Debug Log Monitoring: Check wp-content/debug.log for PHP errors
-# 4. Database Testing: Verify PostgreSQL operations via database client
-# 5. Form Testing: Test class creation, editing, and validation
-# 6. AJAX Testing: Monitor network requests in browser DevTools
-# 7. Shortcode Testing: Test all shortcodes on actual WordPress pages
+```javascript
+help; // = shows available taskmaster commands
+// Project setup
+initialize_project; // = task-master init
+parse_prd; // = task-master parse-prd
+
+// Daily workflow
+get_tasks; // = task-master list
+next_task; // = task-master next
+get_task; // = task-master show <id>
+set_task_status; // = task-master set-status
+
+// Task management
+add_task; // = task-master add-task
+expand_task; // = task-master expand
+update_task; // = task-master update-task
+update_subtask; // = task-master update-subtask
+update; // = task-master update
+
+// Analysis
+analyze_project_complexity; // = task-master analyze-complexity
+complexity_report; // = task-master complexity-report
 ```
 
-## Development Setup Requirements
+## Claude Code Workflow Integration
 
-### Local Development Environment
-- **XAMPP/WAMP/Local**: For local WordPress development
-- **WordPress 5.0+**: Minimum WordPress version required
-- **PHP 7.4+**: Minimum PHP version required
-- **PostgreSQL**: External database for classes data (not WordPress database)
-- **PostgreSQL Client**: pgAdmin, psql, or similar for database management
-- **Text Editor**: VS Code, PHPStorm, or similar with PHP support
+### Standard Development Workflow
 
-### Environment Configuration
-- **No .env file**: Configuration via WordPress options and config/app.php
-- **Database Credentials**: Stored in WordPress options table
-- **Asset Versioning**: Uses datetime stamps for development cache-busting
-- **Debug Mode**: Enable WP_DEBUG and WP_DEBUG_LOG for development
+#### 1. Project Initialization
 
-### Plugin Dependencies
-- **WordPress Core**: Only external dependency
-- **Bootstrap 5**: Required for styling (loaded via theme)
-- **jQuery**: WordPress default jQuery
-- **FullCalendar**: For calendar functionality
-- **No Build Tools**: Pure PHP approach without package.json, composer.json, webpack, etc.
-
-### Development Setup Steps
-1. **Install Local WordPress Environment**: XAMPP, WAMP, or Local
-2. **Enable Debug Mode**: Set WP_DEBUG=true in wp-config.php
-3. **Configure PostgreSQL**: Set up external database connection
-4. **Activate Plugin**: WordPress Admin → Plugins → Activate "WeCoza Classes Plugin"
-5. **Test Functionality**: Create test pages with shortcodes
-
-## Architecture Overview
-
-### MVC Structure
-The plugin follows strict MVC architecture with namespace `WeCozaClasses\`:
-
-- **Controllers** (`app/Controllers/`): Handle business logic and request routing
-  - `ClassController.php`: Main class management, CRUD operations, calendar integration
-  - `ClassTypesController.php`: Class types and subjects via AJAX
-  - `PublicHolidaysController.php`: Static South African holidays, calendar events
-
-- **Models** (`app/Models/`): Database interaction and data structures
-  - `ClassModel.php`: Class data handling with PostgreSQL integration
-
-- **Views** (`app/Views/`): Presentation layer with component-based architecture
-  - `components/`: Reusable form components and display templates
-  - `class-capture-partials/`: Create/update form partials
-
-- **Services** (`app/Services/`): Shared functionality
-  - `Database/DatabaseService.php`: PostgreSQL connection management
-
-### Bootstrap System
-- `app/bootstrap.php`: Core application initialization with autoloader
-- `includes/class-wecoza-classes-plugin.php`: Main plugin orchestration
-- `config/app.php`: Centralized configuration for all plugin aspects
-
-### Database Integration
-- **Primary Database**: PostgreSQL (not WordPress database)
-- **External Database**: Classes data is stored in DigitalOcean PostgreSQL at `db-wecoza-3-do-user-17263152-0.m.db.ondigitalocean.com:25060/defaultdb`
-- **Connection**: Configured via WordPress options, fallback to config defaults
-- **IMPORTANT**: WordPress's `$wpdb` does NOT contain classes data - use `DatabaseService::getInstance()` for PostgreSQL access
-- **Schema**: Full schema in `schema/classes_schema.sql`
-- **Data Format**: JSONB fields for flexible schedule data storage
-- **Tables**: Classes, clients, agents, sites, learners with full relationship mapping
-
-### Asset Architecture
-- **JavaScript**: Component-based with specific responsibilities
-  - `class-schedule-form.js`: Advanced scheduling with holiday detection
-  - `class-capture.js`: Form validation and submission
-  - `learner-level-utils.js`: Auto-population logic for learner levels
-  - `classes-table-search.js`: Real-time search with pagination
-  - `wecoza-calendar.js`: FullCalendar integration
-- **CSS**: Bootstrap 5 compatible, integrated with theme styles
-  - **Stylesheet Location**: All stylesheets are in `/opt/lampp/htdocs/wecoza/wp-content/themes/wecoza_3_child_theme/includes/css`
-  - **Primary Stylesheet**: `ydcoza-styles.css` is the ONLY stylesheet that should be updated
-- **Versioning**: Dynamic timestamps prevent caching issues during development
-
-### Configuration System
-All configuration centralized in `config/app.php`:
-- Database connections and settings
-- Shortcode registration and routing
-- AJAX endpoint definitions with public/private access
-- Asset management and loading
-- Validation rules and constraints
-- User capabilities and permissions
-
-### Shortcode System
-Three main shortcodes with controller routing:
-- `[wecoza_capture_class]`: Form for creating/editing classes
-- `[wecoza_display_classes]`: Searchable table of all classes
-- `[wecoza_display_single_class]`: Detailed single class view
-
-Each shortcode maps to controller methods via configuration.
-
-### Public Holidays Integration
-- **Status**: Fully active and restored in create-class.php (lines 300-354)
-- **Source**: Static South African holidays in `PublicHolidaysController.php`
-- **Detection**: Smart conflict detection only shows holidays that fall on scheduled class days
-- **Override System**: Individual and bulk override capabilities with hidden form input
-- **Form Integration**: Template-based dynamic holiday row generation
-- **UI Features**: Skip All/Override All bulk actions, real-time status badges
-- **Integration**: Holidays factor into end date calculations and schedule generation
-
-### Schedule Data Format
-Classes support complex scheduling with JSONB storage:
-- **V2.0 Format**: Per-day time configuration with individual day settings
-- **Patterns**: Weekly, bi-weekly, monthly with flexible day selection
-- **Holiday Handling**: Override system for including holidays in schedules
-- **Exception Dates**: Client cancellations, agent absences with reason tracking
-
-### AJAX Architecture
-- **Endpoints**: Defined in `config/app.php` with public/private access control
-- **Nonce Security**: WordPress nonce verification for all authenticated endpoints
-- **Error Handling**: Structured JSON responses with error logging
-- **Data Flow**: Form submission → validation → database storage → response
-
-### Development Workflow
-
-#### Code Development Process
-1. **Edit Files**: Direct PHP/JavaScript file editing (no build step required)
-2. **Test Changes**: Refresh WordPress pages to see changes immediately
-3. **Debug Issues**: Monitor WordPress debug logs and browser console
-4. **Validate**: Test all affected functionality manually
-5. **Commit Changes**: Git commit with descriptive messages
-
-#### Development Workflow Steps
-1. **Local Development**: Make changes to plugin files directly
-2. **Immediate Testing**: No compilation needed - changes visible immediately
-3. **Error Checking**: Monitor wp-content/debug.log for PHP errors
-4. **Browser Testing**: Use DevTools to check JavaScript functionality
-5. **Database Validation**: Test PostgreSQL operations via DatabaseService
-6. **Manual Testing**: Test all shortcodes and admin functionality
-
-#### Debugging Process
-- **WordPress Debug**: Enable WP_DEBUG and WP_DEBUG_LOG in wp-config.php
-- **Error Logs**: Check wp-content/debug.log for PHP errors
-- **Console Debugging**: Use browser DevTools console for JavaScript issues
-- **Network Monitoring**: Monitor AJAX requests in browser DevTools
-- **Database Debugging**: Use PostgreSQL client to verify database operations
-- **PHP Debugging**: Add error_log() statements for debugging
-
-#### Deployment Process
-1. **Version Update**: Update version number in main plugin file
-2. **Asset Versioning**: Change from datetime to static version numbers
-3. **Database Backup**: Backup PostgreSQL database before deployment
-4. **File Upload**: Upload changed files to production server
-5. **Plugin Reactivation**: Reactivate plugin to run any new migrations
-6. **Testing**: Verify all functionality works in production environment
-
-#### Documentation Management
-- **Daily Reports**: Development tracking in `daily-updates/`
-  - `WEC-DAILY-WORK-REPORT-*.md`: Generated daily reports with commit analysis
-  - `end-of-day-report.md`: Template for generating daily development reports
-- **Reference Documentation**: Analysis reports in `reference/` for complex features
-- **Migration System**: Database migrations in `includes/migrations/`
-- **Version Control**: Git-based with descriptive commit messages
-- **Documentation**: CLAUDE.md for development guidance and README.md for user documentation
-
-### WordPress Integration
-- **Hooks**: Minimal WordPress dependency with clean separation
-- **Capabilities**: Custom capability checking for class management
-- **Options**: Database settings stored in WordPress options table
-- **Internationalization**: Text domain support with translation ready strings
-
-### Data Validation
-- **Frontend**: JavaScript validation with real-time feedback
-- **Backend**: Server-side validation in controllers with sanitization
-- **Rules**: Centralized validation configuration in `config/app.php`
-- **Security**: Input sanitization and nonce verification for all operations
-
-## Important Development Notes
-
-### PostgreSQL Dependency
-This plugin requires PostgreSQL database connection. WordPress database is NOT used for class data. Database connection must be configured before plugin activation.
-
-**Critical**: All classes, learners, agents, sites, and related data are stored in an external PostgreSQL database on DigitalOcean, NOT in the WordPress database. Never use `global $wpdb` to query classes data - always use the DatabaseService class.
-
-### Calendar Integration
-The Public Holidays Section is **FULLY ACTIVE** in the create-class.php form. Recent commits restored this functionality after it was temporarily disabled. Holiday detection requires `window.wecozaPublicHolidays` to be available. Data is localized via `ClassController.php` and consumed by scheduling JavaScript.
-
-### Form Validation
-Forms use Bootstrap validation classes with custom JavaScript. Server-side validation mirrors client-side rules defined in configuration.
-
-### Search and Pagination
-Classes table implements client-side search with debounced input and Bootstrap pagination. No AJAX required for search functionality.
-
-### Autoloader
-Custom PSR-4 compatible autoloader in `app/bootstrap.php` handles namespace resolution for all plugin classes.
-
-### Asset Versioning
-Development uses datetime stamps for cache busting. Production should use static version numbers.
-
-### Testing Strategy
-No automated test suite. Testing performed via WordPress admin interface and browser-based JavaScript functionality verification.
-
-## Database Migration System
-
-### Migration Files
-- **Location**: `includes/migrations/`
-- **Available Migrations**:
-  - `create-classes-table.php` - Main classes table creation and setup
-  - `add_exam_learners_field.sql` - Adds exam learners field to existing tables
-
-### Migration Execution
-- **Activation Hook**: Runs automatically during plugin activation
-- **Manual Execution**: Via WordPress admin (plugin reactivation)
-- **Rollback**: Available via plugin uninstall hook
-- **Status Tracking**: Migration status tracked in WordPress options
-
-### Schema Management
-- **Primary Schema**: `schema/classes_schema.sql` - Complete database schema
-- **Version Control**: Schema changes tracked via individual migration files
-- **Database Service**: Use `WeCozaClasses\Services\Database\DatabaseService` for all database operations
-- **Migration Format**: PHP files for complex migrations, SQL files for simple schema changes
-
-### Running Migrations
 ```bash
-# Migrations run automatically during plugin activation
-# To manually run migrations:
-# 1. Deactivate plugin in WordPress admin
-# 2. Reactivate plugin to trigger migration hooks
-# 3. Check WordPress debug log for migration status
-# 4. Verify database changes via PostgreSQL client
+# Initialize Task Master
+task-master init
+
+# Create or obtain PRD, then parse it
+task-master parse-prd .taskmaster/docs/prd.txt
+
+# Analyze complexity and expand tasks
+task-master analyze-complexity --research
+task-master expand --all --research
 ```
 
-### Reference Documentation System
-The `reference/` directory contains detailed analysis reports for complex features:
-- **Analysis Reports**: In-depth technical documentation for major features
-- **Implementation Details**: Code structure, data flow, and integration patterns
-- **Current Status**: Up-to-date assessment of feature states and recent changes
-- **Development Context**: Essential information for understanding complex implementations
+If tasks already exist, another PRD can be parsed (with new information only!) using parse-prd with --append flag. This will add the generated tasks to the existing list of tasks..
 
-Use these reports when working on related features or debugging complex functionality.
+#### 2. Daily Development Loop
+
+```bash
+# Start each session
+task-master next                           # Find next available task
+task-master show <id>                     # Review task details
+
+# During implementation, check in code context into the tasks and subtasks
+task-master update-subtask --id=<id> --prompt="implementation notes..."
+
+# Complete tasks
+task-master set-status --id=<id> --status=done
+```
+
+#### 3. Multi-Claude Workflows
+
+For complex projects, use multiple Claude Code sessions:
+
+```bash
+# Terminal 1: Main implementation
+cd project && claude
+
+# Terminal 2: Testing and validation
+cd project-test-worktree && claude
+
+# Terminal 3: Documentation updates
+cd project-docs-worktree && claude
+```
+
+### Custom Slash Commands
+
+Create `.claude/commands/taskmaster-next.md`:
+
+```markdown
+Find the next available Task Master task and show its details.
+
+Steps:
+
+1. Run `task-master next` to get the next task
+2. If a task is available, run `task-master show <id>` for full details
+3. Provide a summary of what needs to be implemented
+4. Suggest the first implementation step
+```
+
+Create `.claude/commands/taskmaster-complete.md`:
+
+```markdown
+Complete a Task Master task: $ARGUMENTS
+
+Steps:
+
+1. Review the current task with `task-master show $ARGUMENTS`
+2. Verify all implementation is complete
+3. Run any tests related to this task
+4. Mark as complete: `task-master set-status --id=$ARGUMENTS --status=done`
+5. Show the next available task with `task-master next`
+```
+
+## Tool Allowlist Recommendations
+
+Add to `.claude/settings.json`:
+
+```json
+{
+  "allowedTools": [
+    "Edit",
+    "Bash(task-master *)",
+    "Bash(git commit:*)",
+    "Bash(git add:*)",
+    "Bash(npm run *)",
+    "mcp__task_master_ai__*"
+  ]
+}
+```
+
+## Configuration & Setup
+
+### API Keys Required
+
+At least **one** of these API keys must be configured:
+
+- `ANTHROPIC_API_KEY` (Claude models) - **Recommended**
+- `PERPLEXITY_API_KEY` (Research features) - **Highly recommended**
+- `OPENAI_API_KEY` (GPT models)
+- `GOOGLE_API_KEY` (Gemini models)
+- `MISTRAL_API_KEY` (Mistral models)
+- `OPENROUTER_API_KEY` (Multiple models)
+- `XAI_API_KEY` (Grok models)
+
+An API key is required for any provider used across any of the 3 roles defined in the `models` command.
+
+### Model Configuration
+
+```bash
+# Interactive setup (recommended)
+task-master models --setup
+
+# Set specific models
+task-master models --set-main claude-3-5-sonnet-20241022
+task-master models --set-research perplexity-llama-3.1-sonar-large-128k-online
+task-master models --set-fallback gpt-4o-mini
+```
+
+## Task Structure & IDs
+
+### Task ID Format
+
+- Main tasks: `1`, `2`, `3`, etc.
+- Subtasks: `1.1`, `1.2`, `2.1`, etc.
+- Sub-subtasks: `1.1.1`, `1.1.2`, etc.
+
+### Task Status Values
+
+- `pending` - Ready to work on
+- `in-progress` - Currently being worked on
+- `done` - Completed and verified
+- `deferred` - Postponed
+- `cancelled` - No longer needed
+- `blocked` - Waiting on external factors
+
+### Task Fields
+
+```json
+{
+  "id": "1.2",
+  "title": "Implement user authentication",
+  "description": "Set up JWT-based auth system",
+  "status": "pending",
+  "priority": "high",
+  "dependencies": ["1.1"],
+  "details": "Use bcrypt for hashing, JWT for tokens...",
+  "testStrategy": "Unit tests for auth functions, integration tests for login flow",
+  "subtasks": []
+}
+```
+
+## Claude Code Best Practices with Task Master
+
+### Context Management
+
+- Use `/clear` between different tasks to maintain focus
+- This CLAUDE.md file is automatically loaded for context
+- Use `task-master show <id>` to pull specific task context when needed
+
+### Iterative Implementation
+
+1. `task-master show <subtask-id>` - Understand requirements
+2. Explore codebase and plan implementation
+3. `task-master update-subtask --id=<id> --prompt="detailed plan"` - Log plan
+4. `task-master set-status --id=<id> --status=in-progress` - Start work
+5. Implement code following logged plan
+6. `task-master update-subtask --id=<id> --prompt="what worked/didn't work"` - Log progress
+7. `task-master set-status --id=<id> --status=done` - Complete task
+
+### Complex Workflows with Checklists
+
+For large migrations or multi-step processes:
+
+1. Create a markdown PRD file describing the new changes: `touch task-migration-checklist.md` (prds can be .txt or .md)
+2. Use Taskmaster to parse the new prd with `task-master parse-prd --append` (also available in MCP)
+3. Use Taskmaster to expand the newly generated tasks into subtasks. Consdier using `analyze-complexity` with the correct --to and --from IDs (the new ids) to identify the ideal subtask amounts for each task. Then expand them.
+4. Work through items systematically, checking them off as completed
+5. Use `task-master update-subtask` to log progress on each task/subtask and/or updating/researching them before/during implementation if getting stuck
+
+### Git Integration
+
+Task Master works well with `gh` CLI:
+
+```bash
+# Create PR for completed task
+gh pr create --title "Complete task 1.2: User authentication" --body "Implements JWT auth system as specified in task 1.2"
+
+# Reference task in commits
+git commit -m "feat: implement JWT auth (task 1.2)"
+```
+
+### Parallel Development with Git Worktrees
+
+```bash
+# Create worktrees for parallel task development
+git worktree add ../project-auth feature/auth-system
+git worktree add ../project-api feature/api-refactor
+
+# Run Claude Code in each worktree
+cd ../project-auth && claude    # Terminal 1: Auth work
+cd ../project-api && claude     # Terminal 2: API work
+```
+
+## Troubleshooting
+
+### AI Commands Failing
+
+```bash
+# Check API keys are configured
+cat .env                           # For CLI usage
+
+# Verify model configuration
+task-master models
+
+# Test with different model
+task-master models --set-fallback gpt-4o-mini
+```
+
+### MCP Connection Issues
+
+- Check `.mcp.json` configuration
+- Verify Node.js installation
+- Use `--mcp-debug` flag when starting Claude Code
+- Use CLI as fallback if MCP unavailable
+
+### Task File Sync Issues
+
+```bash
+# Regenerate task files from tasks.json
+task-master generate
+
+# Fix dependency issues
+task-master fix-dependencies
+```
+
+DO NOT RE-INITIALIZE. That will not do anything beyond re-adding the same Taskmaster core files.
+
+## Important Notes
+
+### AI-Powered Operations
+
+These commands make AI calls and may take up to a minute:
+
+- `parse_prd` / `task-master parse-prd`
+- `analyze_project_complexity` / `task-master analyze-complexity`
+- `expand_task` / `task-master expand`
+- `expand_all` / `task-master expand --all`
+- `add_task` / `task-master add-task`
+- `update` / `task-master update`
+- `update_task` / `task-master update-task`
+- `update_subtask` / `task-master update-subtask`
+
+### File Management
+
+- Never manually edit `tasks.json` - use commands instead
+- Never manually edit `.taskmaster/config.json` - use `task-master models`
+- Task markdown files in `tasks/` are auto-generated
+- Run `task-master generate` after manual changes to tasks.json
+
+### Claude Code Session Management
+
+- Use `/clear` frequently to maintain focused context
+- Create custom slash commands for repeated Task Master workflows
+- Configure tool allowlist to streamline permissions
+- Use headless mode for automation: `claude -p "task-master next"`
+
+### Multi-Task Updates
+
+- Use `update --from=<id>` to update multiple future tasks
+- Use `update-task --id=<id>` for single task updates
+- Use `update-subtask --id=<id>` for implementation logging
+
+### Research Mode
+
+- Add `--research` flag for research-based AI enhancement
+- Requires a research model API key like Perplexity (`PERPLEXITY_API_KEY`) in environment
+- Provides more informed task creation and updates
+- Recommended for complex technical tasks
+
+---
+
+_This guide ensures Claude Code has immediate access to Task Master's essential functionality for agentic development workflows._

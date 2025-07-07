@@ -1,0 +1,76 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": "1",
+        "title": "Investigate level/module data flow issue",
+        "description": "Analyze current implementation to understand why level/module data loads in class learners section but doesn't save to database",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [],
+        "details": "Check create-class.php, update-class.php, and class-schedule-form.js to understand data flow",
+        "testStrategy": "Examine code flow and identify database save operations",
+        "subtasks": []
+      },
+      {
+        "id": "2",
+        "title": "Fix database save functionality for level/module data",
+        "description": "Implement proper database save operations for level/module data in class learners section",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [
+          "1"
+        ],
+        "details": "Ensure level/module data is properly saved when creating/updating classes",
+        "testStrategy": "Test class creation/update and verify data persistence in database",
+        "subtasks": []
+      },
+      {
+        "id": "3",
+        "title": "Fix exam learners section auto-population",
+        "description": "Implement auto-population of level/module data in exam learners section",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": [
+          "2"
+        ],
+        "details": "Ensure exam learners section shows correct level/module data instead of 'Select Level'",
+        "testStrategy": "Test exam learners section displays and verify auto-population works",
+        "subtasks": []
+      },
+      {
+        "id": "4",
+        "title": "Fix update script level/module population",
+        "description": "Ensure update script correctly populates and saves level/module data",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          "2"
+        ],
+        "details": "Update script should load existing level/module data and allow saving changes",
+        "testStrategy": "Test class update functionality and verify level/module data handling",
+        "subtasks": []
+      },
+      {
+        "id": "5",
+        "title": "Test and validate all fixes",
+        "description": "Comprehensive testing of all level/module data functionality",
+        "status": "pending",
+        "priority": "medium",
+        "dependencies": [
+          "2",
+          "3",
+          "4"
+        ],
+        "details": "Test create, update, and display functionality to ensure data consistency",
+        "testStrategy": "Manual testing of all workflows and database verification",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-07-07T17:56:34.893Z",
+      "updated": "2025-07-07T17:56:34.893Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

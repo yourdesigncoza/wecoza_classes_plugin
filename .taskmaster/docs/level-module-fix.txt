@@ -1,0 +1,30 @@
+# Level/Module Data Persistence Fix
+
+## Problem Statement
+The level/module data in the class management system has the following issues:
+1. Data loads correctly in the class learners section (shows "RLN")
+2. Data is NOT being saved to the database
+3. Exam learners section shows "Select Level" instead of populated data
+4. Update script has the same population issue
+
+## Components Affected
+- #class-learners-container: Shows populated data but doesn't save
+- #exam-learners-list: Shows "Select Level" instead of auto-populated data
+
+## Files Involved
+- app/Views/components/class-capture-partials/create-class.php
+- app/Views/components/class-capture-partials/update-class.php  
+- assets/js/class-schedule-form.js
+
+## Requirements
+1. Fix database save functionality for level/module data in class learners section
+2. Auto-populate level/module data in exam learners section 
+3. Ensure update script correctly populates and saves level/module data
+4. Maintain data consistency between class learners and exam learners sections
+5. Test all functionality to ensure data persistence works correctly
+
+## Success Criteria
+- Level/module data is saved to database when creating/updating classes
+- Exam learners section auto-populates with correct level/module data
+- Update forms correctly display and save existing level/module data
+- Data consistency maintained across all sections

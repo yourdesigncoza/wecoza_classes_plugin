@@ -44,21 +44,22 @@ so I know the file loaded correctly.
 
 ### Assets to reference if checked
 
-- [ ] schema/classes_schema.sql  
+- [x] schema/classes_schema.sql  
 - [ ] captured-exam-learners.json  
-- [ ] captured.json  
+- [x] captured.json  
 
 ### View Files to examine if checked / reference
 
-- [ ] app/Views/components/class-capture-partials/update-class.php  
+- [x] app/Views/components/class-capture-partials/update-class.php  
 - [ ] app/Views/components/class-capture-form.view.php  
-- [ ] app/Views/components/class-capture-partials/create-class.php  
+- [x] app/Views/components/class-capture-partials/create-class.php  
 - [ ] app/Views/components/single-class-display.view.php  
 
 ### Screenshots to reference if checked
 
 - [ ] ![alt text](<Screenshot from 2025-07-06 16-11-21.png>)  
 - [ ] ![alt text](<Screenshot from 2025-07-06 16-13-22.png>)  
+- [x] ![alt text](<Screenshot from 2025-07-07 19-36-33.png>)
 
 ### Code Snippets to reference if checked
 

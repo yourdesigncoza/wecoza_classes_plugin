@@ -53,6 +53,9 @@
         // Initialize learner selection functionality
         initLearnerSelection();
 
+        // Initialize auto level population on subject change
+        initSubjectChangeLevelPopulation();
+
         // Initialize backup agents functionality
         initBackupAgents();
 
@@ -1266,8 +1269,10 @@
 
         // Function to update the hidden field with learner data
         function updateLearnersData() {
+            console.log('💾 updateLearnersData called with:', classLearners);
             const jsonData = JSON.stringify(classLearners);
             $classLearnersData.val(jsonData);
+            console.log('💾 Saved to hidden field:', jsonData);
 
             // Trigger custom event for learner data change
             $(document).trigger('classLearnersChanged', [classLearners]);
@@ -1276,9 +1281,12 @@
 
         // Handle level/status changes
         $(document).on('change', '.learner-level-select, .learner-status-select', function() {
+            console.log('🔥 Change event triggered on:', this, 'Value:', $(this).val());
             const learnerId = $(this).data('learner-id');
             const field = $(this).hasClass('learner-level-select') ? 'level' : 'status';
             const value = $(this).val();
+
+            console.log('🔥 Processing change - Learner ID:', learnerId, 'Field:', field, 'Value:', value);
 
             // Convert to string to ensure consistent comparison
             const learnerIdStr = String(learnerId);
@@ -1286,10 +1294,12 @@
             // Update the learner data - ensure both IDs are strings for comparison
             const learner = classLearners.find(l => String(l.id) === learnerIdStr);
             if (learner) {
+                console.log('🔥 Found learner, updating:', learner, 'Setting', field, 'to:', value);
                 learner[field] = value;
                 updateLearnersData();
+                console.log('🔥 Updated learner data:', learner);
             } else {
-                console.warn('Learner not found for ID:', learnerIdStr);
+                console.warn('❌ Learner not found for ID:', learnerIdStr);
             }
         });
 
@@ -1370,6 +1380,36 @@
                 console.error('Error parsing existing learner data:', e);
             }
         }
+    }
+
+    /**
+     * Initialize auto level population when class subject changes
+     * This ensures learner levels are auto-populated when subject is selected
+     */
+    function initSubjectChangeLevelPopulation() {
+        const classSubjectSelect = document.getElementById('class_subject');
+        
+        if (!classSubjectSelect) {
+            return;
+        }
+
+        // Handle class subject change to auto-populate learner levels
+        classSubjectSelect.addEventListener('change', function() {
+            const selectedSubject = this.value;
+            
+            console.log('🎯 Class subject changed to:', selectedSubject);
+            
+            if (selectedSubject && selectedSubject.trim() !== '') {
+                // Use setTimeout to ensure any learners already added to the table are processed
+                setTimeout(function() {
+                    if (typeof classes_populate_learner_levels === 'function') {
+                        classes_populate_learner_levels(selectedSubject);
+                    } else if (typeof window.wecoza_auto_populate_learner_levels === 'function') {
+                        window.wecoza_auto_populate_learner_levels(selectedSubject);
+                    }
+                }, 50); // Small delay to ensure DOM is ready
+            }
+        });
     }
 
     /**

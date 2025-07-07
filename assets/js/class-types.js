@@ -46,8 +46,13 @@ function classes_populate_learner_levels(subjectId) {
             // Set the value to the subject ID
             select.value = subjectId;
 
-            // Trigger change event to update any dependent logic
-            select.dispatchEvent(new Event('change'));
+            // Trigger change event using jQuery to ensure compatibility with jQuery event handlers
+            if (typeof $ !== 'undefined') {
+                $(select).trigger('change');
+            } else {
+                // Fallback to native event if jQuery is not available
+                select.dispatchEvent(new Event('change'));
+            }
 
             console.log(`✅ Set learner level select ${index + 1} to:`, subjectId);
         });
@@ -56,7 +61,13 @@ function classes_populate_learner_levels(subjectId) {
         // If no subject selected, reset all selects
         learnerLevelSelects.forEach(function(select, index) {
             select.value = '';
-            select.dispatchEvent(new Event('change'));
+            // Trigger change event using jQuery to ensure compatibility with jQuery event handlers
+            if (typeof $ !== 'undefined') {
+                $(select).trigger('change');
+            } else {
+                // Fallback to native event if jQuery is not available
+                select.dispatchEvent(new Event('change'));
+            }
             console.log(`🔄 Reset learner level select ${index + 1}`);
         });
         console.log('🔄 Reset all learner level selects');

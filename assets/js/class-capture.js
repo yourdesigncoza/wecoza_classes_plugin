@@ -478,7 +478,9 @@ function showCustomAlert(message) {
 
             // Add each exam learner to the table
             examLearners.forEach(function(learner) {
+                console.log('🎨 Generating UI for exam learner:', learner);
                 const levelSelectHtml = classes_generate_learner_level_select_html(learner.id, learner.level || '');
+                console.log('🎨 Generated level select HTML for level "' + (learner.level || '') + '"');
                 const statusOptions = [
                     { value: 'CIC - Currently in Class', text: 'CIC - Currently in Class' },
                     { value: 'RBE - Removed by Employer', text: 'RBE - Removed by Employer' },
@@ -514,6 +516,34 @@ function showCustomAlert(message) {
                 feather.replace();
             }
 
+            // 🎯 DIRECT AUTO-POPULATION: Set exam learners level to current class subject
+            // This bypasses the broken inheritance chain completely
+            const classSubjectSelect = document.getElementById('class_subject');
+            if (classSubjectSelect && classSubjectSelect.value) {
+                const selectedSubject = classSubjectSelect.value;
+                console.log('🚀 Auto-populating exam learner levels with subject:', selectedSubject);
+                
+                // Find all exam learner level selects and set them to current subject
+                const examLearnerLevelSelects = $examLearnersTbody.find('.learner-level-select');
+                console.log('🎯 Found', examLearnerLevelSelects.length, 'exam learner level selects to populate');
+                
+                examLearnerLevelSelects.each(function(index) {
+                    const $select = $(this);
+                    const learnerId = $select.data('learner-id');
+                    
+                    // Set the select value to current subject
+                    $select.val(selectedSubject);
+                    console.log('✅ Set exam learner', learnerId, 'level to:', selectedSubject);
+                    
+                    // Trigger change event to ensure any handlers fire
+                    $select.trigger('change');
+                });
+                
+                console.log('🎉 Completed auto-population of', examLearnerLevelSelects.length, 'exam learner levels');
+            } else {
+                console.log('⚠️ No class subject selected, skipping exam learner auto-population');
+            }
+
             console.log('Updated exam learners display with', examLearners.length, 'learners');
         }
 
@@ -544,7 +574,9 @@ function showCustomAlert(message) {
 
                 // Get learner's level and status from class learners data
                 const classLearnersData = JSON.parse($('#class_learners_data').val() || '[]');
+                console.log('🔍 Class learners data for inheritance:', classLearnersData);
                 const classLearner = classLearnersData.find(cl => String(cl.id) === learnerIdStr);
+                console.log('🔍 Found class learner for ID', learnerIdStr, ':', classLearner);
                 
                 // Add learner to exam learners array (store as string for consistency)
                 const examLearnerData = {
@@ -555,7 +587,7 @@ function showCustomAlert(message) {
                 };
 
                 examLearners.push(examLearnerData);
-                console.log('Added exam learner:', examLearnerData);
+                console.log('✅ Added exam learner with inherited data:', examLearnerData);
             });
 
             // Update the display and data
