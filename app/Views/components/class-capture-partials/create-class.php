@@ -631,6 +631,8 @@
                         <thead>
                            <tr>
                               <th>Learner</th>
+                              <th>Level/Module</th>
+                              <th>Status</th>
                               <th>Actions</th>
                            </tr>
                         </thead>

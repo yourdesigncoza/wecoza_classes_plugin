@@ -1,152 +1,67 @@
 jquery-migrate.min.js?ver=3.4.1:2 JQMIGRATE: Migrate is installed, version 3.4.1
-class-capture.js?ver=20250703162800:598 Date history functionality initialized (placeholder)
-class-capture.js?ver=20250703162800:603 QA visits functionality initialized (placeholder)
-class-capture.js?ver=20250703162800:608 Class learners functionality initialized (placeholder)
-class-capture.js?ver=20250703162800:613 Backup agents functionality initialized (placeholder)
-class-capture.js?ver=20250703162800:618 Agent replacements functionality initialized (placeholder)
-class-schedule-form.js?ver=20250703162800:2168 === Schedule Data Collection ===
-class-schedule-form.js?ver=20250703162800:2169 Pattern: weekly
-class-schedule-form.js?ver=20250703162800:2170 Start Date: 2025-07-07
-class-schedule-form.js?ver=20250703162800:2171 End Date: 2027-04-13
-class-schedule-form.js?ver=20250703162800:2172 Selected Days: (2) ['Tuesday', 'Wednesday']
-class-schedule-form.js?ver=20250703162800:2173 Time Data: {mode: 'per-day', perDayTimes: {…}}
-class-schedule-form.js?ver=20250703162800:2174 Full collected data: {
-  "pattern": "weekly",
-  "startDate": "2025-07-07",
-  "endDate": "2027-04-13",
-  "dayOfMonth": null,
-  "timeData": {
-    "mode": "per-day",
-    "perDayTimes": {}
-  },
-  "selectedDays": [
-    "Tuesday",
-    "Wednesday"
-  ],
-  "exceptionDates": [
-    {
-      "date": "2025-07-22",
-      "reason": "Other"
-    }
-  ],
-  "holidayOverrides": {},
-  "lastUpdated": "2025-07-03T16:28:04.887Z",
-  "version": "2.0",
-  "metadata": {
-    "lastUpdated": "2025-07-03T16:28:04.887Z",
-    "validatedAt": "2025-07-03T16:28:04.887Z"
-  }
-}
-class-schedule-form.js?ver=20250703162800:2223 === Creating Hidden Fields for Schedule Data ===
-class-schedule-form.js?ver=20250703162800:2224 Container found: true
-class-schedule-form.js?ver=20250703162800:2310 Created hidden field: schedule_data[pattern] = weekly
-class-schedule-form.js?ver=20250703162800:2310 Created hidden field: schedule_data[start_date] = 2025-07-07
-class-schedule-form.js?ver=20250703162800:2310 Created hidden field: schedule_data[end_date] = 2027-04-13
-class-schedule-form.js?ver=20250703162800:2312 Skipped empty hidden field: schedule_data[day_of_month]
-createHiddenField @ class-schedule-form.js?ver=20250703162800:2312
-updateHiddenFormFields @ class-schedule-form.js?ver=20250703162800:2233
-updateScheduleData @ class-schedule-form.js?ver=20250703162800:2114
-(anonymous) @ class-schedule-form.js?ver=20250703162800:156
-dispatch @ jquery.min.js?ver=3.7.1:2
-(anonymous) @ jquery.min.js?ver=3.7.1:2
-trigger @ jquery.min.js?ver=3.7.1:2
-(anonymous) @ jquery.min.js?ver=3.7.1:2
-each @ jquery.min.js?ver=3.7.1:2
-each @ jquery.min.js?ver=3.7.1:2
-trigger @ jquery.min.js?ver=3.7.1:2
-initSchedulePatternSelection @ class-schedule-form.js?ver=20250703162800:210
-initClassScheduleForm @ class-schedule-form.js?ver=20250703162800:19
-(anonymous) @ class-schedule-form.js?ver=20250703162800:3251
-e @ jquery.min.js?ver=3.7.1:2
-(anonymous) @ jquery.min.js?ver=3.7.1:2
-setTimeout
-(anonymous) @ jquery.min.js?ver=3.7.1:2
-c @ jquery.min.js?ver=3.7.1:2
-fireWith @ jquery.min.js?ver=3.7.1:2
-fire @ jquery.min.js?ver=3.7.1:2
-c @ jquery.min.js?ver=3.7.1:2
-fireWith @ jquery.min.js?ver=3.7.1:2
-ready @ jquery.min.js?ver=3.7.1:2
-P @ jquery.min.js?ver=3.7.1:2
-class-schedule-form.js?ver=20250703162800:2310 Created hidden field: schedule_data[version] = 2.0
-class-schedule-form.js?ver=20250703162800:2310 Created hidden field: schedule_data[last_updated] = 2025-07-03T16:28:04.887Z
-class-schedule-form.js?ver=20250703162800:2310 Created hidden field: schedule_data[time_mode] = per_day
-class-schedule-form.js?ver=20250703162800:2310 Created hidden field: schedule_data[selected_days][0] = Tuesday
-class-schedule-form.js?ver=20250703162800:2310 Created hidden field: schedule_data[selected_days][1] = Wednesday
-class-schedule-form.js?ver=20250703162800:2310 Created hidden field: schedule_data[exception_dates][0][date] = 2025-07-22
-class-schedule-form.js?ver=20250703162800:2310 Created hidden field: schedule_data[exception_dates][0][reason] = Other
-class-schedule-form.js?ver=20250703162800:2284 Total hidden fields created: 10
-jquery.min.js?ver=3.7.1:2 jQuery.Deferred exception: Cannot read properties of undefined (reading '2025-09-24') TypeError: Cannot read properties of undefined (reading '2025-09-24')
-    at http://localhost/wecoza/wp-content/plugins/wecoza-classes-plugin/assets/js/class-schedule-form.js?ver=20250703162800:1713:40
-    at Array.forEach (<anonymous>)
-    at updateHolidaysDisplay (http://localhost/wecoza/wp-content/plugins/wecoza-classes-plugin/assets/js/class-schedule-form.js?ver=20250703162800:1684:29)
-    at checkForHolidays (http://localhost/wecoza/wp-content/plugins/wecoza-classes-plugin/assets/js/class-schedule-form.js?ver=20250703162800:1645:9)
-    at HTMLSelectElement.<anonymous> (http://localhost/wecoza/wp-content/plugins/wecoza-classes-plugin/assets/js/class-schedule-form.js?ver=20250703162800:162:17)
-    at HTMLSelectElement.dispatch (http://localhost/wecoza/wp-includes/js/jquery/jquery.min.js?ver=3.7.1:2:40035)
-    at HTMLSelectElement.<anonymous> (http://localhost/wecoza/wp-includes/js/jquery/jquery.min.js?ver=3.7.1:2:38006)
-    at Object.trigger (http://localhost/wecoza/wp-includes/js/jquery/jquery.min.js?ver=3.7.1:2:70124)
-    at HTMLSelectElement.<anonymous> (http://localhost/wecoza/wp-includes/js/jquery/jquery.min.js?ver=3.7.1:2:70726)
-    at ce.each (http://localhost/wecoza/wp-includes/js/jquery/jquery.min.js?ver=3.7.1:2:3129) undefined
-ce.Deferred.exceptionHook @ jquery.min.js?ver=3.7.1:2
-(anonymous) @ jquery.min.js?ver=3.7.1:2
-setTimeout
-(anonymous) @ jquery.min.js?ver=3.7.1:2
-c @ jquery.min.js?ver=3.7.1:2
-fireWith @ jquery.min.js?ver=3.7.1:2
-fire @ jquery.min.js?ver=3.7.1:2
-c @ jquery.min.js?ver=3.7.1:2
-fireWith @ jquery.min.js?ver=3.7.1:2
-ready @ jquery.min.js?ver=3.7.1:2
-P @ jquery.min.js?ver=3.7.1:2
-jquery.min.js?ver=3.7.1:2 Uncaught TypeError: Cannot read properties of undefined (reading '2025-09-24')
-    at class-schedule-form.js?ver=20250703162800:1713:40
-    at Array.forEach (<anonymous>)
-    at updateHolidaysDisplay (class-schedule-form.js?ver=20250703162800:1684:29)
-    at checkForHolidays (class-schedule-form.js?ver=20250703162800:1645:9)
-    at HTMLSelectElement.<anonymous> (class-schedule-form.js?ver=20250703162800:162:17)
-    at HTMLSelectElement.dispatch (jquery.min.js?ver=3.7.1:2:40035)
-    at HTMLSelectElement.<anonymous> (jquery.min.js?ver=3.7.1:2:38006)
-    at Object.trigger (jquery.min.js?ver=3.7.1:2:70124)
-    at HTMLSelectElement.<anonymous> (jquery.min.js?ver=3.7.1:2:70726)
-    at ce.each (jquery.min.js?ver=3.7.1:2:3129)
-(anonymous) @ class-schedule-form.js?ver=20250703162800:1713
-updateHolidaysDisplay @ class-schedule-form.js?ver=20250703162800:1684
-checkForHolidays @ class-schedule-form.js?ver=20250703162800:1645
-(anonymous) @ class-schedule-form.js?ver=20250703162800:162
-dispatch @ jquery.min.js?ver=3.7.1:2
-(anonymous) @ jquery.min.js?ver=3.7.1:2
-trigger @ jquery.min.js?ver=3.7.1:2
-(anonymous) @ jquery.min.js?ver=3.7.1:2
-each @ jquery.min.js?ver=3.7.1:2
-each @ jquery.min.js?ver=3.7.1:2
-trigger @ jquery.min.js?ver=3.7.1:2
-initSchedulePatternSelection @ class-schedule-form.js?ver=20250703162800:210
-initClassScheduleForm @ class-schedule-form.js?ver=20250703162800:19
-(anonymous) @ class-schedule-form.js?ver=20250703162800:3251
-e @ jquery.min.js?ver=3.7.1:2
-(anonymous) @ jquery.min.js?ver=3.7.1:2
-setTimeout
-(anonymous) @ jquery.min.js?ver=3.7.1:2
-c @ jquery.min.js?ver=3.7.1:2
-fireWith @ jquery.min.js?ver=3.7.1:2
-fire @ jquery.min.js?ver=3.7.1:2
-c @ jquery.min.js?ver=3.7.1:2
-fireWith @ jquery.min.js?ver=3.7.1:2
-ready @ jquery.min.js?ver=3.7.1:2
-P @ jquery.min.js?ver=3.7.1:2
-classes-table-search.js?ver=20250703162800:67 WeCoza Classes: Search input not found
-classes_init_table_search @ classes-table-search.js?ver=20250703162800:67
-(anonymous) @ classes-table-search.js?ver=20250703162800:499
-setTimeout
-(anonymous) @ classes-table-search.js?ver=20250703162800:498
-e @ jquery.min.js?ver=3.7.1:2
-(anonymous) @ jquery.min.js?ver=3.7.1:2
-setTimeout
-(anonymous) @ jquery.min.js?ver=3.7.1:2
-c @ jquery.min.js?ver=3.7.1:2
-fireWith @ jquery.min.js?ver=3.7.1:2
-fire @ jquery.min.js?ver=3.7.1:2
-c @ jquery.min.js?ver=3.7.1:2
-fireWith @ jquery.min.js?ver=3.7.1:2
-ready @ jquery.min.js?ver=3.7.1:2
-P @ jquery.min.js?ver=3.7.1:2
+new-class/?mode=update&class_id=47:1708 Pre-populated exam learners: (2) [{…}, {…}]
+class-capture.js?ver=20250704170242:500 Updated exam learners display with 2 learners
+class-capture.js?ver=20250704170242:571 Loaded existing exam learners: (2) [{…}, {…}]
+class-schedule-form.js?ver=20250704170242:1696 Holiday 2025-09-24 (Heritage Day) override value: true resolved to: true
+class-schedule-form.js?ver=20250704170242:1444 === initHolidayOverrides Debug ===
+class-schedule-form.js?ver=20250704170242:1445 Holiday overrides input value: {}
+class-schedule-form.js?ver=20250704170242:1449 Parsed existing overrides: {}
+class-schedule-form.js?ver=20250704170242:1451 Updated window.holidayOverrides: {2025-09-24: true}
+class-schedule-form.js?ver=20250704170242:1696 Holiday 2025-09-24 (Heritage Day) override value: true resolved to: true
+class-schedule-form.js?ver=20250704170242:1989 JS: Exception dates already populated by PHP, skipping JavaScript population
+class-schedule-form.js?ver=20250704170242:2002 === Holiday Overrides JavaScript Debug ===
+class-schedule-form.js?ver=20250704170242:2003 Holiday overrides from data: {2025-09-24: true}
+class-schedule-form.js?ver=20250704170242:2004 Available holiday checkboxes: 1
+class-schedule-form.js?ver=20250704170242:2009 Looking for checkbox with date 2025-09-24: found 1 elements
+class-schedule-form.js?ver=20250704170242:2012 Set checkbox for 2025-09-24 to checked
+class-schedule-form.js?ver=20250704170242:2023 Stored holiday overrides in window.holidayOverrides: {2025-09-24: true}
+class-schedule-form.js?ver=20250704170242:1696 Holiday 2025-09-24 (Heritage Day) override value: true resolved to: true
+class-schedule-form.js?ver=20250704170242:2575 === END DATE RECALCULATION DEBUG ===
+class-schedule-form.js?ver=20250704170242:2581 Start Date: 2025-07-07
+class-schedule-form.js?ver=20250704170242:2582 Class Type: GETC
+class-schedule-form.js?ver=20250704170242:2583 Pattern: weekly
+class-schedule-form.js?ver=20250704170242:2590 Time Data: {mode: 'per-day', perDayTimes: {…}}
+class-schedule-form.js?ver=20250704170242:2607 Hours per week: 1.5
+class-schedule-form.js?ver=20250704170242:2608 Using weekly calculation method
+class-schedule-form.js?ver=20250704170242:2620 Session Duration (average): 0
+class-schedule-form.js?ver=20250704170242:2621 Use Weekly Calculation: true
+class-schedule-form.js?ver=20250704170242:2628 Total Class Hours: 120
+class-schedule-form.js?ver=20250704170242:2635 Exception date rows found: 2
+class-schedule-form.js?ver=20250704170242:2649 Row 0: Added exception date 2025-07-22 (reason: Other)
+class-schedule-form.js?ver=20250704170242:2649 Row 1: Added exception date 2025-07-23 (reason: Other)
+class-schedule-form.js?ver=20250704170242:2655 Exception Dates: (2) ['2025-07-22', '2025-07-23']
+class-schedule-form.js?ver=20250704170242:2656 Expected exception dates from data: ['2025-07-22']
+class-schedule-form.js?ver=20250704170242:2672 Stop/Restart Periods: [{…}]
+class-schedule-form.js?ver=20250704170242:2673 Holiday Overrides (window.holidayOverrides): {2025-09-24: true}
+class-schedule-form.js?ver=20250704170242:2683 Weeks Needed: 80 ( 120 / 1.5 hours per week)
+class-schedule-form.js?ver=20250704170242:2702 Selected Days: (2) ['Tuesday', 'Wednesday']
+class-schedule-form.js?ver=20250704170242:2711 Day Indices: (2) [2, 3]
+class-schedule-form.js?ver=20250704170242:2818 2025-07-08 (Tuesday) - SCHEDULED (Week 1)
+class-schedule-form.js?ver=20250704170242:2818 2025-07-09 (Wednesday) - SCHEDULED (Week 1)
+class-schedule-form.js?ver=20250704170242:2867 Date 2025-07-15 (Tuesday): SKIPPED - Stop Period
+class-schedule-form.js?ver=20250704170242:2786 Week 1 completed
+class-schedule-form.js?ver=20250704170242:2818 2025-07-16 (Wednesday) - SCHEDULED (Week 2)
+class-schedule-form.js?ver=20250704170242:2766 Date 2025-07-22: Exception date
+class-schedule-form.js?ver=20250704170242:2867 Date 2025-07-22 (Tuesday): SKIPPED - Exception
+class-schedule-form.js?ver=20250704170242:2766 Date 2025-07-23: Exception date
+class-schedule-form.js?ver=20250704170242:2867 Date 2025-07-23 (Wednesday): SKIPPED - Exception
+class-schedule-form.js?ver=20250704170242:2786 Week 2 completed
+class-schedule-form.js?ver=20250704170242:2818 2025-07-29 (Tuesday) - SCHEDULED (Week 3)
+class-schedule-form.js?ver=20250704170242:2818 2025-07-30 (Wednesday) - SCHEDULED (Week 3)
+class-schedule-form.js?ver=20250704170242:2786 Week 3 completed
+class-schedule-form.js?ver=20250704170242:2786 Week 4 completed
+class-schedule-form.js?ver=20250704170242:2786 Week 5 completed
+class-schedule-form.js?ver=20250704170242:2864 Date 2025-12-16 (Tuesday): SKIPPED - Holiday (Override: false)
+class-schedule-form.js?ver=20250704170242:2864 Date 2026-06-16 (Tuesday): SKIPPED - Holiday (Override: false)
+class-schedule-form.js?ver=20250704170242:2864 Date 2026-12-16 (Wednesday): SKIPPED - Holiday (Override: false)
+class-schedule-form.js?ver=20250704170242:2786 Week 78 completed
+class-schedule-form.js?ver=20250704170242:2818 2027-01-12 (Tuesday) - SCHEDULED (Week 79)
+class-schedule-form.js?ver=20250704170242:2786 Week 79 completed
+class-schedule-form.js?ver=20250704170242:2818 2027-01-19 (Tuesday) - SCHEDULED (Week 80)
+class-schedule-form.js?ver=20250704170242:2786 Week 80 completed
+class-schedule-form.js?ver=20250704170242:2794 Target weeks (80) reached. Last scheduled date: 2027-01-20
+class-schedule-form.js?ver=20250704170242:3047 Total weeks Scheduled: 80
+class-schedule-form.js?ver=20250704170242:3048 Final End Date: 2027-01-20
+class-schedule-form.js?ver=20250704170242:3060 Expected hours from class_duration: 120
+class-schedule-form.js?ver=20250704170242:3061 Calculated hours: 120
+class-schedule-form.js?ver=20250704170242:3074 === END DATE RECALCULATION COMPLETE ===

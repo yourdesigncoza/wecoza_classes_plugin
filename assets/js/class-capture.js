@@ -478,9 +478,26 @@ function showCustomAlert(message) {
 
             // Add each exam learner to the table
             examLearners.forEach(function(learner) {
+                const levelSelectHtml = classes_generate_learner_level_select_html(learner.id, learner.level || '');
+                const statusOptions = [
+                    { value: 'CIC - Currently in Class', text: 'CIC - Currently in Class' },
+                    { value: 'RBE - Removed by Employer', text: 'RBE - Removed by Employer' },
+                    { value: 'DRO - Drop Out', text: 'DRO - Drop Out' }
+                ];
+                
+                const statusSelectHtml = `
+                    <select class="form-select form-select-sm exam-learner-status-select" data-learner-id="${learner.id}">
+                        ${statusOptions.map(opt => 
+                            `<option value="${opt.value}" ${learner.status === opt.value ? 'selected' : ''}>${opt.text}</option>`
+                        ).join('')}
+                    </select>
+                `;
+                
                 const row = `
                     <tr>
                         <td>${learner.name}</td>
+                        <td>${levelSelectHtml}</td>
+                        <td>${statusSelectHtml}</td>
                         <td>
                             <button type="button" class="btn btn-outline-danger btn-sm remove-exam-learner-btn" data-learner-id="${learner.id}">
                                 <i data-feather="trash-2" style="height:12.8px;width:12.8px;"></i>
@@ -525,10 +542,16 @@ function showCustomAlert(message) {
                     return;
                 }
 
+                // Get learner's level and status from class learners data
+                const classLearnersData = JSON.parse($('#class_learners_data').val() || '[]');
+                const classLearner = classLearnersData.find(cl => String(cl.id) === learnerIdStr);
+                
                 // Add learner to exam learners array (store as string for consistency)
                 const examLearnerData = {
                     id: learnerIdStr,
-                    name: learnerName
+                    name: learnerName,
+                    level: classLearner ? classLearner.level : '',
+                    status: classLearner ? classLearner.status : 'CIC - Currently in Class'
                 };
 
                 examLearners.push(examLearnerData);
@@ -560,6 +583,34 @@ function showCustomAlert(message) {
             updateExamLearnerOptions(); // Refresh dropdown to add back removed learner
 
             console.log('Removed exam learner', learnerIdStr);
+        });
+
+        // Handle exam learner level change
+        $(document).on('change', '#exam-learners-tbody .learner-level-select', function() {
+            const learnerId = String($(this).data('learner-id'));
+            const newLevel = $(this).val();
+            
+            // Find and update the learner's level in the array
+            const learner = examLearners.find(l => String(l.id) === learnerId);
+            if (learner) {
+                learner.level = newLevel;
+                updateExamLearnersData();
+                console.log('Updated exam learner level:', learnerId, newLevel);
+            }
+        });
+
+        // Handle exam learner status change
+        $(document).on('change', '.exam-learner-status-select', function() {
+            const learnerId = String($(this).data('learner-id'));
+            const newStatus = $(this).val();
+            
+            // Find and update the learner's status in the array
+            const learner = examLearners.find(l => String(l.id) === learnerId);
+            if (learner) {
+                learner.status = newStatus;
+                updateExamLearnersData();
+                console.log('Updated exam learner status:', learnerId, newStatus);
+            }
         });
 
         // Load existing exam learner data if available (for editing)
@@ -925,9 +976,26 @@ function showCustomAlert(message) {
 
                     // Add each exam learner to the table
                     examLearners.forEach(function(learner) {
+                        const levelSelectHtml = classes_generate_learner_level_select_html(learner.id, learner.level || '');
+                        const statusOptions = [
+                            { value: 'CIC - Currently in Class', text: 'CIC - Currently in Class' },
+                            { value: 'RBE - Removed by Employer', text: 'RBE - Removed by Employer' },
+                            { value: 'DRO - Drop Out', text: 'DRO - Drop Out' }
+                        ];
+                        
+                        const statusSelectHtml = `
+                            <select class="form-select form-select-sm exam-learner-status-select" data-learner-id="${learner.id}">
+                                ${statusOptions.map(opt => 
+                                    `<option value="${opt.value}" ${learner.status === opt.value ? 'selected' : ''}>${opt.text}</option>`
+                                ).join('')}
+                            </select>
+                        `;
+                        
                         const row = `
                             <tr>
                                 <td>${learner.name}</td>
+                                <td>${levelSelectHtml}</td>
+                                <td>${statusSelectHtml}</td>
                                 <td>
                                     <button type="button" class="btn btn-outline-danger btn-sm remove-exam-learner-btn" data-learner-id="${learner.id}">
                                         <i data-feather="trash-2" style="height:12.8px;width:12.8px;"></i>
