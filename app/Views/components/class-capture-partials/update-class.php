@@ -4,6 +4,81 @@
     width: 150px;
     min-width: 150px;
 }
+
+/* Dropzone styles */
+.dropzone-area {
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.dropzone-area:hover {
+    background-color: #e9ecef;
+    border-color: #6c757d !important;
+}
+
+.dropzone-area.dragover {
+    background-color: #e3f2fd;
+    border-color: #2196f3 !important;
+}
+
+.dropzone-area.dragover .dropzone-content {
+    opacity: 0.7;
+}
+
+/* File list styles */
+.file-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    margin-bottom: 0.5rem;
+    background-color: #fff;
+}
+
+.file-item:hover {
+    background-color: #f8f9fa;
+}
+
+.file-item .file-icon {
+    font-size: 1.5rem;
+    margin-right: 0.75rem;
+    color: #6c757d;
+}
+
+.file-item .file-info {
+    flex-grow: 1;
+}
+
+.file-item .file-name {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.file-item .file-size {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.file-item .file-progress {
+    width: 100px;
+    margin: 0 1rem;
+}
+
+.file-item .file-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.file-item.uploading {
+    opacity: 0.7;
+}
+
+.file-item.error {
+    border-color: #dc3545;
+    background-color: #f8d7da;
+}
 </style>
 <?php
 // Validate and prepare data for update mode
@@ -1130,6 +1205,21 @@ if (isset($data['class_data']) && $data['class_data']):
 
 
          </div>
+         
+         <!-- Add Note Button -->
+         <div class="col-md-6">
+            <div class="mb-3">
+               <label class="form-label">Quick Actions</label>
+               <button type="button" class="btn btn-primary w-100" id="add-class-note-btn" data-bs-toggle="modal" data-bs-target="#classNoteModal">
+                  <i class="bi bi-plus-circle me-1"></i> Add New Class Note
+               </button>
+            </div>
+            
+            <!-- Class Notes Container for dynamic display -->
+            <div id="class-notes-container" class="mt-3">
+               <!-- Notes will be loaded here via AJAX -->
+            </div>
+         </div>
       </div>
 
       <!-- QA Visit Dates and Reports Section -->
@@ -1851,3 +1941,187 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<!-- Class Note Modal -->
+<div class="modal fade" id="classNoteModal" tabindex="-1" aria-labelledby="classNoteModalLabel" aria-hidden="true">
+   <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+         <div class="modal-header">
+            <h5 class="modal-title" id="classNoteModalLabel">
+               <i class="bi bi-sticky-note me-2"></i>
+               <span id="note-modal-title">Add Class Note</span>
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+         </div>
+         <form id="class-note-form" novalidate>
+            <div class="modal-body">
+               <input type="hidden" id="note_id" name="note_id" value="">
+               <input type="hidden" id="note_class_id" name="class_id" value="<?php echo esc_attr($data['class_data']['class_id'] ?? ''); ?>">
+               
+               <!-- Note Title -->
+               <div class="mb-3">
+                  <label for="note_title" class="form-label">Note Title <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="note_title" name="title" required maxlength="255">
+                  <div class="invalid-feedback">Please provide a title for the note.</div>
+               </div>
+               
+               <!-- Note Content -->
+               <div class="mb-3">
+                  <label for="note_content" class="form-label">Note Content <span class="text-danger">*</span></label>
+                  <textarea class="form-control" id="note_content" name="content" rows="5" required></textarea>
+                  <div class="invalid-feedback">Please provide content for the note.</div>
+                  <small class="form-text text-muted">
+                     <span id="note-char-count">0</span> characters
+                  </small>
+               </div>
+               
+               <!-- Note Category and Priority -->
+               <div class="row">
+                  <div class="col-md-6">
+                     <div class="mb-3">
+                        <label for="note_category" class="form-label">Category</label>
+                        <select class="form-select" id="note_category" name="category">
+                           <option value="general">General</option>
+                           <option value="important">Important</option>
+                           <option value="reminder">Reminder</option>
+                           <option value="issue">Issue</option>
+                           <option value="progress">Progress Update</option>
+                        </select>
+                     </div>
+                  </div>
+                  <div class="col-md-6">
+                     <div class="mb-3">
+                        <label for="note_priority" class="form-label">Priority</label>
+                        <select class="form-select" id="note_priority" name="priority">
+                           <option value="low">Low</option>
+                           <option value="medium" selected>Medium</option>
+                           <option value="high">High</option>
+                        </select>
+                     </div>
+                  </div>
+               </div>
+               
+               <!-- Tags -->
+               <div class="mb-3">
+                  <label for="note_tags" class="form-label">Tags</label>
+                  <input type="text" class="form-control" id="note_tags" name="tags" placeholder="Enter tags separated by commas">
+                  <small class="form-text text-muted">e.g., attendance, performance, materials</small>
+               </div>
+               
+               <!-- File Attachments -->
+               <div class="mb-3">
+                  <label class="form-label">Attachments</label>
+                  <div id="note-dropzone" class="dropzone-area border border-2 border-dashed rounded p-4 text-center">
+                     <div class="dropzone-content">
+                        <i class="bi bi-cloud-upload fs-1 text-muted"></i>
+                        <p class="mb-2">Drag and drop files here or click to browse</p>
+                        <p class="text-muted small mb-3">Supported formats: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG (Max 10MB per file)</p>
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="browse-files-btn">
+                           <i class="bi bi-folder2-open me-1"></i> Browse Files
+                        </button>
+                        <input type="file" id="note-file-input" class="d-none" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
+                     </div>
+                     <div class="dropzone-uploading d-none">
+                        <div class="spinner-border text-primary mb-2" role="status">
+                           <span class="visually-hidden">Uploading...</span>
+                        </div>
+                        <p class="mb-0">Uploading files...</p>
+                     </div>
+                  </div>
+                  
+                  <!-- File list -->
+                  <div id="note-file-list" class="mt-3">
+                     <!-- Files will be listed here -->
+                  </div>
+                  
+                  <!-- Upload progress -->
+                  <div id="upload-progress" class="mt-2 d-none">
+                     <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                     </div>
+                     <small class="text-muted">
+                        <span id="upload-status">Preparing upload...</span>
+                     </small>
+                  </div>
+               </div>
+               
+               <!-- Auto-save indicator -->
+               <div id="auto-save-indicator" class="text-muted small d-none">
+                  <i class="bi bi-cloud-check me-1"></i>
+                  <span id="auto-save-message">Draft saved</span>
+               </div>
+               
+               <!-- Error messages -->
+               <div id="note-error-alert" class="alert alert-danger d-none" role="alert">
+                  <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                  <span id="note-error-message"></span>
+               </div>
+            </div>
+            <div class="modal-footer">
+               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+               <button type="submit" class="btn btn-primary" id="save-note-btn">
+                  <span class="btn-text">Save Note</span>
+                  <span class="spinner-border spinner-border-sm d-none ms-2" role="status">
+                     <span class="visually-hidden">Saving...</span>
+                  </span>
+               </button>
+            </div>
+         </form>
+      </div>
+   </div>
+</div>
+
+<!-- QA Form Modal -->
+<div class="modal fade" id="qaFormModal" tabindex="-1" aria-labelledby="qaFormModalLabel" aria-hidden="true">
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-header">
+            <h5 class="modal-title" id="qaFormModalLabel">
+               <i class="bi bi-patch-question me-2"></i>
+               Add Question
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+         </div>
+         <form id="qa-form" novalidate>
+            <div class="modal-body">
+               <input type="hidden" id="qa_class_id" name="class_id" value="<?php echo esc_attr($data['class_data']['class_id'] ?? ''); ?>">
+               
+               <!-- Question -->
+               <div class="mb-3">
+                  <label for="qa_question" class="form-label">Question <span class="text-danger">*</span></label>
+                  <textarea class="form-control" id="qa_question" name="question" rows="3" required></textarea>
+                  <div class="invalid-feedback">Please provide a question.</div>
+               </div>
+               
+               <!-- Question Context -->
+               <div class="mb-3">
+                  <label for="qa_context" class="form-label">Context/Details</label>
+                  <textarea class="form-control" id="qa_context" name="context" rows="2" placeholder="Additional context or details (optional)"></textarea>
+               </div>
+               
+               <!-- Attachment -->
+               <div class="mb-3">
+                  <label for="qa_attachment" class="form-label">Attachment (optional)</label>
+                  <input type="file" class="form-control" id="qa_attachment" name="attachment" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                  <small class="form-text text-muted">Max file size: 5MB</small>
+               </div>
+               
+               <!-- Error messages -->
+               <div id="qa-error-alert" class="alert alert-danger d-none" role="alert">
+                  <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                  <span id="qa-error-message"></span>
+               </div>
+            </div>
+            <div class="modal-footer">
+               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+               <button type="submit" class="btn btn-primary" id="submit-question-btn">
+                  <span class="btn-text">Submit Question</span>
+                  <span class="spinner-border spinner-border-sm d-none ms-2" role="status">
+                     <span class="visually-hidden">Submitting...</span>
+                  </span>
+               </button>
+            </div>
+         </form>
+      </div>
+   </div>
+</div>

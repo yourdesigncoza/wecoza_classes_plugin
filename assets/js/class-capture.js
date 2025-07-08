@@ -133,6 +133,9 @@ function showCustomAlert(message) {
         // Initialize form submission
         initializeFormSubmission();
         
+        // Initialize QA Visit functionality
+        initializeQAVisitHandlers();
+        
         // Add listener for class_start_date changes to trigger schedule updates
         $('#class_start_date').on('change', function() {
             const newDate = $(this).val();
@@ -694,6 +697,605 @@ function showCustomAlert(message) {
     }
 
     /**
+     * Initialize QA Visit functionality
+     * Handles dynamic addition and removal of QA visit date/report rows
+     */
+    function initializeQAVisitHandlers() {
+        const $container = $('#qa-visits-container');
+        const $template = $('#qa-visit-row-template');
+        const $addButton = $('#add-qa-visit-btn');
+        
+        if (!$container.length || !$template.length || !$addButton.length) {
+            console.log('QA Visit elements not found, skipping initialization');
+            return;
+        }
+        
+        // Add new QA visit row
+        $addButton.on('click', function(e) {
+            e.preventDefault();
+            
+            // Clone the template row
+            const $newRow = $template.clone();
+            $newRow.removeClass('d-none');
+            $newRow.removeAttr('id');
+            
+            // Generate unique names for form inputs to avoid conflicts
+            const timestamp = Date.now();
+            $newRow.find('input[name="qa_visit_dates[]"]').attr('id', 'qa_visit_date_' + timestamp);
+            $newRow.find('input[name="qa_reports[]"]').attr('id', 'qa_report_' + timestamp);
+            
+            // Append to container
+            $container.append($newRow);
+            
+            // Initialize remove button handler for this row
+            initializeRemoveButton($newRow);
+            
+            // Focus on the date input
+            $newRow.find('input[name="qa_visit_dates[]"]').focus();
+            
+            console.log('Added new QA visit row');
+        });
+        
+        // Initialize remove buttons for existing rows (if any from pre-population)
+        $container.find('.qa-visit-row').each(function() {
+            initializeRemoveButton($(this));
+        });
+        
+        /**
+         * Initialize remove button for a specific row
+         */
+        function initializeRemoveButton($row) {
+            $row.find('.remove-qa-visit-btn').on('click', function(e) {
+                e.preventDefault();
+                
+                // Check if this is the last row
+                const rowCount = $container.find('.qa-visit-row').length;
+                
+                if (rowCount <= 1) {
+                    showCustomAlert('At least one QA visit row must remain.');
+                    return;
+                }
+                
+                // Confirm removal if there's data
+                const dateValue = $row.find('input[name="qa_visit_dates[]"]').val();
+                const fileValue = $row.find('input[name="qa_reports[]"]').val();
+                
+                if (dateValue || fileValue) {
+                    if (!confirm('Are you sure you want to remove this QA visit? Any unsaved data will be lost.')) {
+                        return;
+                    }
+                }
+                
+                // Remove the row with animation
+                $row.fadeOut(300, function() {
+                    $(this).remove();
+                    console.log('Removed QA visit row');
+                });
+            });
+        }
+        
+        // Add validation function that can be called during form submission
+        window.validateQAVisits = function() {
+            let isValid = true;
+            let hasAnyData = false;
+            
+            $container.find('.qa-visit-row:visible').each(function() {
+                const $row = $(this);
+                const $dateInput = $row.find('input[name="qa_visit_dates[]"]');
+                const $fileInput = $row.find('input[name="qa_reports[]"]');
+                
+                // Remove previous validation classes
+                $dateInput.removeClass('is-invalid is-valid');
+                $fileInput.removeClass('is-invalid is-valid');
+                
+                // Check if row has any data
+                const hasDate = $dateInput.val() ? true : false;
+                const hasFile = $fileInput.val() ? true : false;
+                
+                if (hasDate || hasFile) {
+                    hasAnyData = true;
+                    
+                    // If there's a file but no date, it's invalid
+                    if (hasFile && !hasDate) {
+                        $dateInput.addClass('is-invalid');
+                        isValid = false;
+                    } else if (hasDate) {
+                        $dateInput.addClass('is-valid');
+                        if (hasFile) {
+                            $fileInput.addClass('is-valid');
+                        }
+                    }
+                }
+            });
+            
+            return {
+                isValid: isValid,
+                hasData: hasAnyData,
+                errorMessage: isValid ? '' : 'Please provide dates for all QA visit entries with files.'
+            };
+        };
+        
+        console.log('QA Visit handlers initialized');
+    }
+
+    /**
+     * Data Models for Class Notes and QA
+     */
+    const ClassNotesQAModels = {
+        // Note model
+        Note: class {
+            constructor(data = {}) {
+                this.id = data.id || null;
+                this.title = data.title || '';
+                this.content = data.content || '';
+                this.category = data.category || 'general';
+                this.created_at = data.created_at || new Date().toISOString();
+                this.updated_at = data.updated_at || new Date().toISOString();
+                this.author_id = data.author_id || wecozaClass.currentUserId;
+                this.author_name = data.author_name || '';
+                this.attachments = data.attachments || [];
+                this.tags = data.tags || [];
+            }
+
+            validate() {
+                const errors = [];
+                if (!this.title || this.title.trim() === '') {
+                    errors.push('Title is required');
+                }
+                if (!this.content || this.content.trim() === '') {
+                    errors.push('Content is required');
+                }
+                return { isValid: errors.length === 0, errors };
+            }
+
+            toJSON() {
+                return {
+                    id: this.id,
+                    title: this.title,
+                    content: this.content,
+                    category: this.category,
+                    created_at: this.created_at,
+                    updated_at: this.updated_at,
+                    author_id: this.author_id,
+                    author_name: this.author_name,
+                    attachments: this.attachments,
+                    tags: this.tags
+                };
+            }
+        },
+
+        // QA Visit model
+        QAVisit: class {
+            constructor(data = {}) {
+                this.id = data.id || null;
+                this.visit_date = data.visit_date || '';
+                this.officer_name = data.officer_name || '';
+                this.report_file = data.report_file || null;
+                this.report_url = data.report_url || '';
+                this.notes = data.notes || '';
+                this.status = data.status || 'pending';
+                this.created_at = data.created_at || new Date().toISOString();
+            }
+
+            validate() {
+                const errors = [];
+                if (!this.visit_date) {
+                    errors.push('Visit date is required');
+                }
+                if (!this.report_file && !this.report_url) {
+                    errors.push('Report file is required');
+                }
+                return { isValid: errors.length === 0, errors };
+            }
+
+            toJSON() {
+                return {
+                    id: this.id,
+                    visit_date: this.visit_date,
+                    officer_name: this.officer_name,
+                    report_url: this.report_url,
+                    notes: this.notes,
+                    status: this.status,
+                    created_at: this.created_at
+                };
+            }
+        },
+
+        // Collection manager for notes and QA visits
+        Collection: class {
+            constructor(itemClass) {
+                this.items = [];
+                this.itemClass = itemClass;
+                this.currentPage = 1;
+                this.itemsPerPage = 10;
+                this.totalItems = 0;
+                this.filters = {};
+                this.searchTerm = '';
+                this.sortBy = 'created_at';
+                this.sortOrder = 'desc';
+            }
+
+            add(item) {
+                if (!(item instanceof this.itemClass)) {
+                    item = new this.itemClass(item);
+                }
+                this.items.push(item);
+                this.totalItems++;
+                return item;
+            }
+
+            remove(id) {
+                const index = this.items.findIndex(item => item.id === id);
+                if (index > -1) {
+                    this.items.splice(index, 1);
+                    this.totalItems--;
+                    return true;
+                }
+                return false;
+            }
+
+            find(id) {
+                return this.items.find(item => item.id === id);
+            }
+
+            update(id, data) {
+                const item = this.find(id);
+                if (item) {
+                    Object.assign(item, data);
+                    item.updated_at = new Date().toISOString();
+                    return item;
+                }
+                return null;
+            }
+
+            setFilter(key, value) {
+                if (value === null || value === undefined || value === '') {
+                    delete this.filters[key];
+                } else {
+                    this.filters[key] = value;
+                }
+                this.currentPage = 1; // Reset to first page when filtering
+            }
+
+            setSearch(term) {
+                this.searchTerm = term.toLowerCase();
+                this.currentPage = 1;
+            }
+
+            setSort(field, order = 'asc') {
+                this.sortBy = field;
+                this.sortOrder = order;
+            }
+
+            getFiltered() {
+                let filtered = [...this.items];
+
+                // Apply filters
+                for (const [key, value] of Object.entries(this.filters)) {
+                    filtered = filtered.filter(item => {
+                        if (key === 'dateRange' && value.start && value.end) {
+                            const itemDate = new Date(item.created_at);
+                            return itemDate >= new Date(value.start) && itemDate <= new Date(value.end);
+                        }
+                        if (key === 'tags' && Array.isArray(value)) {
+                            return value.some(tag => item.tags && item.tags.includes(tag));
+                        }
+                        return item[key] === value;
+                    });
+                }
+
+                // Apply search
+                if (this.searchTerm) {
+                    filtered = filtered.filter(item => {
+                        const searchableFields = ['title', 'content', 'notes', 'officer_name', 'author_name'];
+                        return searchableFields.some(field => {
+                            const fieldValue = item[field];
+                            return fieldValue && fieldValue.toLowerCase().includes(this.searchTerm);
+                        });
+                    });
+                }
+
+                // Apply sorting
+                filtered.sort((a, b) => {
+                    let aVal = a[this.sortBy];
+                    let bVal = b[this.sortBy];
+                    
+                    if (this.sortBy.includes('date') || this.sortBy.includes('_at')) {
+                        aVal = new Date(aVal).getTime();
+                        bVal = new Date(bVal).getTime();
+                    }
+                    
+                    if (this.sortOrder === 'asc') {
+                        return aVal > bVal ? 1 : -1;
+                    } else {
+                        return aVal < bVal ? 1 : -1;
+                    }
+                });
+
+                return filtered;
+            }
+
+            getPaginated() {
+                const filtered = this.getFiltered();
+                const start = (this.currentPage - 1) * this.itemsPerPage;
+                const end = start + this.itemsPerPage;
+                
+                return {
+                    items: filtered.slice(start, end),
+                    totalItems: filtered.length,
+                    totalPages: Math.ceil(filtered.length / this.itemsPerPage),
+                    currentPage: this.currentPage,
+                    itemsPerPage: this.itemsPerPage
+                };
+            }
+
+            setPage(page) {
+                const totalPages = Math.ceil(this.getFiltered().length / this.itemsPerPage);
+                if (page >= 1 && page <= totalPages) {
+                    this.currentPage = page;
+                }
+            }
+
+            toJSON() {
+                return this.items.map(item => item.toJSON());
+            }
+        }
+    };
+
+    // Initialize collections
+    window.classNotesCollection = new ClassNotesQAModels.Collection(ClassNotesQAModels.Note);
+    window.qaVisitsCollection = new ClassNotesQAModels.Collection(ClassNotesQAModels.QAVisit);
+
+    /**
+     * Initialize search and filter functionality
+     */
+    function initializeSearchFilter() {
+        // Search input handler
+        $(document).on('input', '#notes-search-input', function() {
+            const searchTerm = $(this).val();
+            window.classNotesCollection.setSearch(searchTerm);
+            refreshNotesDisplay();
+        });
+
+        $(document).on('input', '#qa-search-input', function() {
+            const searchTerm = $(this).val();
+            window.qaVisitsCollection.setSearch(searchTerm);
+            refreshQADisplay();
+        });
+
+        // Filter handlers
+        $(document).on('change', '#notes-category-filter', function() {
+            const category = $(this).val();
+            window.classNotesCollection.setFilter('category', category);
+            refreshNotesDisplay();
+        });
+
+        $(document).on('change', '#qa-status-filter', function() {
+            const status = $(this).val();
+            window.qaVisitsCollection.setFilter('status', status);
+            refreshQADisplay();
+        });
+
+        // Date range filter
+        $(document).on('change', '#date-range-filter', function() {
+            const value = $(this).val();
+            let dateRange = null;
+            
+            if (value === 'today') {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const tomorrow = new Date(today);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                dateRange = { start: today, end: tomorrow };
+            } else if (value === 'week') {
+                const end = new Date();
+                const start = new Date();
+                start.setDate(start.getDate() - 7);
+                dateRange = { start, end };
+            } else if (value === 'month') {
+                const end = new Date();
+                const start = new Date();
+                start.setMonth(start.getMonth() - 1);
+                dateRange = { start, end };
+            }
+            
+            window.classNotesCollection.setFilter('dateRange', dateRange);
+            window.qaVisitsCollection.setFilter('dateRange', dateRange);
+            refreshNotesDisplay();
+            refreshQADisplay();
+        });
+
+        // Sort handlers
+        $(document).on('click', '.sort-trigger', function() {
+            const field = $(this).data('sort-field');
+            const currentOrder = $(this).data('sort-order') || 'asc';
+            const newOrder = currentOrder === 'asc' ? 'desc' : 'asc';
+            
+            $(this).data('sort-order', newOrder);
+            $(this).find('i').removeClass('bi-chevron-up bi-chevron-down')
+                            .addClass(newOrder === 'asc' ? 'bi-chevron-up' : 'bi-chevron-down');
+            
+            if ($(this).closest('.notes-section').length) {
+                window.classNotesCollection.setSort(field, newOrder);
+                refreshNotesDisplay();
+            } else {
+                window.qaVisitsCollection.setSort(field, newOrder);
+                refreshQADisplay();
+            }
+        });
+
+        // Pagination handlers
+        $(document).on('click', '.pagination-link', function(e) {
+            e.preventDefault();
+            const page = $(this).data('page');
+            const target = $(this).data('target');
+            
+            if (target === 'notes') {
+                window.classNotesCollection.setPage(page);
+                refreshNotesDisplay();
+            } else {
+                window.qaVisitsCollection.setPage(page);
+                refreshQADisplay();
+            }
+        });
+    }
+
+    /**
+     * Refresh notes display with current filters and pagination
+     */
+    function refreshNotesDisplay() {
+        const { items, totalPages, currentPage } = window.classNotesCollection.getPaginated();
+        const $container = $('#class-notes-list');
+        
+        if (!$container.length) return;
+        
+        $container.empty();
+        
+        if (items.length === 0) {
+            $container.html('<div class="alert alert-info">No notes found matching your criteria.</div>');
+            return;
+        }
+        
+        // Render notes
+        items.forEach(note => {
+            const noteHtml = `
+                <div class="note-item card mb-2" data-note-id="${note.id}">
+                    <div class="card-body">
+                        <h6 class="card-title">${escapeHtml(note.title)}</h6>
+                        <p class="card-text small">${escapeHtml(note.content.substring(0, 200))}...</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">${formatDate(note.created_at)}</small>
+                            <div>
+                                <button class="btn btn-sm btn-outline-primary edit-note" data-note-id="${note.id}">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger delete-note" data-note-id="${note.id}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            $container.append(noteHtml);
+        });
+        
+        // Update pagination
+        updatePagination('notes', currentPage, totalPages);
+    }
+
+    /**
+     * Refresh QA display with current filters and pagination
+     */
+    function refreshQADisplay() {
+        const { items, totalPages, currentPage } = window.qaVisitsCollection.getPaginated();
+        const $container = $('#qa-visits-list');
+        
+        if (!$container.length) return;
+        
+        $container.empty();
+        
+        if (items.length === 0) {
+            $container.html('<div class="alert alert-info">No QA visits found matching your criteria.</div>');
+            return;
+        }
+        
+        // Render QA visits
+        items.forEach(visit => {
+            const statusClass = visit.status === 'completed' ? 'success' : 
+                              visit.status === 'pending' ? 'warning' : 'danger';
+            const visitHtml = `
+                <div class="qa-visit-item card mb-2" data-visit-id="${visit.id}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="card-title mb-1">Visit Date: ${formatDate(visit.visit_date)}</h6>
+                                <p class="card-text small mb-1">Officer: ${escapeHtml(visit.officer_name || 'Not assigned')}</p>
+                                <span class="badge bg-${statusClass}">${visit.status}</span>
+                            </div>
+                            <div>
+                                ${visit.report_url ? 
+                                    `<a href="${visit.report_url}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-file-pdf"></i> View Report
+                                    </a>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            $container.append(visitHtml);
+        });
+        
+        // Update pagination
+        updatePagination('qa', currentPage, totalPages);
+    }
+
+    /**
+     * Update pagination controls
+     */
+    function updatePagination(target, currentPage, totalPages) {
+        const $pagination = $(`#${target}-pagination`);
+        if (!$pagination.length || totalPages <= 1) return;
+        
+        $pagination.empty();
+        
+        // Previous button
+        $pagination.append(`
+            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link pagination-link" href="#" data-page="${currentPage - 1}" data-target="${target}">Previous</a>
+            </li>
+        `);
+        
+        // Page numbers
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                $pagination.append(`
+                    <li class="page-item ${i === currentPage ? 'active' : ''}">
+                        <a class="page-link pagination-link" href="#" data-page="${i}" data-target="${target}">${i}</a>
+                    </li>
+                `);
+            } else if (i === currentPage - 3 || i === currentPage + 3) {
+                $pagination.append('<li class="page-item disabled"><span class="page-link">...</span></li>');
+            }
+        }
+        
+        // Next button
+        $pagination.append(`
+            <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                <a class="page-link pagination-link" href="#" data-page="${currentPage + 1}" data-target="${target}">Next</a>
+            </li>
+        `);
+    }
+
+    /**
+     * Utility function to escape HTML
+     */
+    function escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    /**
+     * Utility function to format date
+     */
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    /**
      * Initialize form submission
      */
     function initializeFormSubmission() {
@@ -722,6 +1324,16 @@ function showCustomAlert(message) {
                 showErrorMessage('Schedule validation failed: ' + scheduleValidation.errors.join(', '));
                 $submitButton.html(originalButtonText).prop('disabled', false);
                 return false;
+            }
+            
+            // Validate QA visits if the function exists
+            if (typeof validateQAVisits === 'function') {
+                const qaValidation = validateQAVisits();
+                if (!qaValidation.isValid) {
+                    showErrorMessage('QA Visit validation failed: ' + qaValidation.errorMessage);
+                    $submitButton.html(originalButtonText).prop('disabled', false);
+                    return false;
+                }
             }
             
             // Prepare form data
@@ -1021,11 +1633,1009 @@ function showCustomAlert(message) {
         });
     }
 
+    /**
+     * Load class notes via AJAX
+     */
+    function loadClassNotes(classId) {
+        if (!classId) return;
+        
+        const $container = $('#class-notes-container');
+        if (!$container.length) return;
+        
+        // Show loading state
+        $container.html('<div class="text-center py-3"><i class="bi bi-spinner-border"></i> Loading notes...</div>');
+        
+        $.ajax({
+            url: wecozaClass.ajaxUrl,
+            type: 'POST',
+            data: {
+                action: 'get_class_notes',
+                nonce: wecozaClass.nonce,
+                class_id: classId
+            },
+            success: function(response) {
+                if (response.success && response.data.notes) {
+                    // Clear collection and add loaded notes
+                    window.classNotesCollection.items = [];
+                    response.data.notes.forEach(note => {
+                        window.classNotesCollection.add(note);
+                    });
+                    
+                    // Initialize search/filter UI if not already done
+                    if (!$('#notes-search-input').length) {
+                        const searchFilterHtml = `
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <input type="text" id="notes-search-input" class="form-control" placeholder="Search notes...">
+                                </div>
+                                <div class="col-md-3">
+                                    <select id="notes-category-filter" class="form-select">
+                                        <option value="">All Categories</option>
+                                        <option value="general">General</option>
+                                        <option value="important">Important</option>
+                                        <option value="reminder">Reminder</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <select id="date-range-filter" class="form-select">
+                                        <option value="">All Time</option>
+                                        <option value="today">Today</option>
+                                        <option value="week">Last 7 Days</option>
+                                        <option value="month">Last Month</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <button class="btn btn-primary w-100" id="add-new-note-btn">
+                                        <i class="bi bi-plus"></i> Add Note
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="class-notes-list"></div>
+                            <nav>
+                                <ul class="pagination justify-content-center" id="notes-pagination"></ul>
+                            </nav>
+                        `;
+                        $container.html(searchFilterHtml);
+                    }
+                    
+                    refreshNotesDisplay();
+                } else {
+                    $container.html('<div class="alert alert-warning">No notes found for this class.</div>');
+                }
+            },
+            error: function() {
+                $container.html('<div class="alert alert-danger">Failed to load notes. Please try again.</div>');
+            }
+        });
+    }
+
+    /**
+     * Load QA visits via AJAX
+     */
+    function loadQAVisits(classId) {
+        if (!classId) return;
+        
+        const $container = $('#qa-visits-display-container');
+        if (!$container.length) return;
+        
+        // Show loading state
+        $container.html('<div class="text-center py-3"><i class="bi bi-spinner-border"></i> Loading QA visits...</div>');
+        
+        // Get QA visit dates and reports from form or database
+        const qaVisitDates = [];
+        $('#qa-visits-container .qa-visit-row:not(.d-none)').each(function() {
+            const date = $(this).find('.qa-visit-date').val();
+            if (date) qaVisitDates.push(date);
+        });
+        
+        // For update mode, also load from database
+        if (classId && classId !== 'new') {
+            $.ajax({
+                url: wecozaClass.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'get_class_qa_data',
+                    nonce: wecozaClass.nonce,
+                    class_id: classId
+                },
+                success: function(response) {
+                    if (response.success && response.data) {
+                        // Clear collection and add loaded visits
+                        window.qaVisitsCollection.items = [];
+                        
+                        // Process visit dates
+                        if (response.data.qa_visit_dates) {
+                            response.data.qa_visit_dates.forEach((date, index) => {
+                                const visit = {
+                                    id: `visit_${index}`,
+                                    visit_date: date,
+                                    status: 'scheduled'
+                                };
+                                
+                                // Check if there's a corresponding report
+                                if (response.data.qa_reports && response.data.qa_reports[index]) {
+                                    const report = response.data.qa_reports[index];
+                                    visit.report_url = report.url;
+                                    visit.officer_name = report.officer || '';
+                                    visit.status = 'completed';
+                                    visit.notes = report.notes || '';
+                                }
+                                
+                                window.qaVisitsCollection.add(visit);
+                            });
+                        }
+                        
+                        // Initialize QA display UI
+                        if (!$('#qa-search-input').length) {
+                            const qaDisplayHtml = `
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <input type="text" id="qa-search-input" class="form-control" placeholder="Search QA visits...">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select id="qa-status-filter" class="form-select">
+                                            <option value="">All Status</option>
+                                            <option value="scheduled">Scheduled</option>
+                                            <option value="completed">Completed</option>
+                                            <option value="pending">Pending Review</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button class="btn btn-secondary w-100 sort-trigger" data-sort-field="visit_date">
+                                            Sort by Date <i class="bi bi-chevron-down"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="qa-visits-list"></div>
+                                <nav>
+                                    <ul class="pagination justify-content-center" id="qa-pagination"></ul>
+                                </nav>
+                            `;
+                            $container.html(qaDisplayHtml);
+                        }
+                        
+                        refreshQADisplay();
+                    } else {
+                        $container.html('<div class="alert alert-info">No QA visits scheduled for this class.</div>');
+                    }
+                },
+                error: function() {
+                    $container.html('<div class="alert alert-danger">Failed to load QA visits. Please try again.</div>');
+                }
+            });
+        }
+    }
+
+    /**
+     * Save class note via AJAX
+     */
+    function saveClassNote(noteData, classId) {
+        return $.ajax({
+            url: wecozaClass.ajaxUrl,
+            type: 'POST',
+            data: {
+                action: 'save_class_note',
+                nonce: wecozaClass.nonce,
+                class_id: classId,
+                note: noteData
+            }
+        });
+    }
+
+    /**
+     * Delete QA report via AJAX
+     */
+    function deleteQAReport(reportId, classId) {
+        return $.ajax({
+            url: wecozaClass.ajaxUrl,
+            type: 'POST',
+            data: {
+                action: 'delete_qa_report',
+                nonce: wecozaClass.nonce,
+                class_id: classId,
+                report_id: reportId
+            }
+        });
+    }
+
+    /**
+     * Initialize data loading based on context
+     */
+    function initializeDataLoading() {
+        // Get class ID from hidden input or URL
+        const classId = $('#class_id').val() || new URLSearchParams(window.location.search).get('class_id');
+        
+        if (classId && classId !== 'new') {
+            // Load existing data
+            loadClassNotes(classId);
+            loadQAVisits(classId);
+        }
+        
+        // Initialize search/filter functionality
+        initializeSearchFilter();
+        
+        // Handle class selection change (if applicable)
+        $('#class_id, #class-select').on('change', function() {
+            const newClassId = $(this).val();
+            if (newClassId) {
+                loadClassNotes(newClassId);
+                loadQAVisits(newClassId);
+            }
+        });
+    }
+
+    /**
+     * Initialize form processing with validation and CSRF protection
+     */
+    function initializeFormProcessing() {
+        // Initialize note form
+        initializeNoteForm();
+        
+        // Initialize QA form
+        initializeQAForm();
+        
+        // Initialize auto-save functionality
+        initializeAutoSave();
+        
+        // Initialize file upload functionality
+        initializeFileUpload();
+    }
+
+    /**
+     * Initialize class note form with validation
+     */
+    function initializeNoteForm() {
+        const $noteForm = $('#class-note-form');
+        const $noteModal = $('#classNoteModal');
+        const $saveBtn = $('#save-note-btn');
+        const $errorAlert = $('#note-error-alert');
+        const $errorMessage = $('#note-error-message');
+        const $charCount = $('#note-char-count');
+        const $noteContent = $('#note_content');
+        
+        // Character counter
+        $noteContent.on('input', function() {
+            $charCount.text($(this).val().length);
+        });
+        
+        // Form submission
+        $noteForm.on('submit', function(e) {
+            e.preventDefault();
+            
+            // Reset validation states
+            $noteForm.removeClass('was-validated');
+            $errorAlert.addClass('d-none');
+            
+            // Validate form
+            if (!this.checkValidity()) {
+                e.stopPropagation();
+                $noteForm.addClass('was-validated');
+                return;
+            }
+            
+            // Get form data
+            const formData = {
+                action: 'save_class_note',
+                nonce: wecozaClass.nonce,
+                class_id: $('#note_class_id').val(),
+                note_id: $('#note_id').val(),
+                title: $('#note_title').val().trim(),
+                content: $('#note_content').val().trim(),
+                category: $('#note_category').val(),
+                priority: $('#note_priority').val(),
+                tags: $('#note_tags').val().split(',').map(tag => tag.trim()).filter(Boolean)
+            };
+            
+            // Validate data
+            const validation = validateNoteData(formData);
+            if (!validation.isValid) {
+                showFormError($errorAlert, $errorMessage, validation.errors.join(', '));
+                return;
+            }
+            
+            // Show loading state
+            setButtonLoading($saveBtn, true);
+            
+            // Upload files first if any
+            window.uploadNotesFiles().then(uploadedFiles => {
+                // Add uploaded files to form data
+                formData.attachments = uploadedFiles;
+                
+                // Submit via AJAX
+                $.ajax({
+                    url: wecozaClass.ajaxUrl,
+                    type: 'POST',
+                    data: formData,
+                    success: function(response) {
+                    if (response.success) {
+                        // Add/update note in collection
+                        const noteData = response.data.note || formData;
+                        if (formData.note_id) {
+                            window.classNotesCollection.update(formData.note_id, noteData);
+                        } else {
+                            noteData.id = response.data.note_id || new Date().getTime();
+                            window.classNotesCollection.add(noteData);
+                        }
+                        
+                        // Refresh display
+                        refreshNotesDisplay();
+                        
+                        // Reset form and close modal
+                        $noteForm[0].reset();
+                        $noteForm.removeClass('was-validated');
+                        $charCount.text('0');
+                        bootstrap.Modal.getInstance($noteModal[0]).hide();
+                        
+                        // Show success message
+                        showSuccessMessage('Note saved successfully!');
+                        
+                        // Clear auto-save draft
+                        clearAutoSaveDraft('note');
+                    } else {
+                        showFormError($errorAlert, $errorMessage, response.data || 'Failed to save note');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Note save error:', error);
+                    showFormError($errorAlert, $errorMessage, 'An error occurred while saving the note');
+                    },
+                    complete: function() {
+                        setButtonLoading($saveBtn, false);
+                    }
+                });
+            }).catch(error => {
+                console.error('File upload error:', error);
+                showFormError($errorAlert, $errorMessage, 'Failed to upload files. Please try again.');
+                setButtonLoading($saveBtn, false);
+            });
+        });
+        
+        // Handle modal events
+        $noteModal.on('show.bs.modal', function(e) {
+            const $trigger = $(e.relatedTarget);
+            const noteId = $trigger.data('note-id');
+            
+            if (noteId) {
+                // Edit mode - load note data
+                const note = window.classNotesCollection.find(noteId);
+                if (note) {
+                    $('#note-modal-title').text('Edit Class Note');
+                    $('#note_id').val(note.id);
+                    $('#note_title').val(note.title);
+                    $('#note_content').val(note.content);
+                    $('#note_category').val(note.category);
+                    $('#note_priority').val(note.priority);
+                    $('#note_tags').val(note.tags ? note.tags.join(', ') : '');
+                    $charCount.text(note.content.length);
+                }
+            } else {
+                // Add mode - restore draft if available
+                $('#note-modal-title').text('Add Class Note');
+                restoreAutoSaveDraft('note');
+            }
+        });
+        
+        $noteModal.on('hidden.bs.modal', function() {
+            // Reset form
+            $noteForm[0].reset();
+            $noteForm.removeClass('was-validated');
+            $('#note_id').val('');
+            $charCount.text('0');
+            $errorAlert.addClass('d-none');
+        });
+        
+        // Handle edit/delete buttons
+        $(document).on('click', '.edit-note', function(e) {
+            e.preventDefault();
+            const noteId = $(this).data('note-id');
+            $('#classNoteModal').modal('show');
+            // The show.bs.modal event will handle loading the note data
+        });
+        
+        $(document).on('click', '.delete-note', function(e) {
+            e.preventDefault();
+            const noteId = $(this).data('note-id');
+            const note = window.classNotesCollection.find(noteId);
+            
+            if (note && confirm(`Are you sure you want to delete the note "${note.title}"?`)) {
+                deleteNote(noteId);
+            }
+        });
+    }
+
+    /**
+     * Initialize QA form with validation
+     */
+    function initializeQAForm() {
+        const $qaForm = $('#qa-form');
+        const $qaModal = $('#qaFormModal');
+        const $submitBtn = $('#submit-question-btn');
+        const $errorAlert = $('#qa-error-alert');
+        const $errorMessage = $('#qa-error-message');
+        
+        // Form submission
+        $qaForm.on('submit', function(e) {
+            e.preventDefault();
+            
+            // Reset validation states
+            $qaForm.removeClass('was-validated');
+            $errorAlert.addClass('d-none');
+            
+            // Validate form
+            if (!this.checkValidity()) {
+                e.stopPropagation();
+                $qaForm.addClass('was-validated');
+                return;
+            }
+            
+            // Create FormData for file upload
+            const formData = new FormData(this);
+            formData.append('action', 'submit_qa_question');
+            formData.append('nonce', wecozaClass.nonce);
+            
+            // Validate file size
+            const fileInput = $('#qa_attachment')[0];
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                if (file.size > 5 * 1024 * 1024) { // 5MB
+                    showFormError($errorAlert, $errorMessage, 'File size must be less than 5MB');
+                    return;
+                }
+            }
+            
+            // Show loading state
+            setButtonLoading($submitBtn, true);
+            
+            // Submit via AJAX
+            $.ajax({
+                url: wecozaClass.ajaxUrl,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        // Reset form and close modal
+                        $qaForm[0].reset();
+                        $qaForm.removeClass('was-validated');
+                        bootstrap.Modal.getInstance($qaModal[0]).hide();
+                        
+                        // Show success message
+                        showSuccessMessage('Question submitted successfully!');
+                        
+                        // Clear auto-save draft
+                        clearAutoSaveDraft('qa');
+                        
+                        // Optionally reload QA data
+                        const classId = $('#qa_class_id').val();
+                        if (classId) {
+                            loadQAVisits(classId);
+                        }
+                    } else {
+                        showFormError($errorAlert, $errorMessage, response.data || 'Failed to submit question');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('QA submit error:', error);
+                    showFormError($errorAlert, $errorMessage, 'An error occurred while submitting the question');
+                },
+                complete: function() {
+                    setButtonLoading($submitBtn, false);
+                }
+            });
+        });
+        
+        // Handle modal events
+        $qaModal.on('show.bs.modal', function() {
+            // Restore draft if available
+            restoreAutoSaveDraft('qa');
+        });
+        
+        $qaModal.on('hidden.bs.modal', function() {
+            // Reset form
+            $qaForm[0].reset();
+            $qaForm.removeClass('was-validated');
+            $errorAlert.addClass('d-none');
+        });
+    }
+
+    /**
+     * Initialize auto-save functionality
+     */
+    function initializeAutoSave() {
+        let autoSaveTimers = {};
+        const autoSaveDelay = 3000; // 3 seconds
+        
+        // Auto-save for note form
+        $('#note_title, #note_content, #note_category, #note_priority, #note_tags').on('input change', function() {
+            clearTimeout(autoSaveTimers.note);
+            autoSaveTimers.note = setTimeout(() => {
+                saveFormDraft('note', {
+                    title: $('#note_title').val(),
+                    content: $('#note_content').val(),
+                    category: $('#note_category').val(),
+                    priority: $('#note_priority').val(),
+                    tags: $('#note_tags').val()
+                });
+            }, autoSaveDelay);
+        });
+        
+        // Auto-save for QA form
+        $('#qa_question, #qa_context').on('input', function() {
+            clearTimeout(autoSaveTimers.qa);
+            autoSaveTimers.qa = setTimeout(() => {
+                saveFormDraft('qa', {
+                    question: $('#qa_question').val(),
+                    context: $('#qa_context').val()
+                });
+            }, autoSaveDelay);
+        });
+    }
+
+    /**
+     * Validate note data
+     */
+    function validateNoteData(data) {
+        const errors = [];
+        
+        if (!data.title || data.title.length < 3) {
+            errors.push('Title must be at least 3 characters long');
+        }
+        
+        if (!data.content || data.content.length < 10) {
+            errors.push('Content must be at least 10 characters long');
+        }
+        
+        if (data.title.length > 255) {
+            errors.push('Title must be less than 255 characters');
+        }
+        
+        return {
+            isValid: errors.length === 0,
+            errors: errors
+        };
+    }
+
+    /**
+     * Delete a note
+     */
+    function deleteNote(noteId) {
+        const classId = $('#note_class_id').val() || $('#class_id').val();
+        
+        $.ajax({
+            url: wecozaClass.ajaxUrl,
+            type: 'POST',
+            data: {
+                action: 'delete_class_note',
+                nonce: wecozaClass.nonce,
+                class_id: classId,
+                note_id: noteId
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Remove from collection
+                    window.classNotesCollection.remove(noteId);
+                    
+                    // Refresh display
+                    refreshNotesDisplay();
+                    
+                    // Show success message
+                    showSuccessMessage('Note deleted successfully!');
+                } else {
+                    showErrorMessage(response.data || 'Failed to delete note');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Note delete error:', error);
+                showErrorMessage('An error occurred while deleting the note');
+            }
+        });
+    }
+
+    /**
+     * Save form draft to localStorage
+     */
+    function saveFormDraft(formType, data) {
+        try {
+            const key = `wecoza_${formType}_draft`;
+            localStorage.setItem(key, JSON.stringify({
+                data: data,
+                timestamp: new Date().toISOString()
+            }));
+            
+            // Show auto-save indicator
+            if (formType === 'note') {
+                $('#auto-save-indicator').removeClass('d-none');
+                $('#auto-save-message').text('Draft saved');
+                setTimeout(() => {
+                    $('#auto-save-indicator').addClass('d-none');
+                }, 2000);
+            }
+        } catch (e) {
+            console.error('Failed to save draft:', e);
+        }
+    }
+
+    /**
+     * Restore form draft from localStorage
+     */
+    function restoreAutoSaveDraft(formType) {
+        try {
+            const key = `wecoza_${formType}_draft`;
+            const draft = localStorage.getItem(key);
+            
+            if (draft) {
+                const { data, timestamp } = JSON.parse(draft);
+                
+                // Check if draft is less than 24 hours old
+                const draftAge = new Date() - new Date(timestamp);
+                if (draftAge < 24 * 60 * 60 * 1000) {
+                    if (formType === 'note') {
+                        $('#note_title').val(data.title || '');
+                        $('#note_content').val(data.content || '');
+                        $('#note_category').val(data.category || 'general');
+                        $('#note_priority').val(data.priority || 'medium');
+                        $('#note_tags').val(data.tags || '');
+                        $('#note-char-count').text((data.content || '').length);
+                        
+                        // Show indicator
+                        $('#auto-save-indicator').removeClass('d-none');
+                        $('#auto-save-message').text('Draft restored');
+                        setTimeout(() => {
+                            $('#auto-save-indicator').addClass('d-none');
+                        }, 3000);
+                    } else if (formType === 'qa') {
+                        $('#qa_question').val(data.question || '');
+                        $('#qa_context').val(data.context || '');
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('Failed to restore draft:', e);
+        }
+    }
+
+    /**
+     * Clear auto-save draft
+     */
+    function clearAutoSaveDraft(formType) {
+        try {
+            const key = `wecoza_${formType}_draft`;
+            localStorage.removeItem(key);
+        } catch (e) {
+            console.error('Failed to clear draft:', e);
+        }
+    }
+
+    /**
+     * Show form error
+     */
+    function showFormError($alert, $message, error) {
+        $message.text(error);
+        $alert.removeClass('d-none');
+    }
+
+    /**
+     * Set button loading state
+     */
+    function setButtonLoading($button, loading) {
+        if (loading) {
+            $button.prop('disabled', true);
+            $button.find('.btn-text').addClass('d-none');
+            $button.find('.spinner-border').removeClass('d-none');
+        } else {
+            $button.prop('disabled', false);
+            $button.find('.btn-text').removeClass('d-none');
+            $button.find('.spinner-border').addClass('d-none');
+        }
+    }
+
+    /**
+     * Initialize file upload functionality with drag-and-drop
+     */
+    function initializeFileUpload() {
+        const $dropzone = $('#note-dropzone');
+        const $fileInput = $('#note-file-input');
+        const $browseBtn = $('#browse-files-btn');
+        const $fileList = $('#note-file-list');
+        const $uploadProgress = $('#upload-progress');
+        const $progressBar = $uploadProgress.find('.progress-bar');
+        const $uploadStatus = $('#upload-status');
+        
+        // File management
+        let pendingFiles = [];
+        let uploadedFiles = [];
+        const maxFileSize = 10 * 1024 * 1024; // 10MB
+        const allowedTypes = ['application/pdf', 'application/msword', 
+                            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                            'application/vnd.ms-excel', 
+                            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                            'image/jpeg', 'image/png'];
+        
+        // Browse button click
+        $browseBtn.on('click', function(e) {
+            e.preventDefault();
+            $fileInput.click();
+        });
+        
+        // File input change
+        $fileInput.on('change', function(e) {
+            handleFiles(e.target.files);
+            this.value = ''; // Reset input
+        });
+        
+        // Drag and drop events
+        $dropzone.on('dragover dragenter', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $(this).addClass('dragover');
+        });
+        
+        $dropzone.on('dragleave dragend', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $(this).removeClass('dragover');
+        });
+        
+        $dropzone.on('drop', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $(this).removeClass('dragover');
+            
+            const files = e.originalEvent.dataTransfer.files;
+            handleFiles(files);
+        });
+        
+        // Click to upload
+        $dropzone.on('click', function(e) {
+            if (!$(e.target).is('button') && !$(e.target).closest('button').length) {
+                $fileInput.click();
+            }
+        });
+        
+        /**
+         * Handle dropped or selected files
+         */
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (validateFile(file)) {
+                    addFileToList(file);
+                    pendingFiles.push(file);
+                }
+            });
+        }
+        
+        /**
+         * Validate file type and size
+         */
+        function validateFile(file) {
+            // Check file type
+            if (!allowedTypes.includes(file.type)) {
+                showErrorMessage(`Invalid file type: ${file.name}. Please upload PDF, DOC, DOCX, XLS, XLSX, JPG, or PNG files.`);
+                return false;
+            }
+            
+            // Check file size
+            if (file.size > maxFileSize) {
+                showErrorMessage(`File too large: ${file.name}. Maximum file size is 10MB.`);
+                return false;
+            }
+            
+            // Check if file already added
+            const exists = [...pendingFiles, ...uploadedFiles].some(f => 
+                f.name === file.name && f.size === file.size
+            );
+            
+            if (exists) {
+                showErrorMessage(`File already added: ${file.name}`);
+                return false;
+            }
+            
+            return true;
+        }
+        
+        /**
+         * Add file to the display list
+         */
+        function addFileToList(file) {
+            const fileId = 'file_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            const fileIcon = getFileIcon(file.type);
+            const fileSize = formatFileSize(file.size);
+            
+            const fileHtml = `
+                <div class="file-item" id="${fileId}" data-file-name="${file.name}">
+                    <i class="${fileIcon} file-icon"></i>
+                    <div class="file-info">
+                        <div class="file-name">${escapeHtml(file.name)}</div>
+                        <div class="file-size">${fileSize}</div>
+                    </div>
+                    <div class="file-progress d-none">
+                        <div class="progress progress-sm">
+                            <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="file-actions">
+                        <button type="button" class="btn btn-sm btn-outline-danger remove-file-btn" data-file-id="${fileId}">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            $fileList.append(fileHtml);
+            
+            // Store file reference
+            file.elementId = fileId;
+        }
+        
+        /**
+         * Get file icon based on type
+         */
+        function getFileIcon(mimeType) {
+            if (mimeType.startsWith('image/')) return 'bi bi-file-image';
+            if (mimeType.includes('pdf')) return 'bi bi-file-pdf';
+            if (mimeType.includes('word')) return 'bi bi-file-word';
+            if (mimeType.includes('sheet') || mimeType.includes('excel')) return 'bi bi-file-excel';
+            return 'bi bi-file-earmark';
+        }
+        
+        /**
+         * Format file size
+         */
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        /**
+         * Remove file from list
+         */
+        $(document).on('click', '.remove-file-btn', function() {
+            const fileId = $(this).data('file-id');
+            const $fileItem = $('#' + fileId);
+            
+            // Remove from pending files
+            pendingFiles = pendingFiles.filter(f => f.elementId !== fileId);
+            
+            // Remove from uploaded files
+            uploadedFiles = uploadedFiles.filter(f => f.elementId !== fileId);
+            
+            // Remove from DOM
+            $fileItem.fadeOut(300, function() {
+                $(this).remove();
+            });
+        });
+        
+        /**
+         * Upload files to WordPress media library
+         */
+        window.uploadNotesFiles = function() {
+            if (pendingFiles.length === 0) {
+                return Promise.resolve([]);
+            }
+            
+            return new Promise((resolve, reject) => {
+                const totalFiles = pendingFiles.length;
+                let uploadedCount = 0;
+                const results = [];
+                
+                $uploadProgress.removeClass('d-none');
+                $uploadStatus.text(`Uploading ${totalFiles} file(s)...`);
+                
+                // Upload files sequentially
+                const uploadNext = () => {
+                    if (pendingFiles.length === 0) {
+                        $uploadProgress.addClass('d-none');
+                        uploadedFiles.push(...results);
+                        resolve(results);
+                        return;
+                    }
+                    
+                    const file = pendingFiles.shift();
+                    uploadFile(file)
+                        .then(result => {
+                            uploadedCount++;
+                            results.push(result);
+                            
+                            // Update progress
+                            const progress = (uploadedCount / totalFiles) * 100;
+                            $progressBar.css('width', progress + '%');
+                            $uploadStatus.text(`Uploaded ${uploadedCount} of ${totalFiles} files`);
+                            
+                            // Mark file as uploaded
+                            $('#' + file.elementId).removeClass('uploading').find('.file-progress').addClass('d-none');
+                            
+                            uploadNext();
+                        })
+                        .catch(error => {
+                            console.error('File upload error:', error);
+                            $('#' + file.elementId).addClass('error');
+                            // Continue with other files
+                            uploadNext();
+                        });
+                };
+                
+                uploadNext();
+            });
+        };
+        
+        /**
+         * Upload single file to WordPress
+         */
+        function uploadFile(file) {
+            return new Promise((resolve, reject) => {
+                const formData = new FormData();
+                formData.append('action', 'upload_attachment');
+                formData.append('nonce', wecozaClass.nonce);
+                formData.append('file', file);
+                formData.append('context', 'class_notes');
+                
+                // Mark file as uploading
+                const $fileItem = $('#' + file.elementId);
+                $fileItem.addClass('uploading');
+                $fileItem.find('.file-progress').removeClass('d-none');
+                
+                $.ajax({
+                    url: wecozaClass.ajaxUrl,
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    xhr: function() {
+                        const xhr = new window.XMLHttpRequest();
+                        xhr.upload.addEventListener('progress', function(e) {
+                            if (e.lengthComputable) {
+                                const percentComplete = (e.loaded / e.total) * 100;
+                                $fileItem.find('.progress-bar').css('width', percentComplete + '%');
+                            }
+                        }, false);
+                        return xhr;
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            resolve({
+                                id: response.data.id,
+                                url: response.data.url,
+                                name: file.name,
+                                size: file.size,
+                                type: file.type
+                            });
+                        } else {
+                            reject(response.data || 'Upload failed');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        reject(error);
+                    }
+                });
+            });
+        }
+        
+        // Reset files when modal is closed
+        $('#classNoteModal').on('hidden.bs.modal', function() {
+            pendingFiles = [];
+            uploadedFiles = [];
+            $fileList.empty();
+            $uploadProgress.addClass('d-none');
+            $progressBar.css('width', '0%');
+        });
+        
+        // Make uploadedFiles accessible for form submission
+        window.getUploadedFiles = function() {
+            return uploadedFiles;
+        };
+    }
+
     // Initialize when document is ready
     $(document).ready(function() {
         // Check if we're on a page with the class capture form
         if ($('#classes-form').length > 0) {
             initClassCaptureForm();
+            initializeDataLoading();
+            initializeFormProcessing();
         }
     });
 

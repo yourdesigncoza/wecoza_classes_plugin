@@ -38,6 +38,14 @@ class ClassController {
         \add_action('wp_ajax_nopriv_get_calendar_events', [__CLASS__, 'getCalendarEventsAjax']);
         \add_action('wp_ajax_get_class_subjects', [__CLASS__, 'getClassSubjectsAjax']);
         \add_action('wp_ajax_nopriv_get_class_subjects', [__CLASS__, 'getClassSubjectsAjax']);
+        \add_action('wp_ajax_get_class_qa_data', [__CLASS__, 'getClassQAData']);
+        \add_action('wp_ajax_nopriv_get_class_qa_data', [__CLASS__, 'getClassQAData']);
+        \add_action('wp_ajax_delete_class_note', [__CLASS__, 'deleteClassNote']);
+        \add_action('wp_ajax_nopriv_delete_class_note', [__CLASS__, 'deleteClassNote']);
+        \add_action('wp_ajax_submit_qa_question', [__CLASS__, 'submitQAQuestion']);
+        \add_action('wp_ajax_nopriv_submit_qa_question', [__CLASS__, 'submitQAQuestion']);
+        \add_action('wp_ajax_upload_attachment', [__CLASS__, 'uploadAttachment']);
+        \add_action('wp_ajax_nopriv_upload_attachment', [__CLASS__, 'uploadAttachment']);
     }
 
     /**
@@ -822,7 +830,10 @@ class ClassController {
         }
         error_log('processFormData: Processed exam_class: ' . var_export($processed['exam_class'], true));
         $processed['exam_type'] = isset($data['exam_type']) && !is_array($data['exam_type']) ? self::sanitizeText($data['exam_type']) : null;
-        $processed['qa_visit_dates'] = isset($data['qa_visit_dates']) && !is_array($data['qa_visit_dates']) ? self::sanitizeText($data['qa_visit_dates']) : null;
+        // Process QA data (dates and reports) together
+        $qaData = self::processQAData($data, $files);
+        $processed['qa_visit_dates'] = $qaData['qa_visit_dates'];
+        $processed['qa_reports'] = $qaData['qa_reports'];
         $processed['class_agent'] = isset($data['class_agent']) && !empty($data['class_agent']) ? intval($data['class_agent']) : null;
         $processed['initial_class_agent'] = isset($data['initial_class_agent']) && !empty($data['initial_class_agent']) ? intval($data['initial_class_agent']) : null;
         $processed['initial_agent_start_date'] = isset($data['initial_agent_start_date']) && !is_array($data['initial_agent_start_date']) ? self::sanitizeText($data['initial_agent_start_date']) : null;
@@ -831,7 +842,7 @@ class ClassController {
 
         // Array fields
         $processed['class_notes'] = isset($data['class_notes']) && is_array($data['class_notes']) ? array_map([self::class, 'sanitizeText'], $data['class_notes']) : [];
-        $processed['qa_reports'] = isset($data['qa_reports']) && is_array($data['qa_reports']) ? array_map([self::class, 'sanitizeText'], $data['qa_reports']) : [];
+        // qa_reports is now processed in processQAData method above
 
         // JSON fields that need special handling
         // JSON fields that need special handling
@@ -2014,6 +2025,14 @@ class ClassController {
 
             // Handle JSONB fields that come as strings from PostgreSQL
             $jsonbFields = ['learner_ids', 'backup_agent_ids', 'schedule_data', 'stop_restart_dates', 'class_notes_data', 'qa_reports', 'exam_learners'];
+            
+            // Also decode qa_visit_dates if stored as JSON
+            if (isset($result['qa_visit_dates']) && is_string($result['qa_visit_dates'])) {
+                $decoded = json_decode($result['qa_visit_dates'], true);
+                if ($decoded !== null) {
+                    $result['qa_visit_dates'] = $decoded;
+                }
+            }
 
             foreach ($jsonbFields as $field) {
                 if (isset($result[$field]) && is_string($result[$field])) {
@@ -2823,4 +2842,662 @@ class ClassController {
     // Backward compatibility function removed - V2.0 format only
 
     // Migration and integrity check functions removed - V2.0 format only
+    
+    /**
+     * Handle QA report file uploads
+     *
+     * @param array $files The $_FILES array data for qa_reports
+     * @param array $dates The corresponding qa_visit_dates array
+     * @return array Processed file information with metadata
+     */
+    private static function handleQAReportUploads($files, $dates) {
+        $uploadedReports = [];
+        
+        if (empty($files['name']) || !is_array($files['name'])) {
+            return $uploadedReports;
+        }
+        
+        // Get WordPress upload directory
+        $upload_dir = wp_upload_dir();
+        $qa_reports_dir = $upload_dir['basedir'] . '/qa-reports';
+        $qa_reports_url = $upload_dir['baseurl'] . '/qa-reports';
+        
+        // Create directory if it doesn't exist
+        if (!file_exists($qa_reports_dir)) {
+            wp_mkdir_p($qa_reports_dir);
+        }
+        
+        // Process each uploaded file
+        for ($i = 0; $i < count($files['name']); $i++) {
+            // Skip if no file uploaded for this index
+            if (empty($files['name'][$i]) || $files['error'][$i] !== UPLOAD_ERR_OK) {
+                continue;
+            }
+            
+            // Get corresponding date
+            $visit_date = isset($dates[$i]) ? $dates[$i] : date('Y-m-d');
+            
+            // Prepare file upload
+            $file = [
+                'name' => $files['name'][$i],
+                'type' => $files['type'][$i],
+                'tmp_name' => $files['tmp_name'][$i],
+                'error' => $files['error'][$i],
+                'size' => $files['size'][$i]
+            ];
+            
+            // Validate file type (PDF only)
+            $allowed_types = ['application/pdf'];
+            if (!in_array($file['type'], $allowed_types)) {
+                continue;
+            }
+            
+            // Generate unique filename
+            $file_extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $base_name = 'qa_report_' . date('Ymd_His') . '_' . uniqid();
+            $new_filename = $base_name . '.' . $file_extension;
+            $file_path = $qa_reports_dir . '/' . $new_filename;
+            
+            // Move uploaded file
+            if (move_uploaded_file($file['tmp_name'], $file_path)) {
+                $uploadedReports[] = [
+                    'date' => $visit_date,
+                    'filename' => $new_filename,
+                    'original_name' => $file['name'],
+                    'file_path' => 'qa-reports/' . $new_filename,
+                    'file_url' => $qa_reports_url . '/' . $new_filename,
+                    'file_size' => $file['size'],
+                    'uploaded_by' => wp_get_current_user()->display_name,
+                    'upload_date' => current_time('mysql')
+                ];
+            }
+        }
+        
+        return $uploadedReports;
+    }
+    
+    /**
+     * Process QA data for saving
+     *
+     * @param array $data Form data
+     * @param array $files $_FILES data
+     * @return array Processed QA data
+     */
+    private static function processQAData($data, $files = null) {
+        $result = [
+            'qa_visit_dates' => null,
+            'qa_reports' => []
+        ];
+        
+        // Process visit dates
+        if (isset($data['qa_visit_dates']) && is_array($data['qa_visit_dates'])) {
+            $dates = array_values(array_filter(array_map([self::class, 'sanitizeText'], $data['qa_visit_dates'])));
+            $result['qa_visit_dates'] = json_encode($dates);
+        }
+        
+        // Get existing reports if updating
+        $existing_reports = [];
+        if (isset($data['qa_reports_metadata']) && !empty($data['qa_reports_metadata'])) {
+            $existing_reports = json_decode($data['qa_reports_metadata'], true) ?: [];
+        }
+        
+        // Handle new file uploads
+        $new_reports = [];
+        if ($files && isset($files['qa_reports'])) {
+            $new_reports = self::handleQAReportUploads(
+                $files['qa_reports'], 
+                $data['qa_visit_dates'] ?? []
+            );
+        }
+        
+        // Merge existing and new reports
+        $result['qa_reports'] = array_merge($existing_reports, $new_reports);
+        
+        return $result;
+    }
+    
+    /**
+     * AJAX: Get class QA data for a specific class
+     *
+     * @return void
+     */
+    public static function getClassQAData() {
+        // Verify nonce
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'wecoza_class_nonce')) {
+            wp_send_json_error('Invalid security token');
+            return;
+        }
+        
+        $class_id = isset($_POST['class_id']) ? intval($_POST['class_id']) : 0;
+        
+        if ($class_id <= 0) {
+            wp_send_json_error('Invalid class ID');
+            return;
+        }
+        
+        // Get class data
+        $controller = new self();
+        $class = $controller->getSingleClass($class_id);
+        
+        if (!$class) {
+            wp_send_json_error('Class not found');
+            return;
+        }
+        
+        // Parse QA visit dates
+        $qa_visit_dates = [];
+        if (!empty($class['qa_visit_dates'])) {
+            if (is_string($class['qa_visit_dates'])) {
+                // Try to decode as JSON first
+                $decoded = json_decode($class['qa_visit_dates'], true);
+                if ($decoded !== null) {
+                    $qa_visit_dates = $decoded;
+                } else {
+                    // Fall back to comma-separated values
+                    $qa_visit_dates = array_map('trim', explode(',', $class['qa_visit_dates']));
+                }
+            } elseif (is_array($class['qa_visit_dates'])) {
+                $qa_visit_dates = $class['qa_visit_dates'];
+            }
+        }
+        
+        $qa_reports = isset($class['qa_reports']) ? $class['qa_reports'] : [];
+        
+        wp_send_json_success([
+            'qa_visit_dates' => $qa_visit_dates,
+            'qa_reports' => $qa_reports
+        ]);
+    }
+    
+    /**
+     * AJAX: Get class notes for a specific class
+     *
+     * @return void
+     */
+    public function getClassNotes() {
+        // Verify nonce
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'wecoza_class_nonce')) {
+            wp_send_json_error('Invalid security token');
+            return;
+        }
+        
+        $class_id = isset($_POST['class_id']) ? intval($_POST['class_id']) : 0;
+        
+        if ($class_id <= 0) {
+            wp_send_json_error('Invalid class ID');
+            return;
+        }
+        
+        // Get class data
+        $class = $this->getSingleClass($class_id);
+        
+        if (!$class) {
+            wp_send_json_error('Class not found');
+            return;
+        }
+        
+        $notes = isset($class['class_notes_data']) ? $class['class_notes_data'] : [];
+        
+        wp_send_json_success([
+            'notes' => $notes,
+            'count' => count($notes)
+        ]);
+    }
+    
+    /**
+     * AJAX: Save a new class note
+     *
+     * @return void
+     */
+    public function saveClassNote() {
+        // Verify nonce
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'wecoza_class_nonce')) {
+            wp_send_json_error('Invalid security token');
+            return;
+        }
+        
+        $class_id = isset($_POST['class_id']) ? intval($_POST['class_id']) : 0;
+        $note_text = isset($_POST['note']) ? sanitize_textarea_field($_POST['note']) : '';
+        $category = isset($_POST['category']) ? sanitize_text_field($_POST['category']) : 'General';
+        $priority = isset($_POST['priority']) ? sanitize_text_field($_POST['priority']) : 'medium';
+        
+        if ($class_id <= 0 || empty($note_text)) {
+            wp_send_json_error('Invalid input data');
+            return;
+        }
+        
+        // Get current class data
+        $class = $this->getSingleClass($class_id);
+        
+        if (!$class) {
+            wp_send_json_error('Class not found');
+            return;
+        }
+        
+        // Get existing notes
+        $notes = isset($class['class_notes_data']) && is_array($class['class_notes_data']) 
+            ? $class['class_notes_data'] 
+            : [];
+        
+        // Process attachments if provided
+        $attachments = [];
+        if (isset($_POST['attachments']) && is_array($_POST['attachments'])) {
+            foreach ($_POST['attachments'] as $attachment) {
+                if (is_array($attachment) && isset($attachment['id'])) {
+                    $attachments[] = [
+                        'id' => intval($attachment['id']),
+                        'url' => esc_url_raw($attachment['url'] ?? ''),
+                        'name' => sanitize_text_field($attachment['name'] ?? ''),
+                        'size' => intval($attachment['size'] ?? 0),
+                        'type' => sanitize_text_field($attachment['type'] ?? '')
+                    ];
+                }
+            }
+        }
+        
+        // Add new note
+        $new_note = [
+            'id' => uniqid('note_'),
+            'note' => $note_text,
+            'category' => $category,
+            'priority' => $priority,
+            'author' => wp_get_current_user()->display_name,
+            'author_id' => get_current_user_id(),
+            'timestamp' => current_time('mysql'),
+            'attachments' => $attachments
+        ];
+        
+        $notes[] = $new_note;
+        
+        // Update class with new notes
+        $db = \WeCozaClasses\Services\Database\DatabaseService::getInstance();
+        
+        try {
+            $sql = "UPDATE public.classes SET class_notes_data = :notes, updated_at = NOW() WHERE class_id = :class_id";
+            $stmt = $db->getPdo()->prepare($sql);
+            $stmt->execute([
+                'notes' => json_encode($notes),
+                'class_id' => $class_id
+            ]);
+            
+            wp_send_json_success([
+                'message' => 'Note added successfully',
+                'note' => $new_note,
+                'total_notes' => count($notes)
+            ]);
+        } catch (\Exception $e) {
+            error_log('Error saving class note: ' . $e->getMessage());
+            wp_send_json_error('Failed to save note');
+        }
+    }
+    
+    /**
+     * AJAX: Delete a class note
+     *
+     * @return void
+     */
+    public static function deleteClassNote() {
+        // Verify nonce
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'wecoza_class_nonce')) {
+            wp_send_json_error('Invalid security token');
+            return;
+        }
+        
+        $class_id = isset($_POST['class_id']) ? intval($_POST['class_id']) : 0;
+        $note_id = isset($_POST['note_id']) ? sanitize_text_field($_POST['note_id']) : '';
+        
+        if ($class_id <= 0 || empty($note_id)) {
+            wp_send_json_error('Invalid input data');
+            return;
+        }
+        
+        // Get current class data
+        $controller = new self();
+        $class = $controller->getSingleClass($class_id);
+        
+        if (!$class) {
+            wp_send_json_error('Class not found');
+            return;
+        }
+        
+        // Get existing notes
+        $notes = isset($class['class_notes_data']) && is_array($class['class_notes_data']) 
+            ? $class['class_notes_data'] 
+            : [];
+        
+        // Find and remove the note
+        $found = false;
+        foreach ($notes as $index => $note) {
+            if (isset($note['id']) && $note['id'] === $note_id) {
+                array_splice($notes, $index, 1);
+                $found = true;
+                break;
+            }
+        }
+        
+        if (!$found) {
+            wp_send_json_error('Note not found');
+            return;
+        }
+        
+        // Update class
+        $db = \WeCozaClasses\Services\Database\DatabaseService::getInstance();
+        
+        try {
+            $sql = "UPDATE public.classes SET class_notes_data = :notes, updated_at = NOW() WHERE class_id = :class_id";
+            $stmt = $db->getPdo()->prepare($sql);
+            $stmt->execute([
+                'notes' => json_encode($notes),
+                'class_id' => $class_id
+            ]);
+            
+            wp_send_json_success([
+                'message' => 'Note deleted successfully',
+                'remaining_notes' => count($notes)
+            ]);
+        } catch (\Exception $e) {
+            error_log('Error deleting class note: ' . $e->getMessage());
+            wp_send_json_error('Failed to delete note');
+        }
+    }
+    
+    /**
+     * AJAX: Submit a QA question
+     *
+     * @return void
+     */
+    public static function submitQAQuestion() {
+        // Verify nonce
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'wecoza_class_nonce')) {
+            wp_send_json_error('Invalid security token');
+            return;
+        }
+        
+        $class_id = isset($_POST['class_id']) ? intval($_POST['class_id']) : 0;
+        $question = isset($_POST['question']) ? sanitize_textarea_field($_POST['question']) : '';
+        $context = isset($_POST['context']) ? sanitize_textarea_field($_POST['context']) : '';
+        
+        if ($class_id <= 0 || empty($question)) {
+            wp_send_json_error('Invalid input data');
+            return;
+        }
+        
+        // Handle file upload if present
+        $attachment_url = '';
+        $attachment_path = '';
+        
+        if (!empty($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
+            $file = $_FILES['attachment'];
+            
+            // Validate file type
+            $allowed_types = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 
+                            'image/jpeg', 'image/png'];
+            if (!in_array($file['type'], $allowed_types)) {
+                wp_send_json_error('Invalid file type');
+                return;
+            }
+            
+            // Validate file size (5MB)
+            if ($file['size'] > 5 * 1024 * 1024) {
+                wp_send_json_error('File size must be less than 5MB');
+                return;
+            }
+            
+            // Upload file
+            $upload_dir = wp_upload_dir();
+            $qa_dir = $upload_dir['basedir'] . '/qa-questions/' . $class_id;
+            
+            if (!file_exists($qa_dir)) {
+                wp_mkdir_p($qa_dir);
+            }
+            
+            $filename = 'question_' . uniqid() . '_' . sanitize_file_name($file['name']);
+            $filepath = $qa_dir . '/' . $filename;
+            
+            if (move_uploaded_file($file['tmp_name'], $filepath)) {
+                $attachment_path = 'qa-questions/' . $class_id . '/' . $filename;
+                $attachment_url = $upload_dir['baseurl'] . '/' . $attachment_path;
+            }
+        }
+        
+        // Create question data
+        $question_data = [
+            'id' => uniqid('qa_'),
+            'question' => $question,
+            'context' => $context,
+            'author' => wp_get_current_user()->display_name,
+            'author_id' => get_current_user_id(),
+            'timestamp' => current_time('mysql'),
+            'status' => 'pending',
+            'answers' => []
+        ];
+        
+        if ($attachment_url) {
+            $question_data['attachment'] = [
+                'url' => $attachment_url,
+                'path' => $attachment_path,
+                'name' => basename($filename)
+            ];
+        }
+        
+        // Get current class data
+        $controller = new self();
+        $class = $controller->getSingleClass($class_id);
+        
+        if (!$class) {
+            wp_send_json_error('Class not found');
+            return;
+        }
+        
+        // Get existing Q&A data (stored in class_notes_data for now)
+        $qa_data = isset($class['qa_data']) && is_array($class['qa_data']) 
+            ? $class['qa_data'] 
+            : [];
+        
+        // Add new question
+        $qa_data[] = $question_data;
+        
+        // For now, we'll store Q&A in a separate field or within class_notes_data
+        // This would need a schema update to add qa_data JSONB column
+        
+        wp_send_json_success([
+            'message' => 'Question submitted successfully',
+            'question' => $question_data
+        ]);
+    }
+    
+    /**
+     * AJAX: Delete a QA report
+     *
+     * @return void
+     */
+    public function deleteQAReport() {
+        // Verify nonce
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'wecoza_class_nonce')) {
+            wp_send_json_error('Invalid security token');
+            return;
+        }
+        
+        $class_id = isset($_POST['class_id']) ? intval($_POST['class_id']) : 0;
+        $report_index = isset($_POST['report_index']) ? intval($_POST['report_index']) : -1;
+        
+        if ($class_id <= 0 || $report_index < 0) {
+            wp_send_json_error('Invalid input data');
+            return;
+        }
+        
+        // Get current class data
+        $class = $this->getSingleClass($class_id);
+        
+        if (!$class) {
+            wp_send_json_error('Class not found');
+            return;
+        }
+        
+        // Get existing reports
+        $reports = isset($class['qa_reports']) && is_array($class['qa_reports']) 
+            ? $class['qa_reports'] 
+            : [];
+        
+        if (!isset($reports[$report_index])) {
+            wp_send_json_error('Report not found');
+            return;
+        }
+        
+        // Get file path to delete
+        $report = $reports[$report_index];
+        $file_path = '';
+        
+        if (isset($report['file_path'])) {
+            $upload_dir = wp_upload_dir();
+            $file_path = $upload_dir['basedir'] . '/' . $report['file_path'];
+        }
+        
+        // Remove from array
+        array_splice($reports, $report_index, 1);
+        
+        // Update class
+        $db = \WeCozaClasses\Services\Database\DatabaseService::getInstance();
+        
+        try {
+            $sql = "UPDATE public.classes SET qa_reports = :reports, updated_at = NOW() WHERE class_id = :class_id";
+            $stmt = $db->getPdo()->prepare($sql);
+            $stmt->execute([
+                'reports' => json_encode($reports),
+                'class_id' => $class_id
+            ]);
+            
+            // Delete file if exists
+            if ($file_path && file_exists($file_path)) {
+                unlink($file_path);
+            }
+            
+            wp_send_json_success([
+                'message' => 'Report deleted successfully',
+                'remaining_reports' => count($reports)
+            ]);
+        } catch (\Exception $e) {
+            error_log('Error deleting QA report: ' . $e->getMessage());
+            wp_send_json_error('Failed to delete report');
+        }
+    }
+    
+    /**
+     * AJAX: Upload attachment to WordPress media library
+     *
+     * @return void
+     */
+    public static function uploadAttachment() {
+        // Verify nonce
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'wecoza_class_nonce')) {
+            wp_send_json_error('Invalid security token');
+            return;
+        }
+        
+        // Check if user can upload files
+        if (!current_user_can('upload_files')) {
+            wp_send_json_error('You do not have permission to upload files');
+            return;
+        }
+        
+        // Check if file was uploaded
+        if (empty($_FILES['file'])) {
+            wp_send_json_error('No file uploaded');
+            return;
+        }
+        
+        $file = $_FILES['file'];
+        $context = isset($_POST['context']) ? sanitize_text_field($_POST['context']) : 'general';
+        
+        // Validate file type
+        $allowed_types = ['application/pdf', 'application/msword', 
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        'application/vnd.ms-excel', 
+                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        'image/jpeg', 'image/png'];
+        
+        $file_type = wp_check_filetype($file['name']);
+        if (!in_array($file['type'], $allowed_types) && !in_array($file_type['type'], $allowed_types)) {
+            wp_send_json_error('Invalid file type');
+            return;
+        }
+        
+        // Validate file size (10MB)
+        if ($file['size'] > 10 * 1024 * 1024) {
+            wp_send_json_error('File size must be less than 10MB');
+            return;
+        }
+        
+        // Handle the upload using WordPress functions
+        require_once(ABSPATH . 'wp-admin/includes/image.php');
+        require_once(ABSPATH . 'wp-admin/includes/file.php');
+        require_once(ABSPATH . 'wp-admin/includes/media.php');
+        
+        // Set custom upload directory
+        add_filter('upload_dir', [__CLASS__, 'customUploadDir']);
+        
+        // Move uploaded file to uploads directory
+        $upload_overrides = array('test_form' => false);
+        $movefile = wp_handle_upload($file, $upload_overrides);
+        
+        // Remove custom upload directory filter
+        remove_filter('upload_dir', [__CLASS__, 'customUploadDir']);
+        
+        if ($movefile && !isset($movefile['error'])) {
+            // File uploaded successfully, now create attachment
+            $filename = $movefile['file'];
+            $filetype = wp_check_filetype(basename($filename), null);
+            $wp_upload_dir = wp_upload_dir();
+            
+            // Prepare attachment data
+            $attachment = array(
+                'guid'           => $wp_upload_dir['url'] . '/' . basename($filename),
+                'post_mime_type' => $filetype['type'],
+                'post_title'     => preg_replace('/\.[^.]+$/', '', basename($filename)),
+                'post_content'   => '',
+                'post_status'    => 'inherit'
+            );
+            
+            // Insert the attachment
+            $attach_id = wp_insert_attachment($attachment, $filename);
+            
+            if (!is_wp_error($attach_id)) {
+                // Generate metadata for the attachment
+                $attach_data = wp_generate_attachment_metadata($attach_id, $filename);
+                wp_update_attachment_metadata($attach_id, $attach_data);
+                
+                // Add custom meta for context
+                update_post_meta($attach_id, '_wecoza_context', $context);
+                
+                wp_send_json_success([
+                    'id' => $attach_id,
+                    'url' => wp_get_attachment_url($attach_id),
+                    'title' => get_the_title($attach_id),
+                    'filename' => basename($filename),
+                    'filesize' => filesize($filename),
+                    'filetype' => $filetype['type']
+                ]);
+            } else {
+                wp_send_json_error('Failed to create attachment');
+            }
+        } else {
+            // Handle error
+            $error = isset($movefile['error']) ? $movefile['error'] : 'File upload failed';
+            wp_send_json_error($error);
+        }
+    }
+    
+    /**
+     * Custom upload directory for class-related files
+     *
+     * @param array $upload
+     * @return array
+     */
+    public static function customUploadDir($upload) {
+        $upload['subdir'] = '/wecoza-classes' . $upload['subdir'];
+        $upload['path'] = $upload['basedir'] . $upload['subdir'];
+        $upload['url'] = $upload['baseurl'] . $upload['subdir'];
+        
+        return $upload;
+    }
 }

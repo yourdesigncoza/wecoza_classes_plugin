@@ -115,6 +115,41 @@ return array(
             'method' => 'getCalendarEvents',
             'public' => true,
         ),
+        'get_class_notes' => array(
+            'controller' => 'WeCozaClasses\\Controllers\\ClassController',
+            'method' => 'getClassNotes',
+            'public' => false,
+        ),
+        'save_class_note' => array(
+            'controller' => 'WeCozaClasses\\Controllers\\ClassController',
+            'method' => 'saveClassNote',
+            'public' => false,
+        ),
+        'delete_qa_report' => array(
+            'controller' => 'WeCozaClasses\\Controllers\\ClassController',
+            'method' => 'deleteQAReport',
+            'public' => false,
+        ),
+        'get_class_qa_data' => array(
+            'controller' => 'WeCozaClasses\\Controllers\\ClassController',
+            'method' => 'getClassQAData',
+            'public' => false,
+        ),
+        'delete_class_note' => array(
+            'controller' => 'WeCozaClasses\\Controllers\\ClassController',
+            'method' => 'deleteClassNote',
+            'public' => false,
+        ),
+        'submit_qa_question' => array(
+            'controller' => 'WeCozaClasses\\Controllers\\ClassController',
+            'method' => 'submitQAQuestion',
+            'public' => false,
+        ),
+        'upload_attachment' => array(
+            'controller' => 'WeCozaClasses\\Controllers\\ClassController',
+            'method' => 'uploadAttachment',
+            'public' => false,
+        ),
     ),
 
     /**
