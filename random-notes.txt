@@ -1,0 +1,176 @@
+Searching 58 files for "Class Notes & QA"
+
+/opt/lampp/htdocs/wecoza/wp-content/plugins/wecoza-classes-plugin/app/Views/components/class-capture-form.view.php:
+   14   * - Funding & Exam Details: SETA funding and exam information
+   15   * - Exam Learners: Selection of learners taking exams (conditionally displayed)
+   16:  * - Class Notes & QA: Quality assurance information
+   17   * - Assignments & Dates: Staff assignments and important dates
+   18   *
+
+/opt/lampp/htdocs/wecoza/wp-content/plugins/wecoza-classes-plugin/app/Views/components/class-capture-partials/update-class.php:
+ 1098  
+ 1099        <?php echo section_divider(); ?>
+ 1100:       <?php echo section_header('Class Notes & QA', 'Add operational notes and quality assurance information for this class.'); ?>
+ 1101:       <!-- Class Notes & QA Information -->
+ 1102        <div class="row">
+ 1103           <!-- Class Notes (Multi-select) -->
+
+---
+
+From Here on I have fragented notes code scrennshots, I need you to get a good grasp of everything.
+
+'qa_reports' => [
+                        [
+                            'date' => date('Y-m-d', strtotime('-5 days')),
+                            'type' => 'Initial QA Visit',
+                            'filename' => 'qa_report_initial_' . $class_id . '.pdf',
+                            'file_path' => '#',
+                            'uploaded_by' => 'QA Manager'
+                        ],
+                        [
+                            'date' => date('Y-m-d', strtotime('-2 days')),
+                            'type' => 'Follow-up QA',
+                            'filename' => 'qa_report_followup_' . $class_id . '.pdf',
+                            'file_path' => '#',
+                            'uploaded_by' => 'Senior QA Officer'
+                        ]
+                    ],
+                    'class_notes_data' => [
+                        [
+                            'note' => 'Class started successfully. All learners present.',
+                            'category' => 'Class on track',
+                            'author' => 'John Doe',
+                            'timestamp' => date('Y-m-d H:i:s', strtotime('-7 days'))
+                        ],
+                        [
+                            'note' => 'Two learners arrived late due to transport issues.',
+                            'category' => 'Poor attendance',
+                            'author' => 'John Doe',
+                            'timestamp' => date('Y-m-d H:i:s', strtotime('-6 days'))
+                        ],
+                        [
+                            'note' => 'QA visit completed. Positive feedback received.',
+                            'category' => 'Good QA report',
+                            'author' => 'QA Manager',
+                            'timestamp' => date('Y-m-d H:i:s', strtotime('-5 days'))
+                        ],
+                        [
+                            'note' => 'Equipment issue resolved. Projector replaced.',
+                            'category' => 'Equipment problems',
+                            'author' => 'John Doe',
+                            'timestamp' => date('Y-m-d H:i:s', strtotime('-3 days'))
+                        ]
+                    ],
+
+---
+
+[{"file_url":"http://localhost/wecoza/wp-content/uploads/qa-reports/YD-2025-05-27-01.pdf","file_path":"qa-reports/YD-2025-05-27-01.pdf","file_size":40334,"upload_date":"2025-05-29 09:20:58","original_name":"YD-2025-05-27-01.pdf"}]
+
+---
+
+Searching 58 files for "qa-reports"
+
+/opt/lampp/htdocs/wecoza/wp-content/plugins/wecoza-classes-plugin/includes/class-activator.php:
+  175          $subdirs = array(
+  176              'class-documents',
+  177:             'qa-reports',
+  178              'certificates',
+  179              'temp'
+
+---
+Screenshot of some data & classes table / qa_reports column
+/home/laudes/Pictures/Screenshots/Screenshot from 2025-07-08 18-38-08.png
+
+---
+Screenshot of some data & classes table / qa_visit_dates column
+/home/laudes/Pictures/Screenshots/Screenshot from 2025-07-08 18-42-28.png
+
+---
+Searching 58 files for "qa_visit_dates"
+
+/opt/lampp/htdocs/wecoza/wp-content/plugins/wecoza-classes-plugin/app/Controllers/ClassController.php:
+  737          if (isset($formData['exam_class'])) $class->setExamClass($formData['exam_class']);
+  738          if (isset($formData['exam_type'])) $class->setExamType($formData['exam_type']);
+  739:         if (isset($formData['qa_visit_dates'])) $class->setQaVisitDates($formData['qa_visit_dates']);
+  740          if (isset($formData['qa_reports'])) $class->setQaReports($formData['qa_reports']);
+  741          if (isset($formData['class_agent'])) $class->setClassAgent($formData['class_agent']);
+  ...
+  823          error_log('processFormData: Processed exam_class: ' . var_export($processed['exam_class'], true));
+  824          $processed['exam_type'] = isset($data['exam_type']) && !is_array($data['exam_type']) ? self::sanitizeText($data['exam_type']) : null;
+  825:         $processed['qa_visit_dates'] = isset($data['qa_visit_dates']) && !is_array($data['qa_visit_dates']) ? self::sanitizeText($data['qa_visit_dates']) : null;
+  826          $processed['class_agent'] = isset($data['class_agent']) && !empty($data['class_agent']) ? intval($data['class_agent']) : null;
+  827          $processed['initial_class_agent'] = isset($data['initial_class_agent']) && !empty($data['initial_class_agent']) ? intval($data['initial_class_agent']) : null;
+
+/opt/lampp/htdocs/wecoza/wp-content/plugins/wecoza-classes-plugin/app/Models/ClassModel.php:
+   77          $this->setExamClass($data['exam_class'] ?? null);
+   78          $this->setExamType($data['exam_type'] ?? null);
+   79:         $this->setQaVisitDates($data['qa_visit_dates'] ?? null);
+   80          $this->setQaReports($this->parseJsonField($data['qa_reports'] ?? []));
+   81          $this->setClassAgent($data['class_agent'] ?? null);
+   ..
+  144                  client_id, site_id, class_address_line, class_type, class_subject,
+  145                  class_code, class_duration, original_start_date, seta_funded, seta,
+  146:                 exam_class, exam_type, qa_visit_dates, qa_reports, class_agent, initial_class_agent,
+  147                  initial_agent_start_date, project_supervisor_id, delivery_date,
+  148                  learner_ids, exam_learners, backup_agent_ids, schedule_data, stop_restart_dates,
+  ...
+  209                  client_id = ?, site_id = ?, class_address_line = ?, class_type = ?,
+  210                  class_subject = ?, class_code = ?, class_duration = ?, original_start_date = ?,
+  211:                 seta_funded = ?, seta = ?, exam_class = ?, exam_type = ?, qa_visit_dates = ?, qa_reports = ?,
+  212                  class_agent = ?, initial_class_agent = ?, initial_agent_start_date = ?,
+  213                  project_supervisor_id = ?, delivery_date = ?, learner_ids = ?, exam_learners = ?, backup_agent_ids = ?,
+
+/opt/lampp/htdocs/wecoza/wp-content/plugins/wecoza-classes-plugin/app/Views/components/class-capture-partials/update-class.php:
+ 1145                 <div class="mb-3">
+ 1146                    <label class="form-label">Visit Date</label>
+ 1147:                   <input type="date" name="qa_visit_dates[]" class="form-control" placeholder="YYYY-MM-DD">
+ 1148                    <div class="invalid-feedback">Please select a valid date.</div>
+ 1149                    <div class="valid-feedback">Looks good!</div>
+ ....
+ 1533  
+ 1534      // Pre-populate QA visit dates and reports if available
+ 1535:     <?php if (isset($data['class_data']['qa_visit_dates']) && !empty($data['class_data']['qa_visit_dates'])): ?>
+ 1536:     const qaVisitDates = <?php echo json_encode($data['class_data']['qa_visit_dates']); ?>;
+ 1537      const qaReportsMetadata = <?php echo json_encode($data['class_data']['qa_reports'] ?? []); ?>;
+ 1538      <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
+ ....
+ 1551                  newRow.removeAttribute('id');
+ 1552  
+ 1553:                 const dateInput = newRow.querySelector('input[name="qa_visit_dates[]"]');
+ 1554                  const fileInput = newRow.querySelector('input[name="qa_reports[]"]');
+ 1555                  
+
+/opt/lampp/htdocs/wecoza/wp-content/plugins/wecoza-classes-plugin/app/Views/components/single-class-display.view.php:
+  504                                      <td class="py-2">
+  505                                          <p class="fw-semibold mb-0">
+  506:                                             <?php if (!empty($class['qa_visit_dates'])): ?>
+  507:                                                 <?php echo esc_html($class['qa_visit_dates']); ?>
+  508                                              <?php else: ?>
+  509                                                  <span class="text-muted">N/A</span>
+
+/opt/lampp/htdocs/wecoza/wp-content/plugins/wecoza-classes-plugin/captured.csv:
+    1: <skipped 152 characters> ...unded":true,"seta":"HWSETA","exam_class":true,"exam_type":"Open Book Exam","project_supervisor_id":4,"delivery_date":"2025-07-07","created_at":"2025-07-03 08:10:27","updated_at":"2025-07-03 08:10:27","site_id":15,"class_subject":"CL4","class_code":"5-GETC-CL4-2025-07-03-10-07","class_duration":120,"qa_visit_dates":null,"class_agent":null,"learner_ids":[{"id":"1","name":"John Doe","level":"","status":"CIC - Currently in Class"},{"id":"2","name":"Jane Smith","level":"","status":"CIC - Currently in Class"},{"id":"3","name":"Mike Johnson","level":"","status":"CIC - Currently in Class"},{"id":"4","name":"Sarah W... <skipped 993 characters> ...
+
+/opt/lampp/htdocs/wecoza/wp-content/plugins/wecoza-classes-plugin/captured.json:
+    1: <skipped 152 characters> ...unded":true,"seta":"HWSETA","exam_class":true,"exam_type":"Open Book Exam","project_supervisor_id":4,"delivery_date":"2025-07-07","created_at":"2025-07-03 08:10:27","updated_at":"2025-07-03 08:10:27","site_id":15,"class_subject":"CL4","class_code":"5-GETC-CL4-2025-07-03-10-07","class_duration":120,"qa_visit_dates":null,"class_agent":null,"learner_ids":[{"id":"1","name":"John Doe","level":"","status":"CIC - Currently in Class"},{"id":"2","name":"Jane Smith","level":"","status":"CIC - Currently in Class"},{"id":"3","name":"Mike Johnson","level":"","status":"CIC - Currently in Class"},{"id":"4","name":"Sarah W... <skipped 993 characters> ...
+    2  
+
+/opt/lampp/htdocs/wecoza/wp-content/plugins/wecoza-classes-plugin/includes/migrations/create-classes-table.php:
+   48                  class_code VARCHAR(50),
+   49                  class_duration INTEGER,
+   50:                 qa_visit_dates TEXT,
+   51                  class_agent INTEGER,
+   52                  learner_ids JSONB DEFAULT '[]'::jsonb,
+
+/opt/lampp/htdocs/wecoza/wp-content/plugins/wecoza-classes-plugin/random-notes.txt:
+   62  
+   63  ---
+   64: Screenshot of some data & classes table / qa_visit_dates column
+   65  /home/laudes/Pictures/Screenshots/Screenshot from 2025-07-08 18-42-28.png
+
+/opt/lampp/htdocs/wecoza/wp-content/plugins/wecoza-classes-plugin/schema/classes_schema.sql:
+   44      class_code character varying(50),
+   45      class_duration integer,
+   46:     qa_visit_dates text,
+   47      class_agent integer,
+   48      learner_ids jsonb DEFAULT '[]'::jsonb,
