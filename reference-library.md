@@ -43,6 +43,7 @@
    - QA data model with PostgreSQL integration
    - Analytics data processing and aggregation
    - Export functionality for CSV reports
+   - Fixed database connection using DatabaseService::getInstance() singleton pattern
 
 3. **app/Views/qa-analytics-dashboard.php**
    - Full QA analytics dashboard with Chart.js integration

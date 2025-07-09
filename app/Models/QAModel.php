@@ -14,7 +14,7 @@ class QAModel {
     private $db;
 
     public function __construct() {
-        $this->db = new DatabaseService();
+        $this->db = DatabaseService::getInstance();
     }
 
     /**
