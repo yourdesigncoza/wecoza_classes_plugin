@@ -58,6 +58,7 @@ return array(
         'WeCozaClasses\\Controllers\\ClassController',
         'WeCozaClasses\\Controllers\\ClassTypesController',
         'WeCozaClasses\\Controllers\\PublicHolidaysController',
+        'WeCozaClasses\\Controllers\\QAController',
     ),
 
     /**
@@ -78,6 +79,16 @@ return array(
             'controller' => 'WeCozaClasses\\Controllers\\ClassController',
             'method' => 'displaySingleClassShortcode',
             'description' => 'Display single class details',
+        ),
+        'qa_dashboard_widget' => array(
+            'controller' => 'WeCozaClasses\\Controllers\\QAController',
+            'method' => 'renderQADashboardWidget',
+            'description' => 'Display QA dashboard widget for administrator homepage',
+        ),
+        'qa_analytics_dashboard' => array(
+            'controller' => 'WeCozaClasses\\Controllers\\QAController',
+            'method' => 'renderQAAnalyticsDashboard',
+            'description' => 'Display full QA analytics dashboard',
         ),
     ),
 
@@ -148,6 +159,31 @@ return array(
         'upload_attachment' => array(
             'controller' => 'WeCozaClasses\\Controllers\\ClassController',
             'method' => 'uploadAttachment',
+            'public' => false,
+        ),
+        'get_qa_analytics' => array(
+            'controller' => 'WeCozaClasses\\Controllers\\QAController',
+            'method' => 'getQAAnalytics',
+            'public' => false,
+        ),
+        'get_qa_summary' => array(
+            'controller' => 'WeCozaClasses\\Controllers\\QAController',
+            'method' => 'getQASummary',
+            'public' => false,
+        ),
+        'get_qa_visits' => array(
+            'controller' => 'WeCozaClasses\\Controllers\\QAController',
+            'method' => 'getQAVisits',
+            'public' => false,
+        ),
+        'create_qa_visit' => array(
+            'controller' => 'WeCozaClasses\\Controllers\\QAController',
+            'method' => 'createQAVisit',
+            'public' => false,
+        ),
+        'export_qa_reports' => array(
+            'controller' => 'WeCozaClasses\\Controllers\\QAController',
+            'method' => 'exportQAReports',
             'public' => false,
         ),
     ),

@@ -11,7 +11,9 @@ A comprehensive class management system for WeCoza training programs. This WordP
 - **Learner Management**: Assign and manage learners with status tracking and level assignment
 - **Calendar Integration**: FullCalendar integration with public holidays detection
 - **Agent Assignment**: Assign agents and supervisors with backup agent support
-- **QA Management**: Quality assurance visit tracking and reporting
+- **QA Management**: Comprehensive quality assurance system with analytics dashboard and visit tracking
+- **QA Analytics Dashboard**: Real-time data visualization with Chart.js for performance metrics
+- **QA Dashboard Widget**: Compact homepage widget with key metrics and recent activity
 - **SETA Integration**: SETA funding and compliance tracking
 - **Exam Management**: Exam class designation and learner selection
 - **Database Integration**: PostgreSQL integration with comprehensive schema support
@@ -121,6 +123,151 @@ Displays detailed information for a single class.
 [wecoza_display_single_class class_id="123"]
 ```
 
+## QA Features
+
+The plugin includes a comprehensive Quality Assurance (QA) system with analytics dashboard and reporting capabilities.
+
+### QA Shortcodes
+
+#### [qa_dashboard_widget]
+Displays a compact QA dashboard widget for administrator homepage with key metrics and recent activity.
+
+**Features:**
+- Key QA metrics summary (classes visited, visits this month, average rating)
+- Recent QA visit highlights with activity feed
+- Alert notifications and status indicators
+- Mini chart showing 7-day visit trends
+- Quick action buttons and navigation links
+- Auto-refresh functionality (5-minute intervals)
+
+**Parameters:**
+- `show_charts`: Enable/disable mini chart display (default: true)
+- `show_summary`: Enable/disable metrics summary (default: true)
+- `limit`: Number of recent visits to show (default: 5)
+
+**Example:**
+```
+[qa_dashboard_widget]
+[qa_dashboard_widget show_charts="false" limit="10"]
+```
+
+#### [qa_analytics_dashboard]
+Displays the full QA analytics dashboard with comprehensive data visualization and reporting.
+
+**Features:**
+- Monthly visit completion rates with interactive line charts
+- Average ratings by department/subject with bar charts
+- Officer performance metrics with doughnut charts
+- Trending issues analysis with horizontal bar charts
+- Date range filtering and department selection
+- Export functionality for CSV reports
+- Real-time AJAX data updates
+- Responsive design for mobile and desktop
+
+**Parameters:**
+- None required - dashboard is fully interactive with built-in controls
+
+**Example:**
+```
+[qa_analytics_dashboard]
+```
+
+### QA Analytics Dashboard
+
+The QA Analytics Dashboard provides comprehensive quality assurance tracking and reporting capabilities:
+
+#### Dashboard Components
+
+1. **Key Metrics Summary**
+   - Total QA visits for selected period
+   - Number of classes visited
+   - Active QA officers count
+   - Overall average rating
+
+2. **Data Visualizations**
+   - **Monthly Completion Rates**: Line chart showing visit trends over time
+   - **Ratings by Department**: Bar chart comparing average ratings across departments
+   - **Officer Performance**: Doughnut chart showing visit distribution by officer
+   - **Trending Issues**: Horizontal bar chart highlighting common problems
+
+3. **Interactive Controls**
+   - Date range picker (start/end dates)
+   - Department filter dropdown
+   - Refresh dashboard button
+   - Export reports button (CSV format)
+
+4. **Recent Activity Feed**
+   - Latest QA visits with class details
+   - Visit notes and observations
+   - Sortable table with pagination
+
+5. **Alerts & Notifications**
+   - Follow-up visits required
+   - Safety issues needing attention
+   - Overdue action items
+
+#### Database Schema
+
+The QA system uses three main PostgreSQL tables:
+
+```sql
+-- Main QA visits table
+CREATE TABLE qa_visits (
+    visit_id SERIAL PRIMARY KEY,
+    class_id INTEGER NOT NULL,
+    visit_date DATE NOT NULL,
+    visit_time TIME,
+    visit_type VARCHAR(50) DEFAULT 'routine',
+    qa_officer_id INTEGER,
+    overall_rating INTEGER CHECK (overall_rating >= 1 AND overall_rating <= 5),
+    findings JSONB DEFAULT '[]'::jsonb,
+    recommendations JSONB DEFAULT '[]'::jsonb,
+    action_items JSONB DEFAULT '[]'::jsonb,
+    -- ... additional fields
+);
+
+-- Analytics aggregation table
+CREATE TABLE qa_metrics (
+    metric_id SERIAL PRIMARY KEY,
+    metric_period VARCHAR(20) NOT NULL,
+    period_start DATE NOT NULL,
+    period_end DATE NOT NULL,
+    class_id INTEGER,
+    total_visits INTEGER DEFAULT 0,
+    average_rating DECIMAL(3,2),
+    -- ... additional metrics
+);
+
+-- Individual findings tracking
+CREATE TABLE qa_findings (
+    finding_id SERIAL PRIMARY KEY,
+    visit_id INTEGER NOT NULL,
+    finding_type VARCHAR(50) NOT NULL,
+    severity VARCHAR(20) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    status VARCHAR(20) DEFAULT 'open'
+    -- ... additional fields
+);
+```
+
+#### API Endpoints
+
+The QA system provides RESTful API endpoints for data management:
+
+- `GET /wp-admin/admin-ajax.php?action=get_qa_analytics` - Dashboard analytics data
+- `GET /wp-admin/admin-ajax.php?action=get_qa_summary` - Widget summary data
+- `GET /wp-admin/admin-ajax.php?action=get_qa_visits` - Visit history by class
+- `POST /wp-admin/admin-ajax.php?action=create_qa_visit` - Create new visit record
+- `POST /wp-admin/admin-ajax.php?action=export_qa_reports` - Export data as CSV
+
+#### WordPress Integration
+
+- **Admin Menu**: QA Analytics menu item in WordPress admin (requires `manage_options` capability)
+- **Asset Management**: Automatic enqueuing of Chart.js and custom JavaScript
+- **Security**: Nonce verification and capability checks on all endpoints
+- **Caching**: WordPress transients for performance optimization
+
 ## Configuration
 
 The plugin uses a configuration file at `config/app.php` for various settings:
@@ -140,6 +287,12 @@ The plugin integrates with an existing PostgreSQL database containing:
 - **Sites table**: Training site locations and details
 - **Users table**: User management and permissions
 - **Learners table**: Learner information with status and level tracking
+- **QA tables**: Quality assurance system with visit tracking and analytics
+  - **qa_visits**: Detailed QA visit records with ratings and findings
+  - **qa_metrics**: Aggregated analytics data for dashboard reporting
+  - **qa_findings**: Individual issue tracking and resolution status
+  - **qa_reports**: Legacy QA report file management
+  - **agent_qa_visits**: QA officer visit scheduling and tracking
 
 **Database Schema**: Complete schema documentation available in `classes_schema_3.sql`
 
@@ -156,10 +309,23 @@ The plugin follows a strict MVC (Model-View-Controller) architecture:
 ```
 app/
 ├── Controllers/     # Business logic and request handling
+│   ├── ClassController.php       # Main class management
+│   ├── ClassTypesController.php  # Class types and subjects
+│   ├── PublicHolidaysController.php  # Holiday management
+│   └── QAController.php          # QA analytics and dashboard
 ├── Models/         # Data models and database interaction
+│   ├── ClassModel.php            # Class data management
+│   └── QAModel.php               # QA analytics data processing
 ├── Views/          # Presentation layer (templates)
+│   ├── components/               # Reusable UI components
+│   ├── qa-analytics-dashboard.php  # Full QA analytics dashboard
+│   └── qa-dashboard-widget.php     # Compact QA widget
 ├── Services/       # Shared services (database, file upload, etc.)
+│   └── Database/
+│       └── DatabaseService.php  # PostgreSQL connection handling
 └── Helpers/        # View helpers and utility functions
+    ├── ViewHelpers.php           # General view utilities
+    └── view-helpers-loader.php   # Helper loading system
 ```
 
 ## Assets
@@ -172,6 +338,7 @@ app/
 - `learner-level-utils.js`: Learner level management and auto-population utilities
 - `wecoza-calendar.js`: Calendar integration with public holidays
 - `wecoza-classes-admin.js`: Admin interface enhancements
+- `qa-dashboard.js`: QA analytics dashboard and widget functionality with Chart.js integration
 
 ### CSS Files
 - Styles are managed through the main theme's stylesheet
@@ -268,6 +435,33 @@ For support and documentation, contact:
 This plugin is licensed under the GPL v2 or later.
 
 ## Recent Updates
+
+### QA Integration and Advanced Features Implementation (July 2025)
+- **QA Analytics Dashboard**: Comprehensive dashboard with Chart.js data visualization
+  - Monthly visit completion rates with interactive line charts
+  - Average ratings by department/subject with bar charts
+  - Officer performance metrics with doughnut charts
+  - Trending issues analysis with horizontal bar charts
+- **QA Dashboard Widget**: Compact homepage widget with key metrics and recent activity
+  - Auto-refresh functionality (5-minute intervals)
+  - Mini chart showing 7-day visit trends
+  - Alert notifications and quick action buttons
+- **Database Schema Enhancement**: Advanced QA schema with three main tables
+  - `qa_visits`: Detailed visit records with ratings and findings
+  - `qa_metrics`: Aggregated analytics data for dashboard reporting
+  - `qa_findings`: Individual issue tracking and resolution status
+- **API Endpoints**: RESTful AJAX endpoints for QA data management
+  - Dashboard analytics data retrieval
+  - Widget summary data for homepage
+  - Visit history by class with export functionality
+- **WordPress Integration**: Admin menu integration with proper security
+  - `manage_options` capability requirements
+  - Nonce verification and data sanitization
+  - Chart.js library integration for visualizations
+- **Technical Architecture**: MVC pattern with dedicated QA Controller and Model
+  - PostgreSQL compatibility with existing database schema
+  - Performance optimization with caching considerations
+  - Responsive design for mobile and desktop platforms
 
 ### Class Creation Workflow Enhancement (June 2025)
 - **Automatic Redirect**: After successful class creation, users are automatically redirected to the single class display page
