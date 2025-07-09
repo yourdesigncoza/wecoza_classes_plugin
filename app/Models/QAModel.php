@@ -88,7 +88,7 @@ class QAModel {
             ORDER BY qr.report_date DESC
         ";
         
-        return $this->db->query($query, [$class_id]);
+        return $this->db->query($query, [$class_id])->fetchAll();
     }
 
     /**
@@ -109,7 +109,8 @@ class QAModel {
             $visit_data['visit_notes'] ?? ''
         ]);
         
-        return $result[0]['qa_report_id'] ?? null;
+        $row = $result->fetch();
+        return $row['qa_report_id'] ?? null;
     }
 
     /**
@@ -128,7 +129,7 @@ class QAModel {
             ORDER BY month ASC
         ";
         
-        return $this->db->query($query, [$start_date, $end_date]);
+        return $this->db->query($query, [$start_date, $end_date])->fetchAll();
     }
 
     /**
@@ -156,7 +157,7 @@ class QAModel {
         
         $query .= " GROUP BY c.class_subject, c.class_type ORDER BY avg_rating DESC";
         
-        return $this->db->query($query, $params);
+        return $this->db->query($query, $params)->fetchAll();
     }
 
     /**
@@ -176,7 +177,7 @@ class QAModel {
             ORDER BY total_visits DESC
         ";
         
-        return $this->db->query($query, [$start_date, $end_date]);
+        return $this->db->query($query, [$start_date, $end_date])->fetchAll();
     }
 
     /**
@@ -208,7 +209,7 @@ class QAModel {
         ";
         
         $result = $this->db->query($query, [$start_date, $end_date]);
-        return $result[0] ?? [];
+        return $result->fetch() ?? [];
     }
 
     /**
@@ -229,7 +230,7 @@ class QAModel {
             LIMIT $1
         ";
         
-        return $this->db->query($query, [$limit]);
+        return $this->db->query($query, [$limit])->fetchAll();
     }
 
     /**
@@ -246,7 +247,7 @@ class QAModel {
         ";
         
         $result = $this->db->query($query);
-        return $result[0] ?? [];
+        return $result->fetch() ?? [];
     }
 
     /**
@@ -279,6 +280,6 @@ class QAModel {
             ORDER BY qr.report_date DESC
         ";
         
-        return $this->db->query($query, [$start_date, $end_date]);
+        return $this->db->query($query, [$start_date, $end_date])->fetchAll();
     }
 }
