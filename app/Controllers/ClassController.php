@@ -40,6 +40,10 @@ class ClassController {
         \add_action('wp_ajax_nopriv_get_class_subjects', [__CLASS__, 'getClassSubjectsAjax']);
         \add_action('wp_ajax_get_class_qa_data', [__CLASS__, 'getClassQAData']);
         \add_action('wp_ajax_nopriv_get_class_qa_data', [__CLASS__, 'getClassQAData']);
+        \add_action('wp_ajax_get_class_notes', [__CLASS__, 'getClassNotes']);
+        \add_action('wp_ajax_nopriv_get_class_notes', [__CLASS__, 'getClassNotes']);
+        \add_action('wp_ajax_save_class_note', [__CLASS__, 'saveClassNote']);
+        \add_action('wp_ajax_nopriv_save_class_note', [__CLASS__, 'saveClassNote']);
         \add_action('wp_ajax_delete_class_note', [__CLASS__, 'deleteClassNote']);
         \add_action('wp_ajax_nopriv_delete_class_note', [__CLASS__, 'deleteClassNote']);
         \add_action('wp_ajax_submit_qa_question', [__CLASS__, 'submitQAQuestion']);
@@ -3009,197 +3013,8 @@ class ClassController {
         ]);
     }
     
-    /**
-     * AJAX: Get class notes for a specific class
-     *
-     * @return void
-     */
-    public function getClassNotes() {
-        // Verify nonce
-        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'wecoza_class_nonce')) {
-            wp_send_json_error('Invalid security token');
-            return;
-        }
-        
-        $class_id = isset($_POST['class_id']) ? intval($_POST['class_id']) : 0;
-        
-        if ($class_id <= 0) {
-            wp_send_json_error('Invalid class ID');
-            return;
-        }
-        
-        // Get class data
-        $class = $this->getSingleClass($class_id);
-        
-        if (!$class) {
-            wp_send_json_error('Class not found');
-            return;
-        }
-        
-        $notes = isset($class['class_notes_data']) ? $class['class_notes_data'] : [];
-        
-        wp_send_json_success([
-            'notes' => $notes,
-            'count' => count($notes)
-        ]);
-    }
     
-    /**
-     * AJAX: Save a new class note
-     *
-     * @return void
-     */
-    public function saveClassNote() {
-        // Verify nonce
-        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'wecoza_class_nonce')) {
-            wp_send_json_error('Invalid security token');
-            return;
-        }
-        
-        $class_id = isset($_POST['class_id']) ? intval($_POST['class_id']) : 0;
-        $note_text = isset($_POST['note']) ? sanitize_textarea_field($_POST['note']) : '';
-        $category = isset($_POST['category']) ? sanitize_text_field($_POST['category']) : 'General';
-        $priority = isset($_POST['priority']) ? sanitize_text_field($_POST['priority']) : 'medium';
-        
-        if ($class_id <= 0 || empty($note_text)) {
-            wp_send_json_error('Invalid input data');
-            return;
-        }
-        
-        // Get current class data
-        $class = $this->getSingleClass($class_id);
-        
-        if (!$class) {
-            wp_send_json_error('Class not found');
-            return;
-        }
-        
-        // Get existing notes
-        $notes = isset($class['class_notes_data']) && is_array($class['class_notes_data']) 
-            ? $class['class_notes_data'] 
-            : [];
-        
-        // Process attachments if provided
-        $attachments = [];
-        if (isset($_POST['attachments']) && is_array($_POST['attachments'])) {
-            foreach ($_POST['attachments'] as $attachment) {
-                if (is_array($attachment) && isset($attachment['id'])) {
-                    $attachments[] = [
-                        'id' => intval($attachment['id']),
-                        'url' => esc_url_raw($attachment['url'] ?? ''),
-                        'name' => sanitize_text_field($attachment['name'] ?? ''),
-                        'size' => intval($attachment['size'] ?? 0),
-                        'type' => sanitize_text_field($attachment['type'] ?? '')
-                    ];
-                }
-            }
-        }
-        
-        // Add new note
-        $new_note = [
-            'id' => uniqid('note_'),
-            'note' => $note_text,
-            'category' => $category,
-            'priority' => $priority,
-            'author' => wp_get_current_user()->display_name,
-            'author_id' => get_current_user_id(),
-            'timestamp' => current_time('mysql'),
-            'attachments' => $attachments
-        ];
-        
-        $notes[] = $new_note;
-        
-        // Update class with new notes
-        $db = \WeCozaClasses\Services\Database\DatabaseService::getInstance();
-        
-        try {
-            $sql = "UPDATE public.classes SET class_notes_data = :notes, updated_at = NOW() WHERE class_id = :class_id";
-            $stmt = $db->getPdo()->prepare($sql);
-            $stmt->execute([
-                'notes' => json_encode($notes),
-                'class_id' => $class_id
-            ]);
-            
-            wp_send_json_success([
-                'message' => 'Note added successfully',
-                'note' => $new_note,
-                'total_notes' => count($notes)
-            ]);
-        } catch (\Exception $e) {
-            error_log('Error saving class note: ' . $e->getMessage());
-            wp_send_json_error('Failed to save note');
-        }
-    }
     
-    /**
-     * AJAX: Delete a class note
-     *
-     * @return void
-     */
-    public static function deleteClassNote() {
-        // Verify nonce
-        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'wecoza_class_nonce')) {
-            wp_send_json_error('Invalid security token');
-            return;
-        }
-        
-        $class_id = isset($_POST['class_id']) ? intval($_POST['class_id']) : 0;
-        $note_id = isset($_POST['note_id']) ? sanitize_text_field($_POST['note_id']) : '';
-        
-        if ($class_id <= 0 || empty($note_id)) {
-            wp_send_json_error('Invalid input data');
-            return;
-        }
-        
-        // Get current class data
-        $controller = new self();
-        $class = $controller->getSingleClass($class_id);
-        
-        if (!$class) {
-            wp_send_json_error('Class not found');
-            return;
-        }
-        
-        // Get existing notes
-        $notes = isset($class['class_notes_data']) && is_array($class['class_notes_data']) 
-            ? $class['class_notes_data'] 
-            : [];
-        
-        // Find and remove the note
-        $found = false;
-        foreach ($notes as $index => $note) {
-            if (isset($note['id']) && $note['id'] === $note_id) {
-                array_splice($notes, $index, 1);
-                $found = true;
-                break;
-            }
-        }
-        
-        if (!$found) {
-            wp_send_json_error('Note not found');
-            return;
-        }
-        
-        // Update class
-        $db = \WeCozaClasses\Services\Database\DatabaseService::getInstance();
-        
-        try {
-            $sql = "UPDATE public.classes SET class_notes_data = :notes, updated_at = NOW() WHERE class_id = :class_id";
-            $stmt = $db->getPdo()->prepare($sql);
-            $stmt->execute([
-                'notes' => json_encode($notes),
-                'class_id' => $class_id
-            ]);
-            
-            wp_send_json_success([
-                'message' => 'Note deleted successfully',
-                'remaining_notes' => count($notes)
-            ]);
-        } catch (\Exception $e) {
-            error_log('Error deleting class note: ' . $e->getMessage());
-            wp_send_json_error('Failed to delete note');
-        }
-    }
     
     /**
      * AJAX: Submit a QA question
@@ -3487,6 +3302,347 @@ class ClassController {
         }
     }
     
+    /**
+     * Get class notes via AJAX
+     */
+    /**
+     * Get cached class notes with transient support and performance optimizations
+     * Uses PostgreSQL database with JSONB column for class_notes_data
+     * @param int $class_id The class ID
+     * @param array $options Optional parameters for optimization
+     * @return array Array of notes
+     */
+    private static function getCachedClassNotes($class_id, $options = []) {
+        $cache_key = "wecoza_class_notes_{$class_id}";
+        $cached_notes = get_transient($cache_key);
+        
+        if ($cached_notes !== false) {
+            return $cached_notes;
+        }
+        
+        // Use PostgreSQL connection for external database
+        $db_config = include(plugin_dir_path(__FILE__) . '../../config/app.php');
+        $pg_config = $db_config['database']['postgresql'];
+        
+        try {
+            $pdo = new \PDO(
+                "pgsql:host={$pg_config['host']};port={$pg_config['port']};dbname={$pg_config['dbname']}",
+                $pg_config['user'],
+                $pg_config['password'],
+                [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION]
+            );
+            
+            // Query PostgreSQL classes table for class_notes_data JSONB column
+            $stmt = $pdo->prepare("SELECT class_notes_data FROM public.classes WHERE class_id = :class_id LIMIT 1");
+            $stmt->bindParam(':class_id', $class_id, \PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+            
+            $notes = [];
+            if ($result && !empty($result['class_notes_data'])) {
+                $notes_data = json_decode($result['class_notes_data'], true);
+                if (is_array($notes_data)) {
+                    $notes = $notes_data;
+                    
+                    // Sort notes by created_at for better performance
+                    usort($notes, function($a, $b) {
+                        return strtotime($b['created_at']) - strtotime($a['created_at']);
+                    });
+                    
+                    // Apply pagination limits early to reduce memory usage
+                    $limit = isset($options['limit']) ? (int)$options['limit'] : 50;
+                    $offset = isset($options['offset']) ? (int)$options['offset'] : 0;
+                    
+                    if ($limit > 0) {
+                        $notes = array_slice($notes, $offset, $limit);
+                    }
+                }
+            }
+            
+            // Cache for 15 minutes with performance optimizations
+            set_transient($cache_key, $notes, 15 * MINUTE_IN_SECONDS);
+            
+            return $notes;
+            
+        } catch (\PDOException $e) {
+            // Log error and return empty array
+            error_log("PostgreSQL connection error in getCachedClassNotes: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    /**
+     * Clear cached class notes
+     * @param int $class_id The class ID
+     */
+    private static function clearCachedClassNotes($class_id) {
+        $cache_key = "wecoza_class_notes_{$class_id}";
+        delete_transient($cache_key);
+    }
+    
+    /**
+     * Clear all class notes caches (for bulk operations)
+     */
+    private static function clearAllClassNotesCache() {
+        global $wpdb;
+        
+        // Get all transient keys for class notes
+        $transient_keys = $wpdb->get_col(
+            "SELECT option_name FROM {$wpdb->options} 
+             WHERE option_name LIKE '_transient_wecoza_class_notes_%'"
+        );
+        
+        foreach ($transient_keys as $key) {
+            $transient_name = str_replace('_transient_', '', $key);
+            delete_transient($transient_name);
+        }
+    }
+
+    public static function getClassNotes() {
+        // Verify nonce
+        if (!wp_verify_nonce($_POST['nonce'], 'wecoza_class_nonce')) {
+            wp_send_json_error('Invalid nonce');
+        }
+        
+        $class_id = intval($_POST['class_id']);
+        if (!$class_id) {
+            wp_send_json_error('Invalid class ID');
+        }
+        
+        // Use cached notes
+        $notes = self::getCachedClassNotes($class_id);
+        
+        if ($notes === false) {
+            wp_send_json_error('Class not found');
+        }
+        
+        // Parse class notes
+        if (!is_array($notes)) {
+            $notes = [];
+        }
+        
+        // Add author names and format dates
+        foreach ($notes as &$note) {
+            if (isset($note['author_id'])) {
+                $user = get_user_by('id', $note['author_id']);
+                $note['author_name'] = $user ? $user->display_name : 'Unknown';
+            }
+            
+            // Ensure dates are properly formatted
+            if (isset($note['created_at'])) {
+                $note['created_at'] = date('c', strtotime($note['created_at']));
+            }
+            if (isset($note['updated_at'])) {
+                $note['updated_at'] = date('c', strtotime($note['updated_at']));
+            }
+        }
+        
+        wp_send_json_success(['notes' => $notes]);
+    }
+    
+    /**
+     * Save class note via AJAX
+     */
+    public static function saveClassNote() {
+        // Verify nonce
+        if (!wp_verify_nonce($_POST['nonce'], 'wecoza_class_nonce')) {
+            wp_send_json_error('Invalid nonce');
+        }
+        
+        $class_id = intval($_POST['class_id']);
+        if (!$class_id) {
+            wp_send_json_error('Invalid class ID');
+        }
+        
+        $note_data = $_POST['note'];
+        if (!$note_data) {
+            wp_send_json_error('No note data provided');
+        }
+        
+        // Validate note data
+        $note = [
+            'id' => isset($note_data['id']) ? sanitize_text_field($note_data['id']) : uniqid('note_'),
+            'title' => sanitize_text_field($note_data['title']),
+            'content' => sanitize_textarea_field($note_data['content']),
+            'category' => sanitize_text_field($note_data['category'] ?? 'general'),
+            'priority' => sanitize_text_field($note_data['priority'] ?? 'medium'),
+            'tags' => isset($note_data['tags']) ? array_map('sanitize_text_field', explode(',', $note_data['tags'])) : [],
+            'author_id' => get_current_user_id(),
+            'created_at' => isset($note_data['created_at']) ? $note_data['created_at'] : date('c'),
+            'updated_at' => date('c'),
+            'attachments' => isset($note_data['attachments']) ? $note_data['attachments'] : []
+        ];
+        
+        // Basic validation
+        if (empty($note['title'])) {
+            wp_send_json_error('Note title is required');
+        }
+        
+        if (empty($note['content'])) {
+            wp_send_json_error('Note content is required');
+        }
+        
+        // Use PostgreSQL connection for external database
+        $db_config = include(plugin_dir_path(__FILE__) . '../../config/app.php');
+        $pg_config = $db_config['database']['postgresql'];
+        
+        try {
+            $pdo = new \PDO(
+                "pgsql:host={$pg_config['host']};port={$pg_config['port']};dbname={$pg_config['dbname']}",
+                $pg_config['user'],
+                $pg_config['password'],
+                [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION]
+            );
+            
+            // Get current class notes from PostgreSQL
+            $stmt = $pdo->prepare("SELECT class_notes_data FROM public.classes WHERE class_id = :class_id LIMIT 1");
+            $stmt->bindParam(':class_id', $class_id, \PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+            
+            if (!$result) {
+                wp_send_json_error('Class not found');
+            }
+            
+            // Parse existing notes
+            $notes = [];
+            if (!empty($result['class_notes_data'])) {
+                $notes_data = json_decode($result['class_notes_data'], true);
+                if (is_array($notes_data)) {
+                    $notes = $notes_data;
+                }
+            }
+            
+            // Find existing note or add new one
+            $note_found = false;
+            foreach ($notes as &$existing_note) {
+                if ($existing_note['id'] === $note['id']) {
+                    // Update existing note
+                    $existing_note = array_merge($existing_note, $note);
+                    $note_found = true;
+                    break;
+                }
+            }
+            
+            if (!$note_found) {
+                // Add new note
+                $notes[] = $note;
+            }
+            
+            // Update PostgreSQL database with JSONB
+            $notes_json = json_encode($notes);
+            $update_stmt = $pdo->prepare("UPDATE public.classes SET class_notes_data = :notes_data, updated_at = NOW() WHERE class_id = :class_id");
+            $update_stmt->bindParam(':notes_data', $notes_json, \PDO::PARAM_STR);
+            $update_stmt->bindParam(':class_id', $class_id, \PDO::PARAM_INT);
+            $update_result = $update_stmt->execute();
+        
+            if ($update_result) {
+                // Clear cache after successful save
+                self::clearCachedClassNotes($class_id);
+                
+                // Add author name for response
+                $user = get_user_by('id', $note['author_id']);
+                $note['author_name'] = $user ? $user->display_name : 'Unknown';
+                
+                wp_send_json_success(['note' => $note]);
+            } else {
+                wp_send_json_error('Failed to save note');
+            }
+            
+        } catch (\PDOException $e) {
+            // Log error and return error response
+            error_log("PostgreSQL error in saveClassNote: " . $e->getMessage());
+            wp_send_json_error('Database error: Failed to save note');
+        }
+    }
+    
+    /**
+     * Delete class note via AJAX
+     */
+    public static function deleteClassNote() {
+        // Verify nonce
+        if (!wp_verify_nonce($_POST['nonce'], 'wecoza_class_nonce')) {
+            wp_send_json_error('Invalid nonce');
+        }
+        
+        $class_id = intval($_POST['class_id'] ?? 0);
+        $note_id = sanitize_text_field($_POST['note_id'] ?? '');
+        
+        if (!$class_id || !$note_id) {
+            wp_send_json_error('Invalid class ID or note ID');
+        }
+        
+        // Use PostgreSQL connection for external database
+        $db_config = include(plugin_dir_path(__FILE__) . '../../config/app.php');
+        $pg_config = $db_config['database']['postgresql'];
+        
+        try {
+            $pdo = new \PDO(
+                "pgsql:host={$pg_config['host']};port={$pg_config['port']};dbname={$pg_config['dbname']}",
+                $pg_config['user'],
+                $pg_config['password'],
+                [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION]
+            );
+            
+            // Get current class notes from PostgreSQL
+            $stmt = $pdo->prepare("SELECT class_notes_data FROM public.classes WHERE class_id = :class_id LIMIT 1");
+            $stmt->bindParam(':class_id', $class_id, \PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+            
+            if (!$result) {
+                wp_send_json_error('Class not found');
+            }
+            
+            // Parse existing notes
+            $notes = [];
+            if (!empty($result['class_notes_data'])) {
+                $notes_data = json_decode($result['class_notes_data'], true);
+                if (is_array($notes_data)) {
+                    $notes = $notes_data;
+                }
+            }
+            
+            // Filter out the note to delete
+            $original_count = count($notes);
+            $notes = array_filter($notes, function($note) use ($note_id) {
+                return $note['id'] !== $note_id;
+            });
+            
+            // Check if note was found and removed
+            if (count($notes) === $original_count) {
+                wp_send_json_error('Note not found');
+            }
+            
+            // Re-index array
+            $notes = array_values($notes);
+            
+            // Update PostgreSQL database with JSONB
+            $notes_json = json_encode($notes);
+            $update_stmt = $pdo->prepare("UPDATE public.classes SET class_notes_data = :notes_data, updated_at = NOW() WHERE class_id = :class_id");
+            $update_stmt->bindParam(':notes_data', $notes_json, \PDO::PARAM_STR);
+            $update_stmt->bindParam(':class_id', $class_id, \PDO::PARAM_INT);
+            $update_result = $update_stmt->execute();
+        
+            if ($update_result) {
+                // Clear cache after successful delete
+                self::clearCachedClassNotes($class_id);
+                
+                wp_send_json_success(['message' => 'Note deleted successfully']);
+            } else {
+                wp_send_json_error('Failed to delete note');
+            }
+            
+        } catch (\PDOException $e) {
+            // Log error and return error response
+            error_log("PostgreSQL error in deleteClassNote: " . $e->getMessage());
+            wp_send_json_error('Database error: Failed to delete note');
+        }
+    }
+
     /**
      * Custom upload directory for class-related files
      *

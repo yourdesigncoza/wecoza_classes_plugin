@@ -3,93 +3,107 @@
 # Status: pending
 # Dependencies: 6
 # Priority: medium
-# Description: Develop a dynamic notes interface with timeline view, advanced filtering, and search functionality integrated into the update-class.php page for improved class notes and Q&A management
+# Description: Develop a simplified notes interface with basic filtering and search functionality integrated into the update-class.php page for improved class notes and Q&A management using pure PHP and jQuery
 # Details:
-1. Dynamic Notes Interface:
-   - Create responsive React/Vue component or vanilla JS module for notes display
-   - Implement card-based layout with expandable/collapsible note sections
-   - Add rich text editor integration (TinyMCE/Quill) for note creation and editing
-   - Enable inline editing capabilities with auto-save functionality
-   - Implement drag-and-drop for note reorganization
-   - Add note categorization with color-coding and tags
+1. Simple Notes Interface (Pure PHP):
+   - Create basic card or table layout for notes display using PHP templates
+   - Simple note creation and editing with textarea inputs rendered by PHP
+   - Basic note categorization with simple tags using PHP arrays
+   - Responsive design for mobile and desktop with CSS
 
-2. Timeline View Implementation:
-   - Design chronological timeline component showing notes and Q&A entries
-   - Create visual timeline with date markers and connecting lines
-   - Implement zoom controls for different time scales (day/week/month/year)
-   - Add timeline navigation with smooth scrolling to specific dates
-   - Include activity indicators showing note creation/modification times
-   - Integrate Q&A threads into timeline with visual distinction
+2. Basic Display Implementation (PHP-based):
+   - Simple chronological list/table showing notes and Q&A entries using PHP loops
+   - Basic date sorting (newest/oldest first) with PHP usort()
+   - Simple pagination for large note collections using PHP offset/limit
 
-3. Advanced Filtering System:
-   - Build multi-criteria filter panel with collapsible sections
-   - Implement filters for: date range, note type, author, tags, keywords
-   - Create filter presets for common searches (e.g., 'My Notes', 'This Week')
-   - Add real-time filter application with smooth animations
-   - Implement filter persistence using localStorage
-   - Create filter combination logic with AND/OR operators
+3. Basic Filtering System (PHP + jQuery):
+   - Simple filter options for: date range, note type, and class
+   - Basic dropdown/select inputs for filter controls rendered by PHP
+   - Real-time filter application using jQuery AJAX calls to PHP endpoints
+   - Filter state persistence using localStorage in jQuery
 
-4. Search Functionality:
-   - Implement full-text search with highlighting of matched terms
-   - Add search suggestions and auto-complete based on existing content
-   - Create advanced search with field-specific queries
-   - Implement search result ranking based on relevance
-   - Add search history and saved searches feature
-   - Include fuzzy search for typo tolerance
+4. jQuery Search Functionality:
+   - Basic full-text search with jQuery making AJAX calls to PHP search endpoint
+   - Simple search highlighting of matched terms using jQuery
+   - Search input with basic debouncing using jQuery
+   - Clear search functionality with jQuery event handlers
 
-5. Performance Optimization:
-   - Implement virtual scrolling for large note collections
-   - Add lazy loading for notes outside viewport
-   - Create efficient indexing for search operations
-   - Implement debouncing for search and filter inputs
-   - Add caching layer for frequently accessed data
+5. Performance Optimization (PHP-focused):
+   - Use WordPress transients for caching frequently accessed data in PHP
+   - Basic pagination to limit initial load using PHP LIMIT queries
+   - Simple debouncing for search inputs using jQuery setTimeout
 
-6. Integration with update-class.php:
-   - Modify existing PHP template to accommodate new interface
-   - Create REST API endpoints for notes CRUD operations
-   - Implement WebSocket or Server-Sent Events for real-time updates
-   - Ensure seamless integration with existing WordPress user roles
-   - Add proper nonce verification for all AJAX requests
+6. Integration with update-class.php (Pure PHP):
+   - Modify existing PHP template for new interface without any JavaScript frameworks
+   - Create basic AJAX endpoints using WordPress admin-ajax.php for notes CRUD operations
+   - Standard WordPress AJAX handling with nonce verification in PHP
+   - Integration assumes page access controls handle user permissions
 
 # Test Strategy:
+Manual testing only:
+
 1. Interface Testing:
-   - Verify all UI components render correctly across browsers
-   - Test responsive behavior on mobile, tablet, and desktop
-   - Ensure smooth animations and transitions
-   - Validate drag-and-drop functionality across different scenarios
-   - Test keyboard navigation and accessibility features
+   - Manually verify PHP-rendered UI components display correctly in Chrome, Firefox, Safari
+   - Test responsive behavior on mobile, tablet, and desktop devices
+   - Verify basic functionality across different screen sizes
+   - Ensure no JavaScript framework dependencies are present
 
-2. Timeline View Testing:
-   - Verify correct chronological ordering of entries
-   - Test zoom functionality at all scale levels
-   - Ensure smooth scrolling and navigation
-   - Validate date calculations and display formatting
-   - Test performance with large datasets (1000+ entries)
+2. Filter Testing:
+   - Manually test each filter type (date, note type, class) via jQuery AJAX to PHP
+   - Test filter combinations
+   - Verify filter persistence after page reload using localStorage
+   - Test with various data sets processed by PHP
 
-3. Filter Testing:
-   - Test each filter type individually and in combinations
-   - Verify filter persistence across page reloads
-   - Ensure correct result counts after filtering
-   - Test edge cases (empty results, invalid date ranges)
-   - Validate filter performance with complex queries
+3. Search Testing:
+   - Test search with different keywords and phrases sent to PHP endpoint
+   - Verify search highlighting works correctly with jQuery
+   - Test search with empty results from PHP
+   - Test search clearing functionality
 
-4. Search Testing:
-   - Test search accuracy with various query types
-   - Verify highlighting works correctly in all contexts
-   - Test search performance with large datasets
-   - Validate auto-complete suggestions
-   - Test special character handling and escaping
+4. Integration Testing:
+   - Manually verify WordPress AJAX endpoints work correctly
+   - Test note creation, editing, and deletion through PHP processing
+   - Verify proper error handling and user feedback
+   - Test caching behavior with WordPress transients
 
-5. Integration Testing:
-   - Verify all AJAX endpoints return expected data
-   - Test concurrent user scenarios
-   - Validate proper error handling and user feedback
-   - Ensure no conflicts with existing WordPress functionality
-   - Test data integrity during CRUD operations
+5. Basic Performance Testing:
+   - Manually test with varying amounts of note data processed by PHP
+   - Verify page responsiveness during search and filtering
+   - Test pagination functionality with large datasets using PHP queries
 
-6. Performance Testing:
-   - Measure page load times with varying data volumes
-   - Test memory usage during extended sessions
-   - Verify no memory leaks in JavaScript components
-   - Benchmark search and filter response times
-   - Test under high concurrent user load
+6. Technology Stack Verification:
+   - Confirm no React, Vue, or other JavaScript frameworks are used
+   - Verify all templating is done with pure PHP
+   - Ensure jQuery is only used for DOM manipulation and AJAX calls
+
+# Subtasks:
+## 1. Create Basic Notes Interface Components [pending]
+### Dependencies: None
+### Description: Develop the core PHP templates and HTML structure for the notes interface including card/table layouts, note creation forms, and basic categorization system
+### Details:
+Create PHP template files for note display cards/tables with proper HTML structure. Implement note creation/editing forms with textarea inputs and basic validation. Set up note categorization system using PHP arrays for tag management. Ensure responsive CSS design for mobile and desktop compatibility. Create basic CRUD operations for notes data handling.
+
+## 2. Implement Basic Display and Sorting System [pending]
+### Dependencies: 7.1
+### Description: Create PHP-based chronological display of notes and Q&A entries with date sorting capabilities and basic pagination system
+### Details:
+Implement PHP loops to display notes in chronological order using usort() for date sorting functionality. Create pagination system using PHP offset/limit queries to handle large note collections. Add toggle options for newest/oldest first sorting. Ensure proper data retrieval from WordPress database and formatting for display.
+
+## 3. Build Basic Filtering System with PHP and jQuery [pending]
+### Dependencies: 7.2
+### Description: Create filter controls for date range, note type, and class with PHP backend and jQuery frontend for real-time filtering
+### Details:
+Create PHP-rendered dropdown/select inputs for filter controls including date range, note type, and class filters. Implement jQuery AJAX calls to PHP endpoints for real-time filter application. Add filter state persistence using localStorage in jQuery. Create PHP backend endpoints to handle filter queries and return filtered results.
+
+## 4. Implement jQuery Search Functionality [pending]
+### Dependencies: 7.3
+### Description: Create full-text search capability with jQuery frontend making AJAX calls to PHP search endpoints, including search highlighting and debouncing
+### Details:
+Implement search input with jQuery event handlers and basic debouncing using setTimeout. Create PHP search endpoint for full-text search functionality. Add search result highlighting using jQuery to highlight matched terms. Implement clear search functionality with proper event handling and search state management.
+
+## 5. Integrate with update-class.php and Add Performance Optimization [pending]
+### Dependencies: 7.4
+### Description: Modify existing update-class.php template to include the new notes interface and implement WordPress transients for caching and performance optimization
+### Details:
+Modify update-class.php template to integrate the new notes interface without JavaScript frameworks. Create WordPress admin-ajax.php endpoints for notes CRUD operations with proper nonce verification. Implement WordPress transients for caching frequently accessed data. Add performance optimizations including pagination limits and query optimization. Ensure proper user permission handling through existing page access controls.
+

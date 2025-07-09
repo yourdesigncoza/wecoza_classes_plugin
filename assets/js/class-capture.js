@@ -1000,9 +1000,21 @@ function showCustomAlert(message) {
                     let aVal = a[this.sortBy];
                     let bVal = b[this.sortBy];
                     
+                    // Handle date sorting
                     if (this.sortBy.includes('date') || this.sortBy.includes('_at')) {
                         aVal = new Date(aVal).getTime();
                         bVal = new Date(bVal).getTime();
+                    }
+                    // Handle priority sorting (high > medium > low)
+                    else if (this.sortBy === 'priority') {
+                        const priorityOrder = { high: 3, medium: 2, low: 1 };
+                        aVal = priorityOrder[aVal] || 0;
+                        bVal = priorityOrder[bVal] || 0;
+                    }
+                    // Handle string sorting (case-insensitive)
+                    else if (typeof aVal === 'string' && typeof bVal === 'string') {
+                        aVal = aVal.toLowerCase();
+                        bVal = bVal.toLowerCase();
                     }
                     
                     if (this.sortOrder === 'asc') {
@@ -1639,11 +1651,14 @@ function showCustomAlert(message) {
     function loadClassNotes(classId) {
         if (!classId) return;
         
-        const $container = $('#class-notes-container');
-        if (!$container.length) return;
+        const $loadingIndicator = $('#notes-loading');
+        const $notesContainer = $('#class-notes-container');
+        
+        if (!$notesContainer.length) return;
         
         // Show loading state
-        $container.html('<div class="text-center py-3"><i class="bi bi-spinner-border"></i> Loading notes...</div>');
+        $loadingIndicator.removeClass('d-none');
+        $('#notes-empty, #notes-no-results').addClass('d-none');
         
         $.ajax({
             url: wecozaClass.ajaxUrl,
@@ -1656,55 +1671,33 @@ function showCustomAlert(message) {
             success: function(response) {
                 if (response.success && response.data.notes) {
                     // Clear collection and add loaded notes
-                    window.classNotesCollection.items = [];
-                    response.data.notes.forEach(note => {
-                        window.classNotesCollection.add(note);
-                    });
-                    
-                    // Initialize search/filter UI if not already done
-                    if (!$('#notes-search-input').length) {
-                        const searchFilterHtml = `
-                            <div class="row mb-3">
-                                <div class="col-md-4">
-                                    <input type="text" id="notes-search-input" class="form-control" placeholder="Search notes...">
-                                </div>
-                                <div class="col-md-3">
-                                    <select id="notes-category-filter" class="form-select">
-                                        <option value="">All Categories</option>
-                                        <option value="general">General</option>
-                                        <option value="important">Important</option>
-                                        <option value="reminder">Reminder</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <select id="date-range-filter" class="form-select">
-                                        <option value="">All Time</option>
-                                        <option value="today">Today</option>
-                                        <option value="week">Last 7 Days</option>
-                                        <option value="month">Last Month</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-2">
-                                    <button class="btn btn-primary w-100" id="add-new-note-btn">
-                                        <i class="bi bi-plus"></i> Add Note
-                                    </button>
-                                </div>
-                            </div>
-                            <div id="class-notes-list"></div>
-                            <nav>
-                                <ul class="pagination justify-content-center" id="notes-pagination"></ul>
-                            </nav>
-                        `;
-                        $container.html(searchFilterHtml);
+                    if (window.classNotesCollection) {
+                        window.classNotesCollection.items = [];
+                        response.data.notes.forEach(note => {
+                            window.classNotesCollection.add(note);
+                        });
+                        
+                        // Refresh display
+                        refreshNotesDisplay();
                     }
-                    
-                    refreshNotesDisplay();
                 } else {
-                    $container.html('<div class="alert alert-warning">No notes found for this class.</div>');
+                    // Show empty state
+                    $('#notes-empty').removeClass('d-none');
+                    $('#notes-count').text('0 notes');
                 }
             },
             error: function() {
-                $container.html('<div class="alert alert-danger">Failed to load notes. Please try again.</div>');
+                // Show error in empty state area
+                $('#notes-empty').removeClass('d-none').html(`
+                    <div class="text-center py-4 text-danger">
+                        <i class="bi bi-exclamation-triangle display-4 mb-2"></i>
+                        <p class="mb-0">Failed to load notes. Please try again.</p>
+                    </div>
+                `);
+            },
+            complete: function() {
+                // Hide loading state
+                $loadingIndicator.addClass('d-none');
             }
         });
     }
@@ -1839,6 +1832,813 @@ function showCustomAlert(message) {
     }
 
     /**
+     * Render notes in card view
+     */
+    function renderNotesCards(notes) {
+        const $notesList = $('#notes-list');
+        $notesList.empty();
+        
+        if (!notes || notes.length === 0) {
+            $('#notes-empty').show();
+            $('#notes-no-results').hide();
+            return;
+        }
+        
+        $('#notes-empty').hide();
+        $('#notes-no-results').hide();
+        
+        notes.forEach(note => {
+            const noteCard = createNoteCard(note);
+            $notesList.append(noteCard);
+        });
+    }
+    
+    /**
+     * Render notes in table view
+     */
+    function renderNotesTable(notes) {
+        const $notesList = $('#notes-list');
+        $notesList.empty();
+        
+        if (!notes || notes.length === 0) {
+            $('#notes-empty').show();
+            $('#notes-no-results').hide();
+            return;
+        }
+        
+        $('#notes-empty').hide();
+        $('#notes-no-results').hide();
+        
+        const table = $(`
+            <table class="table notes-table">
+                <thead>
+                    <tr>
+                        <th style="width: 50%">Title & Content</th>
+                        <th style="width: 15%">Category</th>
+                        <th style="width: 20%">Created</th>
+                        <th style="width: 15%">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="notes-table-body">
+                </tbody>
+            </table>
+        `);
+        
+        const $tbody = table.find('#notes-table-body');
+        notes.forEach(note => {
+            const noteRow = createNoteRow(note);
+            $tbody.append(noteRow);
+        });
+        
+        $notesList.append(table);
+    }
+    
+    /**
+     * Create a note card element
+     */
+    function createNoteCard(note) {
+        const createdDate = new Date(note.created_at).toLocaleDateString();
+        const createdTime = new Date(note.created_at).toLocaleTimeString();
+        const relativeTime = getRelativeTime(note.created_at);
+        
+        // Check if note was updated
+        const isUpdated = note.updated_at && note.updated_at !== note.created_at;
+        const updatedTime = isUpdated ? getRelativeTime(note.updated_at) : null;
+        
+        // Get current search term for highlighting
+        const currentSearchTerm = window.classNotesCollection ? window.classNotesCollection.searchTerm : '';
+        
+        // Process tags
+        const tags = Array.isArray(note.tags) ? note.tags : (note.tags ? note.tags.split(',') : []);
+        const tagsHtml = tags.map(tag => `<span class="note-tag">${escapeHtml(tag.trim())}</span>`).join('');
+        
+        // Process attachments
+        const attachments = Array.isArray(note.attachments) ? note.attachments : [];
+        const attachmentsHtml = attachments.map(attachment => {
+            const icon = getFileIcon(attachment.type);
+            return `<a href="${attachment.url}" class="note-attachment" target="_blank">
+                <i class="bi ${icon} note-attachment-icon"></i>
+                ${escapeHtml(attachment.name)}
+            </a>`;
+        }).join('');
+        
+        // Truncate content for preview
+        const maxLength = 150;
+        const content = note.content.length > maxLength ? 
+            note.content.substring(0, maxLength) + '...' : note.content;
+        
+        return $(`
+            <div class="note-card note-priority-${note.priority || 'medium'}" data-note-id="${note.id}">
+                <div class="note-card-header">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="note-title">${highlightSearchTerms(note.title, currentSearchTerm)}</div>
+                        <span class="note-category-badge note-category-${note.category || 'general'}">
+                            ${note.category || 'general'}
+                        </span>
+                    </div>
+                </div>
+                <div class="note-card-body">
+                    <div class="note-content note-preview">${highlightSearchTerms(content, currentSearchTerm)}</div>
+                    ${attachmentsHtml ? `<div class="note-attachments">${attachmentsHtml}</div>` : ''}
+                    ${tagsHtml ? `<div class="note-tags">${tagsHtml}</div>` : ''}
+                </div>
+                <div class="note-card-footer">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="note-meta">
+                            <span><i class="bi bi-person"></i> ${escapeHtml(note.author_name || 'Unknown')}</span>
+                            <span title="${createdDate} ${createdTime}"><i class="bi bi-calendar"></i> ${relativeTime}</span>
+                            ${updatedTime ? `<span title="Updated ${updatedTime}" class="text-warning"><i class="bi bi-pencil"></i> Updated</span>` : ''}
+                        </div>
+                        <div class="note-actions">
+                            <button class="btn btn-sm btn-outline-primary edit-note-btn" data-note-id="${note.id}" title="Edit note">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger delete-note-btn" data-note-id="${note.id}" title="Delete note">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `);
+    }
+    
+    /**
+     * Create a note table row element
+     */
+    function createNoteRow(note) {
+        const createdDate = new Date(note.created_at).toLocaleDateString();
+        const createdTime = new Date(note.created_at).toLocaleTimeString();
+        const relativeTime = getRelativeTime(note.created_at);
+        const content = note.content.length > 100 ? 
+            note.content.substring(0, 100) + '...' : note.content;
+        
+        // Check if note was updated
+        const isUpdated = note.updated_at && note.updated_at !== note.created_at;
+        const updatedIcon = isUpdated ? '<i class="bi bi-pencil text-warning ms-1" title="Updated"></i>' : '';
+        
+        // Get current search term for highlighting
+        const currentSearchTerm = window.classNotesCollection ? window.classNotesCollection.searchTerm : '';
+        
+        return $(`
+            <tr data-note-id="${note.id}">
+                <td class="note-title-cell">
+                    ${highlightSearchTerms(note.title, currentSearchTerm)}
+                    ${updatedIcon}
+                    <div class="small text-muted">${highlightSearchTerms(content, currentSearchTerm)}</div>
+                </td>
+                <td>
+                    <span class="note-category-badge note-category-${note.category || 'general'}">
+                        ${note.category || 'general'}
+                    </span>
+                </td>
+                <td class="note-meta-cell" title="${createdDate} ${createdTime}">
+                    ${relativeTime}
+                    <div class="small text-muted">${escapeHtml(note.author_name || 'Unknown')}</div>
+                </td>
+                <td>
+                    <div class="note-actions">
+                        <button class="btn btn-sm btn-outline-primary edit-note-btn" data-note-id="${note.id}" title="Edit note">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger delete-note-btn" data-note-id="${note.id}" title="Delete note">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `);
+    }
+    
+    /**
+     * Get relative time string (e.g., "2 hours ago", "3 days ago")
+     */
+    function getRelativeTime(dateString) {
+        const now = new Date();
+        const date = new Date(dateString);
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+        
+        if (diffMins < 1) {
+            return 'Just now';
+        } else if (diffMins < 60) {
+            return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+        } else if (diffHours < 24) {
+            return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+        } else if (diffDays < 7) {
+            return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+        } else if (diffDays < 30) {
+            const weeks = Math.floor(diffDays / 7);
+            return `${weeks} week${weeks !== 1 ? 's' : ''} ago`;
+        } else if (diffDays < 365) {
+            const months = Math.floor(diffDays / 30);
+            return `${months} month${months !== 1 ? 's' : ''} ago`;
+        } else {
+            const years = Math.floor(diffDays / 365);
+            return `${years} year${years !== 1 ? 's' : ''} ago`;
+        }
+    }
+    
+    /**
+     * Get file icon based on file type
+     */
+    function getFileIcon(type) {
+        const iconMap = {
+            'pdf': 'bi-file-pdf',
+            'doc': 'bi-file-word',
+            'docx': 'bi-file-word',
+            'xls': 'bi-file-excel',
+            'xlsx': 'bi-file-excel',
+            'jpg': 'bi-file-image',
+            'jpeg': 'bi-file-image',
+            'png': 'bi-file-image',
+            'gif': 'bi-file-image'
+        };
+        
+        return iconMap[type] || 'bi-file-earmark';
+    }
+    
+    /**
+     * Escape HTML to prevent XSS
+     */
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    /**
+     * Highlight search terms in text (DRY helper for search functionality)
+     */
+    function highlightSearchTerms(text, searchTerm) {
+        if (!searchTerm || !text) {
+            return escapeHtml(text);
+        }
+        
+        const escapedText = escapeHtml(text);
+        const escapedSearchTerm = escapeHtml(searchTerm);
+        
+        // Create regex for case-insensitive search
+        const regex = new RegExp(`(${escapedSearchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        
+        return escapedText.replace(regex, '<mark class="note-search-highlight">$1</mark>');
+    }
+    
+    /**
+     * Save filter state to localStorage (DRY helper)
+     */
+    function saveFilterState() {
+        const filterState = {
+            search: $('#notes-search').val(),
+            category: $('#notes-category-filter').val(),
+            priority: $('#notes-priority-filter').val(),
+            dateRange: $('#notes-date-filter').val(),
+            sort: $('#notes-sort').val()
+        };
+        localStorage.setItem('notes-filter-state', JSON.stringify(filterState));
+    }
+    
+    /**
+     * Load filter state from localStorage (DRY helper)
+     */
+    function loadFilterState() {
+        const savedState = localStorage.getItem('notes-filter-state');
+        if (savedState) {
+            try {
+                const filterState = JSON.parse(savedState);
+                $('#notes-search').val(filterState.search || '');
+                $('#notes-category-filter').val(filterState.category || '');
+                $('#notes-priority-filter').val(filterState.priority || '');
+                $('#notes-date-filter').val(filterState.dateRange || '');
+                $('#notes-sort').val(filterState.sort || 'newest');
+                
+                // Apply filters to collection
+                if (window.classNotesCollection) {
+                    window.classNotesCollection.setSearch(filterState.search || '');
+                    window.classNotesCollection.setFilter('category', filterState.category || '');
+                    window.classNotesCollection.setFilter('priority', filterState.priority || '');
+                    window.classNotesCollection.setFilter('dateRange', filterState.dateRange || '');
+                    
+                    // Apply sorting
+                    const sortValue = filterState.sort || 'newest';
+                    let field, order;
+                    switch (sortValue) {
+                        case 'newest':
+                            field = 'created_at';
+                            order = 'desc';
+                            break;
+                        case 'oldest':
+                            field = 'created_at';
+                            order = 'asc';
+                            break;
+                        case 'updated':
+                            field = 'updated_at';
+                            order = 'desc';
+                            break;
+                        case 'priority':
+                            field = 'priority';
+                            order = 'desc';
+                            break;
+                        case 'category':
+                            field = 'category';
+                            order = 'asc';
+                            break;
+                        case 'title':
+                            field = 'title';
+                            order = 'asc';
+                            break;
+                        default:
+                            field = 'created_at';
+                            order = 'desc';
+                    }
+                    window.classNotesCollection.setSort(field, order);
+                }
+            } catch (e) {
+                console.error('Error loading filter state:', e);
+            }
+        }
+    }
+    
+    /**
+     * Initialize notes display functionality
+     */
+    function initializeNotesDisplay() {
+        // View toggle functionality
+        $('#notes-view-cards, #notes-view-table').on('click', function() {
+            const view = $(this).data('view');
+            $(this).addClass('active').siblings().removeClass('active');
+            
+            // Store view preference
+            localStorage.setItem('notes-view-preference', view);
+            
+            // Re-render notes in selected view
+            if (window.classNotesCollection) {
+                const notes = window.classNotesCollection.getFiltered();
+                if (view === 'cards') {
+                    renderNotesCards(notes);
+                } else {
+                    renderNotesTable(notes);
+                }
+            }
+        });
+        
+        // Search functionality with enhanced features
+        $('#notes-search').on('input', debounce(function() {
+            const searchTerm = $(this).val();
+            if (window.classNotesCollection) {
+                window.classNotesCollection.setSearch(searchTerm);
+                refreshNotesDisplay();
+                saveFilterState();
+            }
+        }, 300));
+        
+        // Keyboard shortcuts for search
+        $('#notes-search').on('keydown', function(e) {
+            // Enter key: focus on first result
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const firstResult = $('.note-card:first, .notes-table tbody tr:first');
+                if (firstResult.length > 0) {
+                    firstResult.get(0).scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstResult.addClass('highlight-result');
+                    setTimeout(() => firstResult.removeClass('highlight-result'), 2000);
+                }
+            }
+            // Escape key: clear search
+            else if (e.key === 'Escape') {
+                $(this).val('');
+                if (window.classNotesCollection) {
+                    window.classNotesCollection.setSearch('');
+                    refreshNotesDisplay();
+                    saveFilterState();
+                }
+            }
+        });
+        
+        // Clear search
+        $('#clear-notes-search').on('click', function() {
+            $('#notes-search').val('');
+            if (window.classNotesCollection) {
+                window.classNotesCollection.setSearch('');
+                refreshNotesDisplay();
+            }
+        });
+        
+        // Category filter
+        $('#notes-category-filter').on('change', function() {
+            const category = $(this).val();
+            if (window.classNotesCollection) {
+                window.classNotesCollection.setFilter('category', category);
+                refreshNotesDisplay();
+                saveFilterState();
+            }
+        });
+        
+        // Priority filter
+        $('#notes-priority-filter').on('change', function() {
+            const priority = $(this).val();
+            if (window.classNotesCollection) {
+                window.classNotesCollection.setFilter('priority', priority);
+                refreshNotesDisplay();
+                saveFilterState();
+            }
+        });
+        
+        // Date range filter
+        $('#notes-date-filter').on('change', function() {
+            const dateRange = $(this).val();
+            if (window.classNotesCollection) {
+                window.classNotesCollection.setFilter('dateRange', dateRange);
+                refreshNotesDisplay();
+                saveFilterState();
+            }
+        });
+        
+        // Sort functionality
+        $('#notes-sort').on('change', function() {
+            const sortValue = $(this).val();
+            if (window.classNotesCollection) {
+                let field, order;
+                switch (sortValue) {
+                    case 'newest':
+                        field = 'created_at';
+                        order = 'desc';
+                        break;
+                    case 'oldest':
+                        field = 'created_at';
+                        order = 'asc';
+                        break;
+                    case 'priority':
+                        field = 'priority';
+                        order = 'desc';
+                        break;
+                    case 'category':
+                        field = 'category';
+                        order = 'asc';
+                        break;
+                    default:
+                        field = 'created_at';
+                        order = 'desc';
+                }
+                
+                window.classNotesCollection.setSort(field, order);
+                refreshNotesDisplay();
+                saveFilterState();
+            }
+        });
+        
+        // Clear filters
+        $('#clear-notes-filters').on('click', function() {
+            // Clear all form inputs
+            $('#notes-search').val('');
+            $('#notes-category-filter').val('');
+            $('#notes-priority-filter').val('');
+            $('#notes-date-filter').val('');
+            $('#notes-sort').val('newest');
+            
+            if (window.classNotesCollection) {
+                // Clear all filters from collection
+                window.classNotesCollection.setSearch('');
+                window.classNotesCollection.setFilter('category', '');
+                window.classNotesCollection.setFilter('priority', '');
+                window.classNotesCollection.setFilter('dateRange', '');
+                window.classNotesCollection.setSort('created_at', 'desc');
+                refreshNotesDisplay();
+                
+                // Clear saved filter state
+                localStorage.removeItem('notes-filter-state');
+            }
+        });
+        
+        // Edit note functionality
+        $(document).on('click', '.edit-note-btn', function() {
+            const noteId = $(this).data('note-id');
+            const note = window.classNotesCollection ? window.classNotesCollection.find(noteId) : null;
+            
+            if (note) {
+                // Populate the modal with note data
+                $('#note_id').val(note.id);
+                $('#note_title').val(note.title);
+                $('#note_content').val(note.content);
+                $('#note_category').val(note.category || 'general');
+                $('#note_priority').val(note.priority || 'medium');
+                $('#note_tags').val(Array.isArray(note.tags) ? note.tags.join(', ') : note.tags);
+                
+                // Update modal title
+                $('#note-modal-title').text('Edit Class Note');
+                
+                // Show modal
+                $('#classNoteModal').modal('show');
+            }
+        });
+        
+        // Delete note functionality
+        $(document).on('click', '.delete-note-btn', function() {
+            const noteId = $(this).data('note-id');
+            
+            if (confirm('Are you sure you want to delete this note?')) {
+                // Call delete endpoint
+                $.ajax({
+                    url: wecozaClass.ajaxUrl,
+                    type: 'POST',
+                    data: {
+                        action: 'delete_class_note',
+                        nonce: wecozaClass.nonce,
+                        note_id: noteId
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Remove from collection
+                            if (window.classNotesCollection) {
+                                window.classNotesCollection.remove(noteId);
+                                refreshNotesDisplay();
+                            }
+                        } else {
+                            alert('Failed to delete note: ' + (response.data || 'Unknown error'));
+                        }
+                    },
+                    error: function() {
+                        alert('Failed to delete note. Please try again.');
+                    }
+                });
+            }
+        });
+        
+        // Initialize collections
+        if (!window.classNotesCollection) {
+            window.classNotesCollection = new ClassNotesQAModels.Collection(ClassNotesQAModels.Note);
+        }
+        
+        // Load saved view preference
+        const savedView = localStorage.getItem('notes-view-preference') || 'cards';
+        $(`#notes-view-${savedView}`).addClass('active').siblings().removeClass('active');
+        
+        // Initialize pagination and sorting handlers
+        initializePaginationHandlers();
+        initializeSortingHandlers();
+        
+        // Load saved filter state
+        loadFilterState();
+    }
+    
+    /**
+     * Refresh notes display with pagination
+     */
+    function refreshNotesDisplay() {
+        if (!window.classNotesCollection) return;
+        
+        const paginatedData = window.classNotesCollection.getPaginated();
+        const currentView = $('.notes-view-toggle .active').data('view') || 'cards';
+        
+        // Update notes count with search indication
+        const totalCount = window.classNotesCollection.getFiltered().length;
+        const allCount = window.classNotesCollection.items.length;
+        const searchTerm = window.classNotesCollection.searchTerm;
+        
+        let countText = `${totalCount} note${totalCount !== 1 ? 's' : ''}`;
+        if (searchTerm) {
+            countText += ` (filtered from ${allCount})`;
+        }
+        
+        $('#notes-count').text(countText);
+        
+        // Show/hide controls based on notes count
+        if (totalCount > 0) {
+            $('.notes-controls').show();
+        } else {
+            $('.notes-controls').hide();
+        }
+        
+        // Render notes with pagination
+        if (currentView === 'cards') {
+            renderNotesCards(paginatedData.items);
+        } else {
+            renderNotesTable(paginatedData.items);
+        }
+        
+        // Update pagination
+        renderNotesPagination(paginatedData);
+        
+        // Show no results message if search/filter returned empty
+        if (totalCount === 0 && window.classNotesCollection.items.length > 0) {
+            $('#notes-no-results').show();
+            $('#notes-empty').hide();
+            
+            // Update no results message with search context
+            const hasFilters = Object.keys(window.classNotesCollection.filters).length > 0;
+            const hasSearch = window.classNotesCollection.searchTerm;
+            
+            if (hasSearch) {
+                $('#notes-no-results p').text(`No notes found matching "${window.classNotesCollection.searchTerm}"`);
+            } else if (hasFilters) {
+                $('#notes-no-results p').text('No notes found matching your filter criteria.');
+            } else {
+                $('#notes-no-results p').text('No notes found matching your search criteria.');
+            }
+        }
+    }
+    
+    /**
+     * Render pagination for notes
+     */
+    function renderNotesPagination(paginatedData) {
+        const $pagination = $('#notes-pagination');
+        const $paginationNav = $('#notes-pagination-nav');
+        
+        // Hide pagination if only one page
+        if (paginatedData.totalPages <= 1) {
+            $paginationNav.hide();
+            return;
+        }
+        
+        $paginationNav.show();
+        $pagination.empty();
+        
+        const currentPage = paginatedData.currentPage;
+        const totalPages = paginatedData.totalPages;
+        
+        // Previous button
+        const prevDisabled = currentPage === 1 ? 'disabled' : '';
+        $pagination.append(`
+            <li class="page-item ${prevDisabled}">
+                <a class="page-link" href="#" data-page="${currentPage - 1}">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
+        `);
+        
+        // Page numbers
+        const startPage = Math.max(1, currentPage - 2);
+        const endPage = Math.min(totalPages, currentPage + 2);
+        
+        if (startPage > 1) {
+            $pagination.append(`
+                <li class="page-item">
+                    <a class="page-link" href="#" data-page="1">1</a>
+                </li>
+            `);
+            if (startPage > 2) {
+                $pagination.append(`<li class="page-item disabled"><span class="page-link">...</span></li>`);
+            }
+        }
+        
+        for (let i = startPage; i <= endPage; i++) {
+            const active = i === currentPage ? 'active' : '';
+            $pagination.append(`
+                <li class="page-item ${active}">
+                    <a class="page-link" href="#" data-page="${i}">${i}</a>
+                </li>
+            `);
+        }
+        
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                $pagination.append(`<li class="page-item disabled"><span class="page-link">...</span></li>`);
+            }
+            $pagination.append(`
+                <li class="page-item">
+                    <a class="page-link" href="#" data-page="${totalPages}">${totalPages}</a>
+                </li>
+            `);
+        }
+        
+        // Next button
+        const nextDisabled = currentPage === totalPages ? 'disabled' : '';
+        $pagination.append(`
+            <li class="page-item ${nextDisabled}">
+                <a class="page-link" href="#" data-page="${currentPage + 1}">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+        `);
+        
+        // Show pagination info
+        const start = ((currentPage - 1) * paginatedData.itemsPerPage) + 1;
+        const end = Math.min(currentPage * paginatedData.itemsPerPage, paginatedData.totalItems);
+        const paginationInfo = `
+            <div class="d-flex justify-content-between align-items-center mt-2">
+                <small class="text-muted">
+                    Showing ${start}-${end} of ${paginatedData.totalItems} notes
+                </small>
+                <div class="d-flex align-items-center gap-2">
+                    <small class="text-muted">Items per page:</small>
+                    <select class="form-select form-select-sm" id="notes-per-page" style="width: auto;">
+                        <option value="5" ${paginatedData.itemsPerPage === 5 ? 'selected' : ''}>5</option>
+                        <option value="10" ${paginatedData.itemsPerPage === 10 ? 'selected' : ''}>10</option>
+                        <option value="20" ${paginatedData.itemsPerPage === 20 ? 'selected' : ''}>20</option>
+                        <option value="50" ${paginatedData.itemsPerPage === 50 ? 'selected' : ''}>50</option>
+                    </select>
+                </div>
+            </div>
+        `;
+        
+        $paginationNav.append(paginationInfo);
+    }
+    
+    /**
+     * Initialize pagination handlers
+     */
+    function initializePaginationHandlers() {
+        // Page click handler
+        $(document).on('click', '#notes-pagination .page-link', function(e) {
+            e.preventDefault();
+            const page = parseInt($(this).data('page'));
+            if (page && !$(this).parent().hasClass('disabled')) {
+                window.classNotesCollection.setPage(page);
+                refreshNotesDisplay();
+            }
+        });
+        
+        // Items per page change handler
+        $(document).on('change', '#notes-per-page', function() {
+            const itemsPerPage = parseInt($(this).val());
+            window.classNotesCollection.itemsPerPage = itemsPerPage;
+            window.classNotesCollection.currentPage = 1; // Reset to first page
+            refreshNotesDisplay();
+        });
+    }
+    
+    /**
+     * Enhanced sorting functionality
+     */
+    function initializeSortingHandlers() {
+        // Sort dropdown handler
+        $('#notes-sort').on('change', function() {
+            const sortValue = $(this).val();
+            let field, order;
+            
+            switch (sortValue) {
+                case 'newest':
+                    field = 'created_at';
+                    order = 'desc';
+                    break;
+                case 'oldest':
+                    field = 'created_at';
+                    order = 'asc';
+                    break;
+                case 'updated':
+                    field = 'updated_at';
+                    order = 'desc';
+                    break;
+                case 'priority':
+                    field = 'priority';
+                    order = 'desc';
+                    break;
+                case 'category':
+                    field = 'category';
+                    order = 'asc';
+                    break;
+                case 'title':
+                    field = 'title';
+                    order = 'asc';
+                    break;
+                default:
+                    field = 'created_at';
+                    order = 'desc';
+            }
+            
+            window.classNotesCollection.setSort(field, order);
+            window.classNotesCollection.currentPage = 1; // Reset to first page
+            refreshNotesDisplay();
+        });
+        
+        // Quick sort buttons for date
+        $(document).on('click', '.notes-sort-date', function() {
+            const currentSort = window.classNotesCollection.sortBy;
+            const currentOrder = window.classNotesCollection.sortOrder;
+            
+            let newOrder = 'desc';
+            if (currentSort === 'created_at') {
+                newOrder = currentOrder === 'desc' ? 'asc' : 'desc';
+            }
+            
+            window.classNotesCollection.setSort('created_at', newOrder);
+            refreshNotesDisplay();
+            
+            // Update button appearance
+            const icon = newOrder === 'desc' ? 'bi-chevron-down' : 'bi-chevron-up';
+            $(this).find('i').removeClass('bi-chevron-down bi-chevron-up').addClass(icon);
+        });
+    }
+    
+    /**
+     * Debounce function for search input
+     */
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    /**
      * Initialize data loading based on context
      */
     function initializeDataLoading() {
@@ -1945,15 +2745,27 @@ function showCustomAlert(message) {
                 $.ajax({
                     url: wecozaClass.ajaxUrl,
                     type: 'POST',
-                    data: formData,
+                    data: {
+                        action: 'save_class_note',
+                        nonce: wecozaClass.nonce,
+                        class_id: formData.class_id,
+                        note: {
+                            id: formData.note_id,
+                            title: formData.title,
+                            content: formData.content,
+                            category: formData.category,
+                            priority: formData.priority,
+                            tags: formData.tags,
+                            attachments: uploadedFiles
+                        }
+                    },
                     success: function(response) {
                     if (response.success) {
                         // Add/update note in collection
-                        const noteData = response.data.note || formData;
+                        const noteData = response.data.note;
                         if (formData.note_id) {
                             window.classNotesCollection.update(formData.note_id, noteData);
                         } else {
-                            noteData.id = response.data.note_id || new Date().getTime();
                             window.classNotesCollection.add(noteData);
                         }
                         
@@ -2636,7 +3448,286 @@ function showCustomAlert(message) {
             initClassCaptureForm();
             initializeDataLoading();
             initializeFormProcessing();
+            initializeNotesDisplay();
         }
     });
 
 })(jQuery);
+
+/**
+ * Class Notes and QA Data Models
+ * Provides Collection class for managing notes data
+ */
+window.ClassNotesQAModels = (function() {
+    'use strict';
+    
+    /**
+     * Note data model
+     */
+    function Note(data) {
+        this.id = data.id || null;
+        this.title = data.title || '';
+        this.content = data.content || '';
+        this.category = data.category || 'general';
+        this.priority = data.priority || 'medium';
+        this.tags = data.tags || [];
+        this.attachments = data.attachments || [];
+        this.created_at = data.created_at || new Date().toISOString();
+        this.updated_at = data.updated_at || new Date().toISOString();
+        this.class_id = data.class_id || null;
+        this.user_id = data.user_id || null;
+    }
+    
+    /**
+     * Collection class for managing arrays of data with pagination, sorting, and filtering
+     */
+    function Collection(ModelClass) {
+        this.ModelClass = ModelClass;
+        this.items = [];
+        this.currentPage = 1;
+        this.itemsPerPage = 10;
+        this.sortBy = 'created_at';
+        this.sortOrder = 'desc';
+        this.filters = {};
+        this.searchTerm = '';
+    }
+    
+    /**
+     * Add item to collection
+     */
+    Collection.prototype.add = function(data) {
+        const item = new this.ModelClass(data);
+        this.items.push(item);
+        return item;
+    };
+    
+    /**
+     * Find item by ID
+     */
+    Collection.prototype.find = function(id) {
+        return this.items.find(item => item.id == id);
+    };
+    
+    /**
+     * Remove item by ID
+     */
+    Collection.prototype.remove = function(id) {
+        const index = this.items.findIndex(item => item.id == id);
+        if (index > -1) {
+            this.items.splice(index, 1);
+            return true;
+        }
+        return false;
+    };
+    
+    /**
+     * Update item by ID
+     */
+    Collection.prototype.update = function(id, data) {
+        const item = this.find(id);
+        if (item) {
+            Object.assign(item, data);
+            return item;
+        }
+        return null;
+    };
+    
+    /**
+     * Set search term
+     */
+    Collection.prototype.setSearch = function(term) {
+        this.searchTerm = term;
+        this.currentPage = 1; // Reset to first page when search changes
+    };
+    
+    /**
+     * Set filter
+     */
+    Collection.prototype.setFilter = function(key, value) {
+        if (value === '' || value === null || value === undefined) {
+            delete this.filters[key];
+        } else {
+            this.filters[key] = value;
+        }
+        this.currentPage = 1; // Reset to first page when filter changes
+    };
+    
+    /**
+     * Set sort criteria
+     */
+    Collection.prototype.setSort = function(field, order) {
+        this.sortBy = field;
+        this.sortOrder = order;
+        this.currentPage = 1; // Reset to first page when sort changes
+    };
+    
+    /**
+     * Set page number
+     */
+    Collection.prototype.setPage = function(page) {
+        this.currentPage = page;
+    };
+    
+    /**
+     * Get filtered items based on search and filters
+     */
+    Collection.prototype.getFiltered = function() {
+        let filtered = [...this.items];
+        
+        // Apply search filter
+        if (this.searchTerm) {
+            filtered = this._applySearchFilter(filtered, this.searchTerm);
+        }
+        
+        // Apply filters
+        Object.keys(this.filters).forEach(key => {
+            const filterValue = this.filters[key];
+            
+            if (key === 'category') {
+                filtered = filtered.filter(item => item.category === filterValue);
+            } else if (key === 'priority') {
+                filtered = filtered.filter(item => item.priority === filterValue);
+            } else if (key === 'dateRange') {
+                filtered = this._applyDateFilter(filtered, filterValue);
+            }
+        });
+        
+        // Apply sorting
+        filtered.sort((a, b) => {
+            let aValue = a[this.sortBy];
+            let bValue = b[this.sortBy];
+            
+            // Handle different data types for sorting
+            if (this.sortBy === 'created_at' || this.sortBy === 'updated_at') {
+                aValue = new Date(aValue);
+                bValue = new Date(bValue);
+            } else if (this.sortBy === 'priority') {
+                // Priority sorting: high > medium > low
+                const priorityOrder = { high: 3, medium: 2, low: 1 };
+                aValue = priorityOrder[aValue] || 0;
+                bValue = priorityOrder[bValue] || 0;
+            } else if (typeof aValue === 'string') {
+                aValue = aValue.toLowerCase();
+                bValue = bValue.toLowerCase();
+            }
+            
+            if (this.sortOrder === 'desc') {
+                return bValue > aValue ? 1 : bValue < aValue ? -1 : 0;
+            } else {
+                return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+            }
+        });
+        
+        return filtered;
+    };
+    
+    /**
+     * Get paginated data
+     */
+    Collection.prototype.getPaginated = function() {
+        const filtered = this.getFiltered();
+        const totalItems = filtered.length;
+        const totalPages = Math.ceil(totalItems / this.itemsPerPage);
+        
+        // Ensure current page is within bounds
+        if (this.currentPage > totalPages && totalPages > 0) {
+            this.currentPage = totalPages;
+        }
+        if (this.currentPage < 1) {
+            this.currentPage = 1;
+        }
+        
+        const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+        const endIndex = startIndex + this.itemsPerPage;
+        const items = filtered.slice(startIndex, endIndex);
+        
+        return {
+            items: items,
+            currentPage: this.currentPage,
+            totalPages: totalPages,
+            totalItems: totalItems,
+            itemsPerPage: this.itemsPerPage,
+            hasNext: this.currentPage < totalPages,
+            hasPrev: this.currentPage > 1
+        };
+    };
+    
+    /**
+     * Apply date filtering (DRY helper method)
+     */
+    Collection.prototype._applyDateFilter = function(items, filterValue) {
+        const today = new Date();
+        const filterDate = new Date(today);
+        
+        switch (filterValue) {
+            case 'today':
+                filterDate.setHours(0, 0, 0, 0);
+                return items.filter(item => new Date(item.created_at) >= filterDate);
+            case 'week':
+                filterDate.setDate(today.getDate() - 7);
+                return items.filter(item => new Date(item.created_at) >= filterDate);
+            case 'month':
+                filterDate.setMonth(today.getMonth() - 1);
+                return items.filter(item => new Date(item.created_at) >= filterDate);
+            case 'quarter':
+                filterDate.setMonth(today.getMonth() - 3);
+                return items.filter(item => new Date(item.created_at) >= filterDate);
+            default:
+                return items;
+        }
+    };
+    
+    /**
+     * Apply search filtering (DRY helper method with enhanced search)
+     */
+    Collection.prototype._applySearchFilter = function(items, searchTerm) {
+        if (!searchTerm) return items;
+        
+        const searchLower = searchTerm.toLowerCase().trim();
+        
+        // Handle quoted phrases for exact matching
+        const isQuotedPhrase = searchLower.startsWith('"') && searchLower.endsWith('"');
+        if (isQuotedPhrase) {
+            const phrase = searchLower.slice(1, -1);
+            return items.filter(item => {
+                return (
+                    item.title.toLowerCase().includes(phrase) ||
+                    item.content.toLowerCase().includes(phrase) ||
+                    item.category.toLowerCase().includes(phrase) ||
+                    (Array.isArray(item.tags) && item.tags.some(tag => tag.toLowerCase().includes(phrase)))
+                );
+            });
+        }
+        
+        // Handle multiple search terms (AND logic)
+        const searchTerms = searchLower.split(' ').filter(term => term.length > 0);
+        
+        return items.filter(item => {
+            const searchableText = [
+                item.title.toLowerCase(),
+                item.content.toLowerCase(),
+                item.category.toLowerCase(),
+                ...(Array.isArray(item.tags) ? item.tags.map(tag => tag.toLowerCase()) : [])
+            ].join(' ');
+            
+            // All search terms must be found (AND logic)
+            return searchTerms.every(term => searchableText.includes(term));
+        });
+    };
+    
+    /**
+     * Clear all data
+     */
+    Collection.prototype.clear = function() {
+        this.items = [];
+        this.currentPage = 1;
+        this.filters = {};
+        this.searchTerm = '';
+    };
+    
+    // Return public API
+    return {
+        Note: Note,
+        Collection: Collection
+    };
+})();

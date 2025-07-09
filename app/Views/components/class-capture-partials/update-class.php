@@ -79,6 +79,237 @@
     border-color: #dc3545;
     background-color: #f8d7da;
 }
+
+/* Notes Display Styles */
+.note-card {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    margin-bottom: 1rem;
+    transition: all 0.2s ease;
+}
+
+.note-card:hover {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-color: #adb5bd;
+}
+
+.note-card.note-priority-high {
+    border-left: 4px solid #dc3545;
+}
+
+.note-card.note-priority-medium {
+    border-left: 4px solid #ffc107;
+}
+
+.note-card.note-priority-low {
+    border-left: 4px solid #28a745;
+}
+
+.note-card-header {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+}
+
+.note-card-body {
+    padding: 1rem;
+}
+
+.note-card-footer {
+    padding: 0.5rem 1rem;
+    border-top: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+    font-size: 0.875rem;
+}
+
+.note-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.note-content {
+    color: #6c757d;
+    line-height: 1.5;
+    margin-bottom: 0.75rem;
+}
+
+.note-content.note-preview {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.note-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.note-category-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.note-category-general {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+.note-category-important {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.note-category-reminder {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.note-category-issue {
+    background-color: #f5c6cb;
+    color: #721c24;
+}
+
+.note-category-progress {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.note-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-top: 0.5rem;
+}
+
+.note-tag {
+    background-color: #e9ecef;
+    color: #495057;
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    text-decoration: none;
+}
+
+.note-tag:hover {
+    background-color: #dee2e6;
+    color: #495057;
+}
+
+.note-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.note-actions .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+.note-attachments {
+    margin-top: 0.5rem;
+}
+
+.note-attachment {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    margin-right: 0.5rem;
+    margin-bottom: 0.25rem;
+    text-decoration: none;
+    color: #495057;
+    font-size: 0.875rem;
+}
+
+.note-attachment:hover {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+.note-attachment-icon {
+    width: 16px;
+    height: 16px;
+}
+
+/* Notes search highlighting */
+.note-search-highlight {
+    background-color: #fff3cd;
+    padding: 0.125rem;
+    border-radius: 0.125rem;
+}
+
+/* Keyboard focus highlight for search results */
+.highlight-result {
+    background-color: #e3f2fd !important;
+    border-color: #2196f3 !important;
+    transition: all 0.3s ease;
+}
+
+/* Notes table view (alternative to cards) */
+.notes-table {
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.notes-table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    padding: 0.75rem;
+    font-size: 0.875rem;
+    color: #495057;
+}
+
+.notes-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #dee2e6;
+    vertical-align: top;
+}
+
+.notes-table tr:hover {
+    background-color: #f8f9fa;
+}
+
+.notes-table .note-title-cell {
+    font-weight: 600;
+    color: #495057;
+}
+
+.notes-table .note-content-cell {
+    max-width: 300px;
+    color: #6c757d;
+}
+
+.notes-table .note-meta-cell {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+/* View toggle buttons */
+.notes-view-toggle {
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+}
+
+.notes-view-toggle .btn {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+}
 </style>
 <?php
 // Validate and prepare data for update mode
@@ -1217,7 +1448,124 @@ if (isset($data['class_data']) && $data['class_data']):
             
             <!-- Class Notes Container for dynamic display -->
             <div id="class-notes-container" class="mt-3">
-               <!-- Notes will be loaded here via AJAX -->
+               <!-- Notes Display Header -->
+               <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="mb-0">Class Notes</h6>
+                  <div class="d-flex align-items-center gap-2">
+                     <small class="text-muted" id="notes-count">0 notes</small>
+                     <div class="notes-view-toggle">
+                        <button class="btn btn-sm btn-outline-secondary active" id="notes-view-cards" data-view="cards">
+                           <i class="bi bi-grid-3x3-gap"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" id="notes-view-table" data-view="table">
+                           <i class="bi bi-table"></i>
+                        </button>
+                     </div>
+                  </div>
+               </div>
+               
+               <!-- Notes Search and Filter Controls -->
+               <div class="notes-controls mb-3" style="display: none;">
+                  <div class="row g-2 mb-2">
+                     <div class="col-md-6">
+                        <div class="input-group input-group-sm">
+                           <span class="input-group-text"><i class="bi bi-search"></i></span>
+                           <input type="text" class="form-control" id="notes-search" placeholder="Search notes... (use quotes for exact phrases)">
+                           <button class="btn btn-outline-secondary" type="button" id="clear-notes-search">
+                              <i class="bi bi-x"></i>
+                           </button>
+                        </div>
+                        <div class="small text-muted mt-1">
+                           <i class="bi bi-info-circle"></i> 
+                           Advanced search: Use quotes for exact phrases, separate words for AND search
+                        </div>
+                     </div>
+                     <div class="col-md-6">
+                        <div class="d-flex justify-content-end">
+                           <button class="btn btn-outline-secondary btn-sm" id="clear-notes-filters" title="Clear all filters">
+                              <i class="bi bi-arrow-clockwise"></i> Reset Filters
+                           </button>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="row g-2">
+                     <div class="col-md-3">
+                        <select class="form-select form-select-sm" id="notes-date-filter">
+                           <option value="">All Time</option>
+                           <option value="today">Today</option>
+                           <option value="week">This Week</option>
+                           <option value="month">This Month</option>
+                           <option value="quarter">This Quarter</option>
+                        </select>
+                     </div>
+                     <div class="col-md-3">
+                        <select class="form-select form-select-sm" id="notes-category-filter">
+                           <option value="">All Categories</option>
+                           <option value="general">General</option>
+                           <option value="important">Important</option>
+                           <option value="reminder">Reminder</option>
+                           <option value="issue">Issue</option>
+                           <option value="progress">Progress Update</option>
+                        </select>
+                     </div>
+                     <div class="col-md-3">
+                        <select class="form-select form-select-sm" id="notes-priority-filter">
+                           <option value="">All Priorities</option>
+                           <option value="high">High Priority</option>
+                           <option value="medium">Medium Priority</option>
+                           <option value="low">Low Priority</option>
+                        </select>
+                     </div>
+                     <div class="col-md-3">
+                        <select class="form-select form-select-sm" id="notes-sort">
+                           <option value="newest">Newest First</option>
+                           <option value="oldest">Oldest First</option>
+                           <option value="updated">Recently Updated</option>
+                           <option value="priority">By Priority</option>
+                           <option value="category">By Category</option>
+                           <option value="title">By Title</option>
+                        </select>
+                     </div>
+                  </div>
+               </div>
+               
+               <!-- Notes Display Area -->
+               <div id="notes-display-area">
+                  <!-- Loading state -->
+                  <div id="notes-loading" class="text-center py-3 d-none">
+                     <div class="spinner-border spinner-border-sm text-primary" role="status">
+                        <span class="visually-hidden">Loading notes...</span>
+                     </div>
+                     <div class="mt-2 text-muted small">Loading notes...</div>
+                  </div>
+                  
+                  <!-- Empty state -->
+                  <div id="notes-empty" class="text-center py-4 text-muted">
+                     <i class="bi bi-sticky-note display-4 mb-2"></i>
+                     <p class="mb-0">No notes yet. Click "Add New Class Note" to get started.</p>
+                  </div>
+                  
+                  <!-- Notes list -->
+                  <div id="notes-list">
+                     <!-- Notes will be dynamically loaded here -->
+                  </div>
+                  
+                  <!-- No results state -->
+                  <div id="notes-no-results" class="text-center py-3 text-muted d-none">
+                     <i class="bi bi-search display-4 mb-2"></i>
+                     <p class="mb-0">No notes found matching your search criteria.</p>
+                     <button class="btn btn-sm btn-outline-primary mt-2" id="clear-notes-filters">
+                        Clear Filters
+                     </button>
+                  </div>
+               </div>
+               
+               <!-- Notes Pagination -->
+               <nav aria-label="Notes pagination" id="notes-pagination-nav" class="mt-3" style="display: none;">
+                  <ul class="pagination pagination-sm justify-content-center" id="notes-pagination">
+                     <!-- Pagination will be generated here -->
+                  </ul>
+               </nav>
             </div>
          </div>
       </div>
