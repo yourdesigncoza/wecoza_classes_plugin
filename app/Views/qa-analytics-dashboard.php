@@ -14,6 +14,9 @@ if (!defined('ABSPATH')) {
 if (!current_user_can('manage_options')) {
     wp_die(__('You do not have sufficient permissions to access this page.'));
 }
+
+// Start output buffering to prevent header conflicts
+ob_start();
 ?>
 
 <div class="wrap qa-analytics-dashboard">
@@ -572,3 +575,8 @@ class QAAnalytics {
     }
 }
 </style>
+
+<?php
+// Flush output buffer to prevent header conflicts
+ob_end_flush();
+?>
