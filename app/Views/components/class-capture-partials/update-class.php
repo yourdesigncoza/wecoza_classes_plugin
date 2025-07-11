@@ -1109,22 +1109,14 @@ if (isset($data['class_data']) && $data['class_data']):
                      <!-- Notes Display Header -->
                      <div class="d-flex justify-content-between align-items-center mb-3 col-md-2">
                         <div class="d-flex align-items-center gap-2">
-                           <div class="notes-view-toggle">
-                              <button type="button" class="btn btn-sm btn-outline-secondary active" id="notes-view-cards" data-view="cards">
-                                 <i class="bi bi-grid-3x3-gap"></i>
-                              </button>
-                              <button type="button" class="btn btn-sm btn-outline-secondary" id="notes-view-table" data-view="table">
-                                 <i class="bi bi-table"></i>
-                              </button>
-                           </div>
-                           <small class="text-muted" id="notes-count">0 notes</small>
+                           <span class="badge ms-2 badge badge-phoenix badge-phoenix-warning " id="notes-count">0 notes</span>
                         </div>
                      </div>
                      <!-- Search Input -->
                      <div class="col-md-4">
                         <div class="input-group input-group-sm">
                            <span class="input-group-text"><i class="bi bi-search"></i></span>
-                           <input type="text" class="form-control" id="notes-search" placeholder="Search notes... (use quotes for exact phrases)">
+                           <input type="text" class="form-control" id="notes-search" placeholder="Search notes... (use quotes for exact phrases)" autocomplete="off">
                            <button class="btn btn-outline-secondary" type="button" id="clear-notes-search">
                               <i class="bi bi-x"></i>
                            </button>

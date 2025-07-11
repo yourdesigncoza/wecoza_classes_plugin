@@ -829,6 +829,7 @@ function showCustomAlert(message) {
                 this.title = data.title || '';
                 this.content = data.content || '';
                 this.category = data.category || 'general';
+                this.priority = data.priority || 'medium';
                 this.created_at = data.created_at || new Date().toISOString();
                 this.updated_at = data.updated_at || new Date().toISOString();
                 this.author_id = data.author_id || wecozaClass.currentUserId;
@@ -1159,7 +1160,6 @@ function showCustomAlert(message) {
         if (!window.classNotesCollection) return;
         
         const paginatedData = window.classNotesCollection.getPaginated();
-        const currentView = $('.notes-view-toggle .active').data('view') || 'cards';
         
         // Update notes count with search indication
         const totalCount = window.classNotesCollection.getFiltered().length;
@@ -1176,12 +1176,8 @@ function showCustomAlert(message) {
         // Notes controls are now always visible - no need to show/hide the container
         // The interface elements should remain visible even when there are no notes
         
-        // Render notes with pagination
-        if (currentView === 'cards') {
-            renderNotesCards(paginatedData.items);
-        } else {
-            renderNotesTable(paginatedData.items);
-        }
+        // Render notes in enhanced card grid layout
+        renderNotesGrid(paginatedData.items);
         
         // Update pagination
         renderNotesPagination(paginatedData);
@@ -1851,32 +1847,12 @@ function showCustomAlert(message) {
         });
     }
 
-    /**
-     * Render notes in card view
-     */
-    function renderNotesCards(notes) {
-        const $notesList = $('#notes-list');
-        $notesList.empty();
-        
-        if (!notes || notes.length === 0) {
-            $('#notes-empty').show();
-            $('#notes-no-results').hide();
-            return;
-        }
-        
-        $('#notes-empty').hide();
-        $('#notes-no-results').hide();
-        
-        notes.forEach(note => {
-            const noteCard = createNoteCard(note);
-            $notesList.append(noteCard);
-        });
-    }
+    // Removed renderNotesCards function - using table view only
     
     /**
-     * Render notes in table view
+     * Render notes in enhanced card grid layout
      */
-    function renderNotesTable(notes) {
+    function renderNotesGrid(notes) {
         const $notesList = $('#notes-list');
         $notesList.empty();
         
@@ -1889,28 +1865,14 @@ function showCustomAlert(message) {
         $('#notes-empty').hide();
         $('#notes-no-results').hide();
         
-        const table = $(`
-            <table class="table table-striped table-sm fs-9 mb-0 w-100">
-                <thead class="bg-body-highlight">
-                    <tr>
-                        <th style="width: 30%">Note Type</th>
-                        <th style="width: 50%">Note</th>
-                        <th style="width: 10%">Created</th>
-                        <th style="width: 10%">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="notes-table-body">
-                </tbody>
-            </table>
-        `);
+        const $grid = $('<div class="notes-grid"></div>');
         
-        const $tbody = table.find('#notes-table-body');
         notes.forEach(note => {
-            const noteRow = createNoteRow(note);
-            $tbody.append(noteRow);
+            const noteCard = createEnhancedNoteCard(note);
+            $grid.append(noteCard);
         });
         
-        $notesList.append(table);
+        $notesList.append($grid);
     }
     
     /**
@@ -1951,9 +1913,9 @@ function showCustomAlert(message) {
     }
     
     /**
-     * Create a note card element
+     * Create an enhanced note card with full feature display
      */
-    function createNoteCard(note) {
+    function createEnhancedNoteCard(note) {
         const createdDate = new Date(note.created_at).toLocaleDateString();
         const createdTime = new Date(note.created_at).toLocaleTimeString();
         const relativeTime = getRelativeTime(note.created_at);
@@ -1965,91 +1927,80 @@ function showCustomAlert(message) {
         // Get current search term for highlighting
         const currentSearchTerm = window.classNotesCollection ? window.classNotesCollection.searchTerm : '';
         
-        // Process tags
-        const tags = Array.isArray(note.tags) ? note.tags : (note.tags ? note.tags.split(',') : []);
-        const tagsHtml = tags.map(tag => `<span class="note-tag">${escapeHtml(tag.trim())}</span>`).join('');
+        // Generate category badges
+        const categoryBadges = generateCategoryBadges(note.category);
         
-        // Process attachments
-        const attachments = Array.isArray(note.attachments) ? note.attachments : [];
-        const attachmentsHtml = attachments.map(attachment => {
-            const icon = getFileIcon(attachment.type);
-            return `<a href="${attachment.url}" class="note-attachment" target="_blank">
-                <i class="bi ${icon} note-attachment-icon"></i>
-                ${escapeHtml(attachment.name)}
-            </a>`;
-        }).join('');
+        // Priority class for card border - old notes default to medium priority
+        const priority = note.priority || 'medium';
+        const priorityClass = `priority-${priority.toLowerCase()}`;
         
-        // Truncate content for preview
-        const maxLength = 150;
-        const content = note.content.length > maxLength ? 
-            note.content.substring(0, maxLength) + '...' : note.content;
+        // Attachments indicator with clickable dropdown
+        let attachmentsIndicator = '';
+        if (note.attachments && note.attachments.length > 0) {
+            const count = Array.isArray(note.attachments) ? note.attachments.length : 1;
+            const attachmentsList = note.attachments.map(attachment => `
+                <li><a class="dropdown-item" href="${attachment.url}" target="_blank" download="${attachment.name}">
+                    <i class="bi bi-download me-2"></i>${attachment.name}
+                </a></li>
+            `).join('');
+            
+            attachmentsIndicator = `
+                <div class="dropdown note-attachments-dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle note-attachments-indicator" 
+                            type="button" 
+                            data-bs-toggle="dropdown" 
+                            aria-expanded="false" 
+                            title="${count} attachment(s)">
+                        <i class="bi bi-paperclip"></i>
+                        <span>${count}</span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        ${attachmentsList}
+                    </ul>
+                </div>
+            `;
+        }
+        
+        // Content with expand/collapse functionality
+        const maxLength = 200;
+        const needsExpansion = note.content.length > maxLength;
+        const shortContent = needsExpansion ? note.content.substring(0, maxLength) + '...' : note.content;
+        
+        const contentHtml = needsExpansion ? `
+            <div class="note-content-expandable">
+                <div class="note-content-full note-content-collapsed" data-full-content="${escapeHtml(note.content)}">
+                    ${highlightSearchTerms(shortContent, currentSearchTerm)}
+                </div>
+                <button type="button" class="note-expand-btn fs-10" onclick="toggleNoteContent(this)">
+                    <i class="bi bi-chevron-down me-1"></i>Show More
+                </button>
+            </div>
+        ` : `
+            <div class="note-content-full">
+                ${highlightSearchTerms(note.content, currentSearchTerm)}
+            </div>
+        `;
         
         return $(`
-            <div class="note-card ${note.priority ? 'note-priority-' + note.priority : ''}" data-note-id="${note.id}">
+            <div class="note-card ${priorityClass}" data-note-id="${note.id}">
                 <div class="note-card-header">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div class="note-title">${highlightSearchTerms(note.content.substring(0, 50) + (note.content.length > 50 ? '...' : ''), currentSearchTerm)}</div>
-                        ${generateCategoryBadges(note.category)}
+                    <div class="note-card-categories">
+                        ${categoryBadges}
+                    </div>
+                    <div class="note-card-metadata">
+                        ${attachmentsIndicator}
                     </div>
                 </div>
                 <div class="note-card-body">
-                    <div class="note-content note-preview">${highlightSearchTerms(content, currentSearchTerm)}</div>
-                    ${attachmentsHtml ? `<div class="note-attachments">${attachmentsHtml}</div>` : ''}
-                    ${tagsHtml ? `<div class="note-tags">${tagsHtml}</div>` : ''}
+                    ${contentHtml}
                 </div>
                 <div class="note-card-footer">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="note-meta">
-                            <span><i class="bi bi-person"></i> ${escapeHtml(note.author_name || 'Unknown')}</span>
-                            <span title="${createdDate} ${createdTime}"><i class="bi bi-calendar"></i> ${relativeTime}</span>
-                            ${updatedTime ? `<span title="Updated ${updatedTime}" class="text-warning"><i class="bi bi-pencil"></i> Updated</span>` : ''}
-                        </div>
-                        <div class="note-actions">
-                            <button type="button" class="btn btn-sm btn-outline-primary edit-note-btn" data-note-id="${note.id}" title="Edit note">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-danger delete-note-btn" data-note-id="${note.id}" title="Delete note">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
+                    <div class="note-card-meta">
+                        <span><i class="bi bi-person"></i> ${escapeHtml(note.author_name || 'Unknown')}</span>
+                        <span title="${createdDate} ${createdTime}"><i class="bi bi-calendar"></i> ${relativeTime}</span>
+                        ${updatedTime ? `<span class="note-updated-indicator" title="Updated ${updatedTime}"><i class="bi bi-pencil"></i> Updated</span>` : ''}
                     </div>
-                </div>
-            </div>
-        `);
-    }
-    
-    /**
-     * Create a note table row element
-     */
-    function createNoteRow(note) {
-        const createdDate = new Date(note.created_at).toLocaleDateString();
-        const createdTime = new Date(note.created_at).toLocaleTimeString();
-        const relativeTime = getRelativeTime(note.created_at);
-        const content = note.content.length > 100 ? 
-            note.content.substring(0, 100) + '...' : note.content;
-        
-        // Check if note was updated
-        const isUpdated = note.updated_at && note.updated_at !== note.created_at;
-        const updatedIcon = isUpdated ? '<i class="bi bi-pencil text-warning ms-1" title="Updated"></i>' : '';
-        
-        // Get current search term for highlighting
-        const currentSearchTerm = window.classNotesCollection ? window.classNotesCollection.searchTerm : '';
-        
-        return $(`
-            <tr data-note-id="${note.id}">
-                <td>
-                    ${generateCategoryBadges(note.category)}
-                </td>
-                <td class="note-content-cell">
-                    ${highlightSearchTerms(content, currentSearchTerm)}
-                    ${updatedIcon}
-                </td>
-                <td class="note-meta-cell" title="${createdDate} ${createdTime}">
-                    ${relativeTime}
-                    <div class="small text-muted">${escapeHtml(note.author_name || 'Unknown')}</div>
-                </td>
-                <td>
-                    <div class="note-actions">
+                    <div class="note-card-actions">
                         <button type="button" class="btn btn-sm btn-outline-primary edit-note-btn" data-note-id="${note.id}" title="Edit note">
                             <i class="bi bi-pencil"></i>
                         </button>
@@ -2057,10 +2008,43 @@ function showCustomAlert(message) {
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
-                </td>
-            </tr>
+                </div>
+            </div>
         `);
     }
+    
+    /**
+     * Toggle note content expand/collapse
+     */
+    function toggleNoteContent(button) {
+        const $button = $(button);
+        const $contentDiv = $button.siblings('.note-content-full');
+        const $icon = $button.find('i');
+        
+        if ($contentDiv.hasClass('note-content-collapsed')) {
+            // Expand
+            const fullContent = $contentDiv.data('full-content');
+            const currentSearchTerm = window.classNotesCollection ? window.classNotesCollection.searchTerm : '';
+            $contentDiv.html(highlightSearchTerms(fullContent, currentSearchTerm));
+            $contentDiv.removeClass('note-content-collapsed');
+            $icon.removeClass('bi-chevron-down').addClass('bi-chevron-up');
+            $button.html('<i class="bi bi-chevron-up me-1"></i>Show Less');
+        } else {
+            // Collapse
+            const fullContent = $contentDiv.text();
+            const shortContent = fullContent.substring(0, 200) + '...';
+            const currentSearchTerm = window.classNotesCollection ? window.classNotesCollection.searchTerm : '';
+            $contentDiv.html(highlightSearchTerms(shortContent, currentSearchTerm));
+            $contentDiv.addClass('note-content-collapsed');
+            $icon.removeClass('bi-chevron-up').addClass('bi-chevron-down');
+            $button.html('<i class="bi bi-chevron-down me-1"></i>Show More');
+        }
+    }
+    
+    // Make toggleNoteContent globally available
+    window.toggleNoteContent = toggleNoteContent;
+    
+    // Removed createNoteRow function - using enhanced card grid layout
     
     /**
      * Get relative time string (e.g., "2 hours ago", "3 days ago")
@@ -2096,21 +2080,7 @@ function showCustomAlert(message) {
     /**
      * Get file icon based on file type
      */
-    function getFileIcon(type) {
-        const iconMap = {
-            'pdf': 'bi-file-pdf',
-            'doc': 'bi-file-word',
-            'docx': 'bi-file-word',
-            'xls': 'bi-file-excel',
-            'xlsx': 'bi-file-excel',
-            'jpg': 'bi-file-image',
-            'jpeg': 'bi-file-image',
-            'png': 'bi-file-image',
-            'gif': 'bi-file-image'
-        };
-        
-        return iconMap[type] || 'bi-file-earmark';
-    }
+    // Removed getFileIcon function - was only used in card view
     
     /**
      * Escape HTML to prevent XSS
@@ -2138,103 +2108,13 @@ function showCustomAlert(message) {
         return escapedText.replace(regex, '<mark class="note-search-highlight">$1</mark>');
     }
     
-    /**
-     * Save filter state to localStorage (DRY helper)
-     */
-    function saveFilterState() {
-        const filterState = {
-            search: $('#notes-search').val(),
-            category: $('#notes-category-filter').val(),
-            priority: $('#notes-priority-filter').val(),
-            dateRange: $('#notes-date-filter').val(),
-            sort: $('#notes-sort').val()
-        };
-        localStorage.setItem('notes-filter-state', JSON.stringify(filterState));
-    }
-    
-    /**
-     * Load filter state from localStorage (DRY helper)
-     */
-    function loadFilterState() {
-        const savedState = localStorage.getItem('notes-filter-state');
-        if (savedState) {
-            try {
-                const filterState = JSON.parse(savedState);
-                $('#notes-search').val(filterState.search || '');
-                $('#notes-category-filter').val(filterState.category || '');
-                $('#notes-priority-filter').val(filterState.priority || '');
-                $('#notes-date-filter').val(filterState.dateRange || '');
-                $('#notes-sort').val(filterState.sort || 'newest');
-                
-                // Apply filters to collection
-                if (window.classNotesCollection) {
-                    window.classNotesCollection.setSearch(filterState.search || '');
-                    window.classNotesCollection.setFilter('category', filterState.category || '');
-                    window.classNotesCollection.setFilter('priority', filterState.priority || '');
-                    window.classNotesCollection.setFilter('dateRange', filterState.dateRange || '');
-                    
-                    // Apply sorting
-                    const sortValue = filterState.sort || 'newest';
-                    let field, order;
-                    switch (sortValue) {
-                        case 'newest':
-                            field = 'created_at';
-                            order = 'desc';
-                            break;
-                        case 'oldest':
-                            field = 'created_at';
-                            order = 'asc';
-                            break;
-                        case 'updated':
-                            field = 'updated_at';
-                            order = 'desc';
-                            break;
-                        case 'priority':
-                            field = 'priority';
-                            order = 'desc';
-                            break;
-                        case 'category':
-                            field = 'category';
-                            order = 'asc';
-                            break;
-                        case 'title':
-                            field = 'title';
-                            order = 'asc';
-                            break;
-                        default:
-                            field = 'created_at';
-                            order = 'desc';
-                    }
-                    window.classNotesCollection.setSort(field, order);
-                }
-            } catch (e) {
-                console.error('Error loading filter state:', e);
-            }
-        }
-    }
+    // Removed filter state persistence - page loads with clean state
     
     /**
      * Initialize notes display functionality
      */
     function initializeNotesDisplay() {
-        // View toggle functionality
-        $('#notes-view-cards, #notes-view-table').on('click', function() {
-            const view = $(this).data('view');
-            $(this).addClass('active').siblings().removeClass('active');
-            
-            // Store view preference
-            localStorage.setItem('notes-view-preference', view);
-            
-            // Re-render notes in selected view
-            if (window.classNotesCollection) {
-                const notes = window.classNotesCollection.getFiltered();
-                if (view === 'cards') {
-                    renderNotesCards(notes);
-                } else {
-                    renderNotesTable(notes);
-                }
-            }
-        });
+        // View toggle functionality removed - using table view only
         
         // Search functionality with enhanced features
         $('#notes-search').on('input', debounce(function() {
@@ -2242,7 +2122,6 @@ function showCustomAlert(message) {
             if (window.classNotesCollection) {
                 window.classNotesCollection.setSearch(searchTerm);
                 refreshNotesDisplay();
-                saveFilterState();
             }
         }, 300));
         
@@ -2264,7 +2143,6 @@ function showCustomAlert(message) {
                 if (window.classNotesCollection) {
                     window.classNotesCollection.setSearch('');
                     refreshNotesDisplay();
-                    saveFilterState();
                 }
             }
         });
@@ -2284,7 +2162,6 @@ function showCustomAlert(message) {
             if (window.classNotesCollection) {
                 window.classNotesCollection.setFilter('category', category);
                 refreshNotesDisplay();
-                saveFilterState();
             }
         });
         
@@ -2294,7 +2171,6 @@ function showCustomAlert(message) {
             if (window.classNotesCollection) {
                 window.classNotesCollection.setFilter('priority', priority);
                 refreshNotesDisplay();
-                saveFilterState();
             }
         });
         
@@ -2304,7 +2180,6 @@ function showCustomAlert(message) {
             if (window.classNotesCollection) {
                 window.classNotesCollection.setFilter('dateRange', dateRange);
                 refreshNotesDisplay();
-                saveFilterState();
             }
         });
         
@@ -2337,7 +2212,6 @@ function showCustomAlert(message) {
                 
                 window.classNotesCollection.setSort(field, order);
                 refreshNotesDisplay();
-                saveFilterState();
             }
         });
         
@@ -2359,8 +2233,7 @@ function showCustomAlert(message) {
                 window.classNotesCollection.setSort('created_at', 'desc');
                 refreshNotesDisplay();
                 
-                // Clear saved filter state
-                localStorage.removeItem('notes-filter-state');
+                // Filter persistence removed
             }
         });
         
@@ -2432,16 +2305,13 @@ function showCustomAlert(message) {
             window.classNotesCollection = new ClassNotesQAModels.Collection(ClassNotesQAModels.Note);
         }
         
-        // Load saved view preference
-        const savedView = localStorage.getItem('notes-view-preference') || 'cards';
-        $(`#notes-view-${savedView}`).addClass('active').siblings().removeClass('active');
+        // View preference removed - using table view only
         
         // Initialize pagination and sorting handlers
         initializePaginationHandlers();
         initializeSortingHandlers();
         
-        // Load saved filter state
-        loadFilterState();
+        // Filter persistence removed - page loads with clean state
     }
     
     
