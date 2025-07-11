@@ -118,6 +118,47 @@
 - PostgreSQL with PDO
 - Font Awesome / Bootstrap Icons
 
+## Class Notes Form Simplification & Empty State Fixes (2025-07-11)
+
+### Major Bug Fixes:
+
+1. **app/Views/components/class-capture-partials/update-class.php**
+   - Simplified class note form by removing title/tags fields (reduced complexity)
+   - Removed `style="display: none;"` from `.notes-controls` container
+   - Fixed empty state display to always show interface elements
+   - Maintained proper HTML structure for notes container targeting
+
+2. **assets/js/class-capture.js**
+   - Fixed duplicate `refreshNotesDisplay()` functions causing container targeting conflicts
+   - Removed problematic `addClass('d-none')` calls that were hiding empty states
+   - Centralized empty state logic through single `refreshNotesDisplay()` function
+   - Fixed form submission errors by updating field validation logic
+   - Enhanced delete functionality with proper `class_id` parameter handling
+   - Improved initialization order to prevent timing conflicts
+   - Added safety net with setTimeout for proper display state
+
+3. **app/Controllers/ClassController.php**
+   - Updated `saveClassNote()` method to handle simplified form structure
+   - Fixed `deleteClassNote()` method with comprehensive debug logging
+   - Updated field validation to remove title/tags requirements
+   - Enhanced error handling and response consistency
+
+### Issues Resolved:
+
+- **Empty State Display**: Fixed notes container showing blank instead of "Add Note" interface
+- **Duplicate Functions**: Removed conflicting `refreshNotesDisplay()` targeting wrong containers
+- **Form Submission**: Fixed JSON parsing errors due to undefined title field
+- **Delete Functionality**: Added missing `class_id` parameter for note deletion
+- **Interface Visibility**: Always show search/filter/add controls even when no notes exist
+- **Initialization Conflicts**: Resolved timing issues between different initialization functions
+
+### Key Technical Improvements:
+
+- **Consistent State Management**: All empty state logic now flows through `refreshNotesDisplay()`
+- **Reduced Code Duplication**: Eliminated duplicate function definitions
+- **Better Error Handling**: Improved AJAX error states and user feedback
+- **Enhanced UX**: Users can always access "Add Note" functionality regardless of state
+
 ### Development Files:
 
 1. **random-notes.txt** - Developer notes and implementation reminders

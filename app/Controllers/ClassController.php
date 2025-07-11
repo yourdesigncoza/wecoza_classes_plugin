@@ -3462,16 +3462,12 @@ class ClassController {
         
         // Validate note data
         $note = [
-            'id' => isset($note_data['id']) ? sanitize_text_field($note_data['id']) : uniqid('note_'),
-            'title' => sanitize_text_field($note_data['title']),
+            'id' => !empty($note_data['id']) ? sanitize_text_field($note_data['id']) : uniqid('note_'),
             'content' => sanitize_textarea_field($note_data['content']),
-            'category' => sanitize_text_field($note_data['category'] ?? 'general'),
-            'priority' => sanitize_text_field($note_data['priority'] ?? 'medium'),
-            'tags' => isset($note_data['tags']) ? 
-                (is_array($note_data['tags']) ? 
-                    array_map('sanitize_text_field', $note_data['tags']) : 
-                    array_map('sanitize_text_field', explode(',', $note_data['tags']))
-                ) : [],
+            'category' => isset($note_data['category']) && is_array($note_data['category']) ? 
+                array_map('sanitize_text_field', $note_data['category']) : 
+                [sanitize_text_field($note_data['category'] ?? '')],
+            'priority' => sanitize_text_field($note_data['priority'] ?? ''),
             'author_id' => get_current_user_id(),
             'created_at' => isset($note_data['created_at']) ? $note_data['created_at'] : date('c'),
             'updated_at' => date('c'),
@@ -3479,12 +3475,16 @@ class ClassController {
         ];
         
         // Basic validation
-        if (empty($note['title'])) {
-            wp_send_json_error('Note title is required');
-        }
-        
         if (empty($note['content'])) {
             wp_send_json_error('Note content is required');
+        }
+        
+        if (empty($note['category']) || (is_array($note['category']) && count($note['category']) === 0)) {
+            wp_send_json_error('At least one class note type is required');
+        }
+        
+        if (empty($note['priority'])) {
+            wp_send_json_error('Priority is required');
         }
         
         // Use PostgreSQL connection for external database
@@ -3574,8 +3574,15 @@ class ClassController {
         $class_id = intval($_POST['class_id'] ?? 0);
         $note_id = sanitize_text_field($_POST['note_id'] ?? '');
         
-        if (!$class_id || !$note_id) {
-            wp_send_json_error('Invalid class ID or note ID');
+        // Debug logging
+        error_log("Delete note request - Class ID: {$class_id}, Note ID: '{$note_id}'");
+        
+        if (!$class_id) {
+            wp_send_json_error('Invalid class ID');
+        }
+        
+        if (!isset($_POST['note_id'])) {
+            wp_send_json_error('Note ID not provided');
         }
         
         // Use PostgreSQL connection for external database
@@ -3612,9 +3619,15 @@ class ClassController {
             
             // Filter out the note to delete
             $original_count = count($notes);
+            error_log("Notes before filter: " . json_encode(array_column($notes, 'id')));
+            
             $notes = array_filter($notes, function($note) use ($note_id) {
-                return $note['id'] !== $note_id;
+                $keep = $note['id'] !== $note_id;
+                error_log("Comparing '{$note['id']}' !== '{$note_id}' = " . ($keep ? 'true' : 'false'));
+                return $keep;
             });
+            
+            error_log("Notes after filter: " . json_encode(array_column($notes, 'id')));
             
             // Check if note was found and removed
             if (count($notes) === $original_count) {

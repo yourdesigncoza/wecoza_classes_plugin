@@ -958,7 +958,7 @@ function showCustomAlert(message) {
             }
 
             setSearch(term) {
-                this.searchTerm = term.toLowerCase();
+                this.searchTerm = (term || '').toLowerCase();
                 this.currentPage = 1;
             }
 
@@ -1156,44 +1156,61 @@ function showCustomAlert(message) {
      * Refresh notes display with current filters and pagination
      */
     function refreshNotesDisplay() {
-        const { items, totalPages, currentPage } = window.classNotesCollection.getPaginated();
-        const $container = $('#class-notes-list');
+        if (!window.classNotesCollection) return;
         
-        if (!$container.length) return;
+        const paginatedData = window.classNotesCollection.getPaginated();
+        const currentView = $('.notes-view-toggle .active').data('view') || 'cards';
         
-        $container.empty();
+        // Update notes count with search indication
+        const totalCount = window.classNotesCollection.getFiltered().length;
+        const allCount = window.classNotesCollection.items.length;
+        const searchTerm = window.classNotesCollection.searchTerm;
         
-        if (items.length === 0) {
-            $container.html('<div class="alert alert-info">No notes found matching your criteria.</div>');
-            return;
+        let countText = `${totalCount} note${totalCount !== 1 ? 's' : ''}`;
+        if (searchTerm) {
+            countText += ` (filtered from ${allCount})`;
         }
         
-        // Render notes
-        items.forEach(note => {
-            const noteHtml = `
-                <div class="note-item card mb-2" data-note-id="${note.id}">
-                    <div class="card-body">
-                        <h6 class="card-title">${escapeHtml(note.title)}</h6>
-                        <p class="card-text small">${escapeHtml(note.content.substring(0, 200))}...</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted">${formatDate(note.created_at)}</small>
-                            <div>
-                                <button class="btn btn-sm btn-outline-primary edit-note" data-note-id="${note.id}">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger delete-note" data-note-id="${note.id}">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            $container.append(noteHtml);
-        });
+        $('#notes-count').text(countText);
+        
+        // Notes controls are now always visible - no need to show/hide the container
+        // The interface elements should remain visible even when there are no notes
+        
+        // Render notes with pagination
+        if (currentView === 'cards') {
+            renderNotesCards(paginatedData.items);
+        } else {
+            renderNotesTable(paginatedData.items);
+        }
         
         // Update pagination
-        updatePagination('notes', currentPage, totalPages);
+        renderNotesPagination(paginatedData);
+        
+        // Show no results message if search/filter returned empty
+        if (totalCount === 0 && window.classNotesCollection.items.length > 0) {
+            $('#notes-no-results').show();
+            $('#notes-empty').hide();
+            
+            // Update no results message with search context
+            const hasFilters = Object.keys(window.classNotesCollection.filters).length > 0;
+            const hasSearch = window.classNotesCollection.searchTerm;
+            
+            if (hasSearch) {
+                $('#notes-no-results p').text(`No notes found matching "${window.classNotesCollection.searchTerm}"`);
+            } else if (hasFilters) {
+                $('#notes-no-results p').text('No notes found matching your filter criteria.');
+            } else {
+                $('#notes-no-results p').text('No notes found matching your search criteria.');
+            }
+        } else if (totalCount === 0) {
+            // Truly empty - no notes at all
+            $('#notes-empty').show();
+            $('#notes-no-results').hide();
+        } else {
+            // Has notes - hide empty states
+            $('#notes-empty').hide();
+            $('#notes-no-results').hide();
+        }
     }
 
     /**
@@ -1471,7 +1488,7 @@ function showCustomAlert(message) {
      */
     function showErrorMessage(message) {
         const alertHtml = `
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <div class="alert alert-subtle-danger alert-dismissible fade show" role="alert">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i>
                 <strong>Error!</strong> ${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -1658,7 +1675,8 @@ function showCustomAlert(message) {
         
         // Show loading state
         $loadingIndicator.removeClass('d-none');
-        $('#notes-empty, #notes-no-results').addClass('d-none');
+        // Only hide no-results, let empty state be handled by the response
+        $('#notes-no-results').addClass('d-none');
         
         $.ajax({
             url: wecozaClass.ajaxUrl,
@@ -1681,14 +1699,16 @@ function showCustomAlert(message) {
                         refreshNotesDisplay();
                     }
                 } else {
-                    // Show empty state
-                    $('#notes-empty').removeClass('d-none');
-                    $('#notes-count').text('0 notes');
+                    // No notes - ensure collection is empty and refresh display
+                    if (window.classNotesCollection) {
+                        window.classNotesCollection.items = [];
+                        refreshNotesDisplay();
+                    }
                 }
             },
             error: function() {
                 // Show error in empty state area
-                $('#notes-empty').removeClass('d-none').html(`
+                $('#notes-empty').show().html(`
                     <div class="text-center py-4 text-danger">
                         <i class="bi bi-exclamation-triangle display-4 mb-2"></i>
                         <p class="mb-0">Failed to load notes. Please try again.</p>
@@ -1870,13 +1890,13 @@ function showCustomAlert(message) {
         $('#notes-no-results').hide();
         
         const table = $(`
-            <table class="table notes-table">
-                <thead>
+            <table class="table-striped table-sm fs-9 mb-0 w-100">
+                <thead class="bg-body-highlight">
                     <tr>
-                        <th style="width: 50%">Title & Content</th>
-                        <th style="width: 15%">Category</th>
-                        <th style="width: 20%">Created</th>
-                        <th style="width: 15%">Actions</th>
+                        <th style="width: 30%">Note Type</th>
+                        <th style="width: 50%">Note</th>
+                        <th style="width: 10%">Created</th>
+                        <th style="width: 10%">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="notes-table-body">
@@ -1928,12 +1948,12 @@ function showCustomAlert(message) {
             note.content.substring(0, maxLength) + '...' : note.content;
         
         return $(`
-            <div class="note-card note-priority-${note.priority || 'medium'}" data-note-id="${note.id}">
+            <div class="note-card ${note.priority ? 'note-priority-' + note.priority : ''}" data-note-id="${note.id}">
                 <div class="note-card-header">
                     <div class="d-flex justify-content-between align-items-start">
-                        <div class="note-title">${highlightSearchTerms(note.title, currentSearchTerm)}</div>
-                        <span class="note-category-badge note-category-${note.category || 'general'}">
-                            ${note.category || 'general'}
+                        <div class="note-title">${highlightSearchTerms(note.content.substring(0, 50) + (note.content.length > 50 ? '...' : ''), currentSearchTerm)}</div>
+                        <span class="note-category-badge">
+                            ${Array.isArray(note.category) ? note.category.join(', ') : (note.category || 'general')}
                         </span>
                     </div>
                 </div>
@@ -1950,10 +1970,10 @@ function showCustomAlert(message) {
                             ${updatedTime ? `<span title="Updated ${updatedTime}" class="text-warning"><i class="bi bi-pencil"></i> Updated</span>` : ''}
                         </div>
                         <div class="note-actions">
-                            <button class="btn btn-sm btn-outline-primary edit-note-btn" data-note-id="${note.id}" title="Edit note">
+                            <button type="button" class="btn btn-sm btn-outline-primary edit-note-btn" data-note-id="${note.id}" title="Edit note">
                                 <i class="bi bi-pencil"></i>
                             </button>
-                            <button class="btn btn-sm btn-outline-danger delete-note-btn" data-note-id="${note.id}" title="Delete note">
+                            <button type="button" class="btn btn-sm btn-outline-danger delete-note-btn" data-note-id="${note.id}" title="Delete note">
                                 <i class="bi bi-trash"></i>
                             </button>
                         </div>
@@ -1982,15 +2002,14 @@ function showCustomAlert(message) {
         
         return $(`
             <tr data-note-id="${note.id}">
-                <td class="note-title-cell">
-                    ${highlightSearchTerms(note.title, currentSearchTerm)}
-                    ${updatedIcon}
-                    <div class="small text-muted">${highlightSearchTerms(content, currentSearchTerm)}</div>
-                </td>
                 <td>
-                    <span class="note-category-badge note-category-${note.category || 'general'}">
-                        ${note.category || 'general'}
+                    <span class="note-category-badge">
+                        ${Array.isArray(note.category) ? note.category.join(', ') : (note.category || 'general')}
                     </span>
+                </td>
+                <td class="note-content-cell">
+                    ${highlightSearchTerms(content, currentSearchTerm)}
+                    ${updatedIcon}
                 </td>
                 <td class="note-meta-cell" title="${createdDate} ${createdTime}">
                     ${relativeTime}
@@ -1998,10 +2017,10 @@ function showCustomAlert(message) {
                 </td>
                 <td>
                     <div class="note-actions">
-                        <button class="btn btn-sm btn-outline-primary edit-note-btn" data-note-id="${note.id}" title="Edit note">
+                        <button type="button" class="btn btn-sm btn-outline-primary edit-note-btn" data-note-id="${note.id}" title="Edit note">
                             <i class="bi bi-pencil"></i>
                         </button>
-                        <button class="btn btn-sm btn-outline-danger delete-note-btn" data-note-id="${note.id}" title="Delete note">
+                        <button type="button" class="btn btn-sm btn-outline-danger delete-note-btn" data-note-id="${note.id}" title="Delete note">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
@@ -2320,11 +2339,10 @@ function showCustomAlert(message) {
             if (note) {
                 // Populate the modal with note data
                 $('#note_id').val(note.id);
-                $('#note_title').val(note.title);
                 $('#note_content').val(note.content);
-                $('#note_category').val(note.category || 'general');
-                $('#note_priority').val(note.priority || 'medium');
-                $('#note_tags').val(Array.isArray(note.tags) ? note.tags.join(', ') : note.tags);
+                // Handle multi-select class notes
+                $('#class_notes').val(Array.isArray(note.category) ? note.category : [note.category]);
+                $('#note_priority').val(note.priority || '');
                 
                 // Update modal title
                 $('#note-modal-title').text('Edit Class Note');
@@ -2337,6 +2355,14 @@ function showCustomAlert(message) {
         // Delete note functionality
         $(document).on('click', '.delete-note-btn', function() {
             const noteId = $(this).data('note-id');
+            const classId = $('#note_class_id').val() || $('#class_id').val();
+            
+            console.log('Delete note - ID:', noteId, 'Class ID:', classId); // Debug log
+            
+            if (!classId) {
+                alert('Error: Unable to determine class ID');
+                return;
+            }
             
             if (confirm('Are you sure you want to delete this note?')) {
                 // Call delete endpoint
@@ -2346,6 +2372,7 @@ function showCustomAlert(message) {
                     data: {
                         action: 'delete_class_note',
                         nonce: wecozaClass.nonce,
+                        class_id: classId,
                         note_id: noteId
                     },
                     success: function(response) {
@@ -2355,12 +2382,13 @@ function showCustomAlert(message) {
                                 window.classNotesCollection.remove(noteId);
                                 refreshNotesDisplay();
                             }
+                            showSuccessMessage('Note deleted successfully!');
                         } else {
-                            alert('Failed to delete note: ' + (response.data || 'Unknown error'));
+                            showErrorMessage(response.data || 'Failed to delete note');
                         }
                     },
                     error: function() {
-                        alert('Failed to delete note. Please try again.');
+                        showErrorMessage('Failed to delete note. Please try again.');
                     }
                 });
             }
@@ -2383,62 +2411,6 @@ function showCustomAlert(message) {
         loadFilterState();
     }
     
-    /**
-     * Refresh notes display with pagination
-     */
-    function refreshNotesDisplay() {
-        if (!window.classNotesCollection) return;
-        
-        const paginatedData = window.classNotesCollection.getPaginated();
-        const currentView = $('.notes-view-toggle .active').data('view') || 'cards';
-        
-        // Update notes count with search indication
-        const totalCount = window.classNotesCollection.getFiltered().length;
-        const allCount = window.classNotesCollection.items.length;
-        const searchTerm = window.classNotesCollection.searchTerm;
-        
-        let countText = `${totalCount} note${totalCount !== 1 ? 's' : ''}`;
-        if (searchTerm) {
-            countText += ` (filtered from ${allCount})`;
-        }
-        
-        $('#notes-count').text(countText);
-        
-        // Show/hide controls based on notes count
-        if (totalCount > 0) {
-            $('.notes-controls').show();
-        } else {
-            $('.notes-controls').hide();
-        }
-        
-        // Render notes with pagination
-        if (currentView === 'cards') {
-            renderNotesCards(paginatedData.items);
-        } else {
-            renderNotesTable(paginatedData.items);
-        }
-        
-        // Update pagination
-        renderNotesPagination(paginatedData);
-        
-        // Show no results message if search/filter returned empty
-        if (totalCount === 0 && window.classNotesCollection.items.length > 0) {
-            $('#notes-no-results').show();
-            $('#notes-empty').hide();
-            
-            // Update no results message with search context
-            const hasFilters = Object.keys(window.classNotesCollection.filters).length > 0;
-            const hasSearch = window.classNotesCollection.searchTerm;
-            
-            if (hasSearch) {
-                $('#notes-no-results p').text(`No notes found matching "${window.classNotesCollection.searchTerm}"`);
-            } else if (hasFilters) {
-                $('#notes-no-results p').text('No notes found matching your filter criteria.');
-            } else {
-                $('#notes-no-results p').text('No notes found matching your search criteria.');
-            }
-        }
-    }
     
     /**
      * Render pagination for notes
@@ -2649,6 +2621,11 @@ function showCustomAlert(message) {
             // Load existing data
             loadClassNotes(classId);
             loadQAVisits(classId);
+        } else {
+            // No valid class ID - show empty state
+            if (window.classNotesCollection) {
+                refreshNotesDisplay();
+            }
         }
         
         // Initialize search/filter functionality
@@ -2719,11 +2696,9 @@ function showCustomAlert(message) {
                 nonce: wecozaClass.nonce,
                 class_id: $('#note_class_id').val(),
                 note_id: $('#note_id').val(),
-                title: $('#note_title').val().trim(),
                 content: $('#note_content').val().trim(),
-                category: $('#note_category').val(),
-                priority: $('#note_priority').val(),
-                tags: $('#note_tags').val().split(',').map(tag => tag.trim()).filter(Boolean)
+                category: $('#class_notes').val() || [], // Multi-select array
+                priority: $('#note_priority').val()
             };
             
             // Validate data
@@ -2751,11 +2726,9 @@ function showCustomAlert(message) {
                         class_id: formData.class_id,
                         note: {
                             id: formData.note_id,
-                            title: formData.title,
                             content: formData.content,
                             category: formData.category,
                             priority: formData.priority,
-                            tags: formData.tags,
                             attachments: uploadedFiles
                         }
                     },
@@ -2813,17 +2786,33 @@ function showCustomAlert(message) {
                 if (note) {
                     $('#note-modal-title').text('Edit Class Note');
                     $('#note_id').val(note.id);
-                    $('#note_title').val(note.title);
                     $('#note_content').val(note.content);
-                    $('#note_category').val(note.category);
+                    $('#class_notes').val(Array.isArray(note.category) ? note.category : [note.category]);
                     $('#note_priority').val(note.priority);
-                    $('#note_tags').val(note.tags ? note.tags.join(', ') : '');
                     $charCount.text(note.content.length);
                 }
             } else {
-                // Add mode - restore draft if available
+                // Add mode - clear form first
                 $('#note-modal-title').text('Add Class Note');
-                restoreAutoSaveDraft('note');
+                $('#note_id').val('');
+                $('#note_content').val('');
+                $('#class_notes').val([]);
+                $('#note_priority').val('');
+                $charCount.text('0');
+                
+                // Optionally restore only content from draft (not required fields)
+                try {
+                    const draft = localStorage.getItem('wecoza_note_draft');
+                    if (draft) {
+                        const { data } = JSON.parse(draft);
+                        if (data && data.content) {
+                            $('#note_content').val(data.content);
+                            $charCount.text(data.content.length);
+                        }
+                    }
+                } catch (e) {
+                    // Ignore draft restoration errors
+                }
             }
         });
         
@@ -2834,6 +2823,14 @@ function showCustomAlert(message) {
             $('#note_id').val('');
             $charCount.text('0');
             $errorAlert.addClass('d-none');
+            
+            // Fix accessibility: Make buttons non-focusable when modal is hidden
+            $noteModal.find('button, input, select, textarea, [tabindex]:not([tabindex="-1"])').attr('tabindex', '-1');
+        });
+        
+        $noteModal.on('show.bs.modal', function() {
+            // Fix accessibility: Restore focusability when modal is shown
+            $noteModal.find('[tabindex="-1"]').removeAttr('tabindex');
         });
         
         // Handle edit/delete buttons
@@ -2849,7 +2846,7 @@ function showCustomAlert(message) {
             const noteId = $(this).data('note-id');
             const note = window.classNotesCollection.find(noteId);
             
-            if (note && confirm(`Are you sure you want to delete the note "${note.title}"?`)) {
+            if (note && confirm(`Are you sure you want to delete this note?`)) {
                 deleteNote(noteId);
             }
         });
@@ -2948,6 +2945,14 @@ function showCustomAlert(message) {
             $qaForm[0].reset();
             $qaForm.removeClass('was-validated');
             $errorAlert.addClass('d-none');
+            
+            // Fix accessibility: Make buttons non-focusable when modal is hidden
+            $qaModal.find('button, input, select, textarea, [tabindex]:not([tabindex="-1"])').attr('tabindex', '-1');
+        });
+        
+        $qaModal.on('show.bs.modal', function() {
+            // Fix accessibility: Restore focusability when modal is shown
+            $qaModal.find('[tabindex="-1"]').removeAttr('tabindex');
         });
     }
 
@@ -2959,15 +2964,13 @@ function showCustomAlert(message) {
         const autoSaveDelay = 3000; // 3 seconds
         
         // Auto-save for note form
-        $('#note_title, #note_content, #note_category, #note_priority, #note_tags').on('input change', function() {
+        $('#note_content, #class_notes, #note_priority').on('input change', function() {
             clearTimeout(autoSaveTimers.note);
             autoSaveTimers.note = setTimeout(() => {
                 saveFormDraft('note', {
-                    title: $('#note_title').val(),
                     content: $('#note_content').val(),
-                    category: $('#note_category').val(),
-                    priority: $('#note_priority').val(),
-                    tags: $('#note_tags').val()
+                    category: $('#class_notes').val(),
+                    priority: $('#note_priority').val()
                 });
             }, autoSaveDelay);
         });
@@ -2990,16 +2993,16 @@ function showCustomAlert(message) {
     function validateNoteData(data) {
         const errors = [];
         
-        if (!data.title || data.title.length < 3) {
-            errors.push('Title must be at least 3 characters long');
-        }
-        
         if (!data.content || data.content.length < 10) {
             errors.push('Content must be at least 10 characters long');
         }
         
-        if (data.title.length > 255) {
-            errors.push('Title must be less than 255 characters');
+        if (!data.category || (Array.isArray(data.category) && data.category.length === 0)) {
+            errors.push('Please select at least one class note type');
+        }
+        
+        if (!data.priority || data.priority === '') {
+            errors.push('Please select a priority level');
         }
         
         return {
@@ -3083,11 +3086,9 @@ function showCustomAlert(message) {
                 const draftAge = new Date() - new Date(timestamp);
                 if (draftAge < 24 * 60 * 60 * 1000) {
                     if (formType === 'note') {
-                        $('#note_title').val(data.title || '');
                         $('#note_content').val(data.content || '');
-                        $('#note_category').val(data.category || 'general');
-                        $('#note_priority').val(data.priority || 'medium');
-                        $('#note_tags').val(data.tags || '');
+                        $('#class_notes').val(data.category || []);
+                        $('#note_priority').val(data.priority || '');
                         $('#note-char-count').text((data.content || '').length);
                         
                         // Show indicator
@@ -3463,6 +3464,13 @@ function showCustomAlert(message) {
             initializeDataLoading();
             initializeFormProcessing();
             initializeNotesDisplay();
+            
+            // Ensure proper initial display state
+            setTimeout(function() {
+                if (window.classNotesCollection) {
+                    refreshNotesDisplay();
+                }
+            }, 100);
         }
     });
 
@@ -3480,11 +3488,9 @@ window.ClassNotesQAModels = (function() {
      */
     function Note(data) {
         this.id = data.id || null;
-        this.title = data.title || '';
         this.content = data.content || '';
-        this.category = data.category || 'general';
-        this.priority = data.priority || 'medium';
-        this.tags = data.tags || [];
+        this.category = data.category || [];
+        this.priority = data.priority || '';
         this.attachments = data.attachments || [];
         this.created_at = data.created_at || new Date().toISOString();
         this.updated_at = data.updated_at || new Date().toISOString();

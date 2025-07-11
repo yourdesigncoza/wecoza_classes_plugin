@@ -1,316 +1,4 @@
 <!-- Class Details Display Section -->
-<style>
-.ydcoza-w-150 {
-    width: 150px;
-    min-width: 150px;
-}
-
-/* Dropzone styles */
-.dropzone-area {
-    background-color: #f8f9fa;
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.dropzone-area:hover {
-    background-color: #e9ecef;
-    border-color: #6c757d !important;
-}
-
-.dropzone-area.dragover {
-    background-color: #e3f2fd;
-    border-color: #2196f3 !important;
-}
-
-.dropzone-area.dragover .dropzone-content {
-    opacity: 0.7;
-}
-
-/* File list styles */
-.file-item {
-    display: flex;
-    align-items: center;
-    padding: 0.5rem;
-    border: 1px solid #dee2e6;
-    border-radius: 0.25rem;
-    margin-bottom: 0.5rem;
-    background-color: #fff;
-}
-
-.file-item:hover {
-    background-color: #f8f9fa;
-}
-
-.file-item .file-icon {
-    font-size: 1.5rem;
-    margin-right: 0.75rem;
-    color: #6c757d;
-}
-
-.file-item .file-info {
-    flex-grow: 1;
-}
-
-.file-item .file-name {
-    font-weight: 500;
-    margin-bottom: 0.25rem;
-}
-
-.file-item .file-size {
-    font-size: 0.875rem;
-    color: #6c757d;
-}
-
-.file-item .file-progress {
-    width: 100px;
-    margin: 0 1rem;
-}
-
-.file-item .file-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.file-item.uploading {
-    opacity: 0.7;
-}
-
-.file-item.error {
-    border-color: #dc3545;
-    background-color: #f8d7da;
-}
-
-/* Notes Display Styles */
-.note-card {
-    background: #fff;
-    border: 1px solid #dee2e6;
-    border-radius: 0.375rem;
-    margin-bottom: 1rem;
-    transition: all 0.2s ease;
-}
-
-.note-card:hover {
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    border-color: #adb5bd;
-}
-
-.note-card.note-priority-high {
-    border-left: 4px solid #dc3545;
-}
-
-.note-card.note-priority-medium {
-    border-left: 4px solid #ffc107;
-}
-
-.note-card.note-priority-low {
-    border-left: 4px solid #28a745;
-}
-
-.note-card-header {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid #dee2e6;
-    background-color: #f8f9fa;
-}
-
-.note-card-body {
-    padding: 1rem;
-}
-
-.note-card-footer {
-    padding: 0.5rem 1rem;
-    border-top: 1px solid #dee2e6;
-    background-color: #f8f9fa;
-    font-size: 0.875rem;
-}
-
-.note-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #495057;
-    margin-bottom: 0.5rem;
-}
-
-.note-content {
-    color: #6c757d;
-    line-height: 1.5;
-    margin-bottom: 0.75rem;
-}
-
-.note-content.note-preview {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.note-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    align-items: center;
-    font-size: 0.875rem;
-    color: #6c757d;
-}
-
-.note-category-badge {
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    text-transform: uppercase;
-}
-
-.note-category-general {
-    background-color: #e9ecef;
-    color: #495057;
-}
-
-.note-category-important {
-    background-color: #f8d7da;
-    color: #721c24;
-}
-
-.note-category-reminder {
-    background-color: #fff3cd;
-    color: #856404;
-}
-
-.note-category-issue {
-    background-color: #f5c6cb;
-    color: #721c24;
-}
-
-.note-category-progress {
-    background-color: #d4edda;
-    color: #155724;
-}
-
-.note-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-    margin-top: 0.5rem;
-}
-
-.note-tag {
-    background-color: #e9ecef;
-    color: #495057;
-    padding: 0.125rem 0.5rem;
-    border-radius: 0.25rem;
-    font-size: 0.75rem;
-    text-decoration: none;
-}
-
-.note-tag:hover {
-    background-color: #dee2e6;
-    color: #495057;
-}
-
-.note-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.note-actions .btn-sm {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-}
-
-.note-attachments {
-    margin-top: 0.5rem;
-}
-
-.note-attachment {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 0.25rem;
-    padding: 0.25rem 0.5rem;
-    margin-right: 0.5rem;
-    margin-bottom: 0.25rem;
-    text-decoration: none;
-    color: #495057;
-    font-size: 0.875rem;
-}
-
-.note-attachment:hover {
-    background-color: #e9ecef;
-    color: #495057;
-}
-
-.note-attachment-icon {
-    width: 16px;
-    height: 16px;
-}
-
-/* Notes search highlighting */
-.note-search-highlight {
-    background-color: #fff3cd;
-    padding: 0.125rem;
-    border-radius: 0.125rem;
-}
-
-/* Keyboard focus highlight for search results */
-.highlight-result {
-    background-color: #e3f2fd !important;
-    border-color: #2196f3 !important;
-    transition: all 0.3s ease;
-}
-
-/* Notes table view (alternative to cards) */
-.notes-table {
-    width: 100%;
-    margin-bottom: 1rem;
-}
-
-.notes-table th {
-    background-color: #f8f9fa;
-    border-bottom: 2px solid #dee2e6;
-    font-weight: 600;
-    padding: 0.75rem;
-    font-size: 0.875rem;
-    color: #495057;
-}
-
-.notes-table td {
-    padding: 0.75rem;
-    border-bottom: 1px solid #dee2e6;
-    vertical-align: top;
-}
-
-.notes-table tr:hover {
-    background-color: #f8f9fa;
-}
-
-.notes-table .note-title-cell {
-    font-weight: 600;
-    color: #495057;
-}
-
-.notes-table .note-content-cell {
-    max-width: 300px;
-    color: #6c757d;
-}
-
-.notes-table .note-meta-cell {
-    font-size: 0.875rem;
-    color: #6c757d;
-}
-
-/* View toggle buttons */
-.notes-view-toggle {
-    display: flex;
-    gap: 0.25rem;
-    margin-bottom: 1rem;
-}
-
-.notes-view-toggle .btn {
-    padding: 0.375rem 0.75rem;
-    font-size: 0.875rem;
-}
-</style>
 <?php
 // Validate and prepare data for update mode
 if (isset($data['class_data']) && $data['class_data']):
@@ -1406,68 +1094,34 @@ if (isset($data['class_data']) && $data['class_data']):
       <?php echo section_header('Class Notes & QA', 'Add operational notes and quality assurance information for this class.'); ?>
       <!-- Class Notes & QA Information -->
       <div class="row">
-         <!-- Class Notes (Multi-select) -->
-         <div class="col-md-6">
-            <!-- For multi-select with floating labels, we need a custom approach -->
-            <div class="mb-3">
-            <label for="class_notes" class="form-label">Class Notes</label>
-            <select
-               id="class_notes"
-               name="class_notes[]"
-               class="form-select"
-               size="5"
-               multiple
-               aria-label="Class notes selection"
-            >
-               <?php
-               $selectedNotes = $data['class_data']['class_notes_data'] ?? [];
-               foreach ($data['class_notes_options'] as $option):
-                  $isSelected = is_array($selectedNotes) && in_array($option['id'], $selectedNotes);
-               ?>
-                  <option value="<?= $option['id'] ?>" <?php echo $isSelected ? 'selected' : ''; ?>><?= $option['name'] ?></option>
-               <?php endforeach; ?>
-            </select>
-            <div class="form-text">
-               Select multiple operational notes that apply to this class. Hold Ctrl/Cmd to select.
-            </div>
-            <div class="invalid-feedback">Please select at least one note.</div>
-            <div class="valid-feedback">Looks good!</div>
-            </div>
-
-
-         </div>
+         <div class="card-body card px-5">
          
          <!-- Add Note Button -->
-         <div class="col-md-6">
-            <div class="mb-3">
-               <label class="form-label">Quick Actions</label>
-               <button type="button" class="btn btn-primary w-100" id="add-class-note-btn" data-bs-toggle="modal" data-bs-target="#classNoteModal">
-                  <i class="bi bi-plus-circle me-1"></i> Add New Class Note
-               </button>
-            </div>
-            
+         <div class="col-md-12">
+           
             <!-- Class Notes Container for dynamic display -->
-            <div id="class-notes-container" class="mt-3">
-               <!-- Notes Display Header -->
-               <div class="d-flex justify-content-between align-items-center mb-3">
-                  <h6 class="mb-0">Class Notes</h6>
-                  <div class="d-flex align-items-center gap-2">
-                     <small class="text-muted" id="notes-count">0 notes</small>
-                     <div class="notes-view-toggle">
-                        <button class="btn btn-sm btn-outline-secondary active" id="notes-view-cards" data-view="cards">
-                           <i class="bi bi-grid-3x3-gap"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-secondary" id="notes-view-table" data-view="table">
-                           <i class="bi bi-table"></i>
-                        </button>
-                     </div>
-                  </div>
-               </div>
-               
+            <div id="class-notes-container" class="mt-3">               
                <!-- Notes Search and Filter Controls -->
-               <div class="notes-controls mb-3" style="display: none;">
+               <div class="notes-controls mb-3">
                   <div class="row g-2 mb-2">
-                     <div class="col-md-6">
+
+
+                     <!-- Notes Display Header -->
+                     <div class="d-flex justify-content-between align-items-center mb-3 col-md-2">
+                        <div class="d-flex align-items-center gap-2">
+                           <div class="notes-view-toggle">
+                              <button type="button" class="btn btn-sm btn-outline-secondary active" id="notes-view-cards" data-view="cards">
+                                 <i class="bi bi-grid-3x3-gap"></i>
+                              </button>
+                              <button type="button" class="btn btn-sm btn-outline-secondary" id="notes-view-table" data-view="table">
+                                 <i class="bi bi-table"></i>
+                              </button>
+                           </div>
+                           <small class="text-muted" id="notes-count">0 notes</small>
+                        </div>
+                     </div>
+                     <!-- Search Input -->
+                     <div class="col-md-4">
                         <div class="input-group input-group-sm">
                            <span class="input-group-text"><i class="bi bi-search"></i></span>
                            <input type="text" class="form-control" id="notes-search" placeholder="Search notes... (use quotes for exact phrases)">
@@ -1480,12 +1134,15 @@ if (isset($data['class_data']) && $data['class_data']):
                            Advanced search: Use quotes for exact phrases, separate words for AND search
                         </div>
                      </div>
-                     <div class="col-md-6">
-                        <div class="d-flex justify-content-end">
-                           <button class="btn btn-outline-secondary btn-sm" id="clear-notes-filters" title="Clear all filters">
+                     <div class="col-md-2">
+                           <button type="button" class="btn btn-outline-secondary btn-sm" id="clear-notes-filters" title="Clear all filters">
                               <i class="bi bi-arrow-clockwise"></i> Reset Filters
                            </button>
-                        </div>
+                     </div>
+                     <div class="col-md-4">
+                        <button type="button" class="btn btn-primary w-100" id="add-class-note-btn" data-bs-toggle="modal" data-bs-target="#classNoteModal">
+                           <i class="bi bi-plus-circle me-1"></i> Add New Class Note
+                        </button>
                      </div>
                   </div>
                   <div class="row g-2">
@@ -1554,7 +1211,7 @@ if (isset($data['class_data']) && $data['class_data']):
                   <div id="notes-no-results" class="text-center py-3 text-muted d-none">
                      <i class="bi bi-search display-4 mb-2"></i>
                      <p class="mb-0">No notes found matching your search criteria.</p>
-                     <button class="btn btn-sm btn-outline-primary mt-2" id="clear-notes-filters">
+                     <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="clear-notes-filters">
                         Clear Filters
                      </button>
                   </div>
@@ -1567,6 +1224,7 @@ if (isset($data['class_data']) && $data['class_data']):
                   </ul>
                </nav>
             </div>
+         </div>
          </div>
       </div>
 
@@ -2306,11 +1964,28 @@ document.addEventListener('DOMContentLoaded', function() {
                <input type="hidden" id="note_id" name="note_id" value="">
                <input type="hidden" id="note_class_id" name="class_id" value="<?php echo esc_attr($data['class_data']['class_id'] ?? ''); ?>">
                
-               <!-- Note Title -->
+               <!-- Class Notes -->
                <div class="mb-3">
-                  <label for="note_title" class="form-label">Note Title <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control" id="note_title" name="title" required maxlength="255">
-                  <div class="invalid-feedback">Please provide a title for the note.</div>
+                  <label for="class_notes" class="form-label">Class Notes <span class="text-danger">*</span></label>
+                  <select
+                     id="class_notes"
+                     name="class_notes[]"
+                     class="form-select"
+                     size="5"
+                     multiple
+                     required
+                     aria-label="Class notes selection"
+                  >
+                     <option value="" disabled>Select class notes that apply (hold Ctrl/Cmd for multiple)</option>
+                     <?php foreach ($data['class_notes_options'] as $option): ?>
+                        <option value="<?= $option['id'] ?>"><?= $option['name'] ?></option>
+                     <?php endforeach; ?>
+                  </select>
+                  <div class="form-text">
+                     Select multiple operational notes that apply to this class. Hold Ctrl/Cmd to select.
+                  </div>
+                  <div class="invalid-feedback">Please select at least one note.</div>
+                  <div class="valid-feedback">Looks good!</div>
                </div>
                
                <!-- Note Content -->
@@ -2323,38 +1998,18 @@ document.addEventListener('DOMContentLoaded', function() {
                   </small>
                </div>
                
-               <!-- Note Category and Priority -->
-               <div class="row">
-                  <div class="col-md-6">
-                     <div class="mb-3">
-                        <label for="note_category" class="form-label">Category</label>
-                        <select class="form-select" id="note_category" name="category">
-                           <option value="general">General</option>
-                           <option value="important">Important</option>
-                           <option value="reminder">Reminder</option>
-                           <option value="issue">Issue</option>
-                           <option value="progress">Progress Update</option>
-                        </select>
-                     </div>
-                  </div>
-                  <div class="col-md-6">
-                     <div class="mb-3">
-                        <label for="note_priority" class="form-label">Priority</label>
-                        <select class="form-select" id="note_priority" name="priority">
-                           <option value="low">Low</option>
-                           <option value="medium" selected>Medium</option>
-                           <option value="high">High</option>
-                        </select>
-                     </div>
-                  </div>
+               <!-- Priority -->
+               <div class="mb-3">
+                  <label for="note_priority" class="form-label">Priority <span class="text-danger">*</span></label>
+                  <select class="form-select" id="note_priority" name="priority" required>
+                     <option value="">Select priority level</option>
+                     <option value="low">Low</option>
+                     <option value="medium">Medium</option>
+                     <option value="high">High</option>
+                  </select>
+                  <div class="invalid-feedback">Please select a priority level.</div>
                </div>
                
-               <!-- Tags -->
-               <div class="mb-3">
-                  <label for="note_tags" class="form-label">Tags</label>
-                  <input type="text" class="form-control" id="note_tags" name="tags" placeholder="Enter tags separated by commas">
-                  <small class="form-text text-muted">e.g., attendance, performance, materials</small>
-               </div>
                
                <!-- File Attachments -->
                <div class="mb-3">
