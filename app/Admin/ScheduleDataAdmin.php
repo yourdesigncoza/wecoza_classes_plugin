@@ -53,14 +53,14 @@ class ScheduleDataAdmin {
             <h1>Schedule Data Management</h1>
             <p>Manage schedule data format migrations and integrity checks for WeCoza Classes.</p>
             
-            <div class="card">
+            <div class="wecoza-admin-card">
                 <h2>Schedule Data Integrity Check</h2>
                 <p>Check the integrity and format of schedule data across all classes.</p>
                 <button id="check-integrity-btn" class="button button-secondary">Run Integrity Check</button>
                 <div id="integrity-results" style="margin-top: 15px;"></div>
             </div>
             
-            <div class="card" style="margin-top: 20px;">
+            <div class="card">
                 <h2>Schedule Data Migration</h2>
                 <p>Migrate legacy schedule data (v1.0) to the new enhanced format (v2.0).</p>
                 <p><strong>Warning:</strong> This will modify your database. Always backup your data first.</p>
@@ -73,7 +73,7 @@ class ScheduleDataAdmin {
                 <div id="migration-results" style="margin-top: 15px;"></div>
             </div>
             
-            <div class="card" style="margin-top: 20px;">
+            <div class="card">
                 <h2>Supported Formats</h2>
                 <div id="supported-formats"></div>
             </div>
@@ -222,24 +222,6 @@ class ScheduleDataAdmin {
         });
         </script>
         
-        <style>
-        .card {
-            background: #fff;
-            border: 1px solid #ccd0d4;
-            border-radius: 4px;
-            padding: 20px;
-            box-shadow: 0 1px 1px rgba(0,0,0,.04);
-        }
-        .card h2 {
-            margin-top: 0;
-        }
-        pre {
-            background: #f1f1f1;
-            padding: 10px;
-            border-radius: 3px;
-            overflow-x: auto;
-        }
-        </style>
         <?php
     }
     

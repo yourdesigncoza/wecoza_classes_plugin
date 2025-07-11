@@ -1338,32 +1338,6 @@ if (!empty($class['schedule_data'])) {
                 </div>
             </div>
             
-            <style>
-            .timeline-container {
-                position: relative;
-                padding-left: 20px;
-            }
-            
-            .timeline-item {
-                position: relative;
-            }
-            
-            .timeline-connector {
-                position: absolute;
-                left: 39px;
-                top: 45px;
-                width: 2px;
-                height: calc(100% - 45px);
-                background-color: #dee2e6;
-            }
-            
-            .timeline-content {
-                background-color: #f8f9fa;
-                border-radius: 0.5rem;
-                padding: 1rem;
-                border: 1px solid #e9ecef;
-            }
-            </style>
             <?php endif; ?>
 
             <!-- Class Calendar Section -->
