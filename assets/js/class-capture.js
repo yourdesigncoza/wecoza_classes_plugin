@@ -1890,7 +1890,7 @@ function showCustomAlert(message) {
         $('#notes-no-results').hide();
         
         const table = $(`
-            <table class="table-striped table-sm fs-9 mb-0 w-100">
+            <table class="table table-striped table-sm fs-9 mb-0 w-100">
                 <thead class="bg-body-highlight">
                     <tr>
                         <th style="width: 30%">Note Type</th>
@@ -1911,6 +1911,43 @@ function showCustomAlert(message) {
         });
         
         $notesList.append(table);
+    }
+    
+    /**
+     * Generate CSS class name from category text
+     */
+    function generateCategoryClass(category) {
+        if (!category || category === 'general') {
+            return 'note-category-general';
+        }
+        
+        // Convert category text to CSS class name
+        // e.g., "Client Cancelled" -> "note-category-client-cancelled"
+        const className = category
+            .toLowerCase()
+            .replace(/[^a-z0-9\s]/g, '') // Remove special characters
+            .replace(/\s+/g, '-')        // Replace spaces with hyphens
+            .trim();
+            
+        return `note-category-${className}`;
+    }
+    
+    /**
+     * Generate badges HTML for categories (supports multiple categories)
+     */
+    function generateCategoryBadges(categories) {
+        if (!categories) {
+            return '<span class="note-category-badge note-category-general">general</span>';
+        }
+        
+        // Handle both string and array categories
+        const categoryArray = Array.isArray(categories) ? categories : [categories];
+        
+        return categoryArray.map(category => {
+            const categoryText = category.trim();
+            const cssClass = generateCategoryClass(categoryText);
+            return `<span class="note-category-badge ${cssClass}">${categoryText}</span>`;
+        }).join(' ');
     }
     
     /**
@@ -1952,9 +1989,7 @@ function showCustomAlert(message) {
                 <div class="note-card-header">
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="note-title">${highlightSearchTerms(note.content.substring(0, 50) + (note.content.length > 50 ? '...' : ''), currentSearchTerm)}</div>
-                        <span class="note-category-badge">
-                            ${Array.isArray(note.category) ? note.category.join(', ') : (note.category || 'general')}
-                        </span>
+                        ${generateCategoryBadges(note.category)}
                     </div>
                 </div>
                 <div class="note-card-body">
@@ -2003,9 +2038,7 @@ function showCustomAlert(message) {
         return $(`
             <tr data-note-id="${note.id}">
                 <td>
-                    <span class="note-category-badge">
-                        ${Array.isArray(note.category) ? note.category.join(', ') : (note.category || 'general')}
-                    </span>
+                    ${generateCategoryBadges(note.category)}
                 </td>
                 <td class="note-content-cell">
                     ${highlightSearchTerms(content, currentSearchTerm)}
