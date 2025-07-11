@@ -1,5 +1,5 @@
 ---
-description: Ultrathink a complex task by breaking it down into sub-tasks and delegating to specialist agents.
+description: Ultrathink Planning
 ---
 
 ## Usage

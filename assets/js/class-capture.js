@@ -1452,7 +1452,7 @@ function showCustomAlert(message) {
      */
     function showSuccessMessage(message) {
         const alertHtml = `
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <div class="alert alert-subtle-success alert-dismissible fade show" role="alert">
                 <i class="bi bi-check-circle-fill me-2"></i>
                 <strong>Success!</strong> ${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -3157,6 +3157,7 @@ function showCustomAlert(message) {
         // File management
         let pendingFiles = [];
         let uploadedFiles = [];
+        let isFileInputTriggering = false; // Flag to prevent recursive clicks
         const maxFileSize = 10 * 1024 * 1024; // 10MB
         const allowedTypes = ['application/pdf', 'application/msword', 
                             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -3164,32 +3165,39 @@ function showCustomAlert(message) {
                             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                             'image/jpeg', 'image/png'];
         
-        // Browse button click
-        $browseBtn.on('click', function(e) {
+        // Browse button click - unbind first to prevent duplicate handlers
+        $browseBtn.off('click.fileupload').on('click.fileupload', function(e) {
             e.preventDefault();
-            $fileInput.click();
+            e.stopImmediatePropagation();
+            if (!isFileInputTriggering) {
+                isFileInputTriggering = true;
+                setTimeout(() => {
+                    $fileInput[0].click(); // Use native DOM click instead of jQuery
+                    isFileInputTriggering = false;
+                }, 0);
+            }
         });
         
-        // File input change
-        $fileInput.on('change', function(e) {
+        // File input change - unbind first to prevent duplicate handlers
+        $fileInput.off('change.fileupload').on('change.fileupload', function(e) {
             handleFiles(e.target.files);
             this.value = ''; // Reset input
         });
         
-        // Drag and drop events
-        $dropzone.on('dragover dragenter', function(e) {
+        // Drag and drop events - unbind first to prevent duplicate handlers
+        $dropzone.off('dragover.fileupload dragenter.fileupload').on('dragover.fileupload dragenter.fileupload', function(e) {
             e.preventDefault();
             e.stopPropagation();
             $(this).addClass('dragover');
         });
         
-        $dropzone.on('dragleave dragend', function(e) {
+        $dropzone.off('dragleave.fileupload dragend.fileupload').on('dragleave.fileupload dragend.fileupload', function(e) {
             e.preventDefault();
             e.stopPropagation();
             $(this).removeClass('dragover');
         });
         
-        $dropzone.on('drop', function(e) {
+        $dropzone.off('drop.fileupload').on('drop.fileupload', function(e) {
             e.preventDefault();
             e.stopPropagation();
             $(this).removeClass('dragover');
@@ -3198,10 +3206,16 @@ function showCustomAlert(message) {
             handleFiles(files);
         });
         
-        // Click to upload
-        $dropzone.on('click', function(e) {
-            if (!$(e.target).is('button') && !$(e.target).closest('button').length) {
-                $fileInput.click();
+        // Click to upload - unbind first to prevent duplicate handlers
+        $dropzone.off('click.fileupload').on('click.fileupload', function(e) {
+            if (!$(e.target).is('button') && !$(e.target).closest('button').length && !isFileInputTriggering) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                isFileInputTriggering = true;
+                setTimeout(() => {
+                    $fileInput[0].click(); // Use native DOM click instead of jQuery
+                    isFileInputTriggering = false;
+                }, 0);
             }
         });
         

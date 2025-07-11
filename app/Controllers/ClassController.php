@@ -3467,7 +3467,11 @@ class ClassController {
             'content' => sanitize_textarea_field($note_data['content']),
             'category' => sanitize_text_field($note_data['category'] ?? 'general'),
             'priority' => sanitize_text_field($note_data['priority'] ?? 'medium'),
-            'tags' => isset($note_data['tags']) ? array_map('sanitize_text_field', explode(',', $note_data['tags'])) : [],
+            'tags' => isset($note_data['tags']) ? 
+                (is_array($note_data['tags']) ? 
+                    array_map('sanitize_text_field', $note_data['tags']) : 
+                    array_map('sanitize_text_field', explode(',', $note_data['tags']))
+                ) : [],
             'author_id' => get_current_user_id(),
             'created_at' => isset($note_data['created_at']) ? $note_data['created_at'] : date('c'),
             'updated_at' => date('c'),

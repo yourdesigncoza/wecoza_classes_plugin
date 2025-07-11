@@ -362,27 +362,30 @@
     function classes_bind_pagination_events() {
         if (!$paginationContainer) return;
 
-        // Previous button
-        $paginationContainer.find('[data-list-pagination="prev"]').off('click').on('click', function(e) {
+        // Use event delegation to prevent rebinding issues
+        $paginationContainer.off('click.pagination').on('click.pagination', '[data-list-pagination="prev"]', function(e) {
             e.preventDefault();
+            e.stopImmediatePropagation();
             if (!$(this).closest('.page-item').hasClass('disabled')) {
                 classes_go_to_page(currentPage - 1);
             }
         });
 
-        // Next button
-        $paginationContainer.find('[data-list-pagination="next"]').off('click').on('click', function(e) {
+        $paginationContainer.off('click.pagination').on('click.pagination', '[data-list-pagination="next"]', function(e) {
             e.preventDefault();
+            e.stopImmediatePropagation();
             if (!$(this).closest('.page-item').hasClass('disabled')) {
                 classes_go_to_page(currentPage + 1);
             }
         });
 
-        // Page number buttons
-        $paginationContainer.find('[data-page-number]').off('click').on('click', function(e) {
+        $paginationContainer.off('click.pagination').on('click.pagination', '[data-page-number]', function(e) {
             e.preventDefault();
+            e.stopImmediatePropagation();
             const pageNumber = parseInt($(this).data('page-number'));
-            classes_go_to_page(pageNumber);
+            if (pageNumber !== currentPage) { // Prevent clicking same page
+                classes_go_to_page(pageNumber);
+            }
         });
     }
 
