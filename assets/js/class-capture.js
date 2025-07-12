@@ -822,13 +822,14 @@ function showCustomAlert(message) {
      * Data Models for Class Notes and QA
      */
     const ClassNotesQAModels = {
+
         // Note model
         Note: class {
             constructor(data = {}) {
                 this.id = data.id || null;
                 this.title = data.title || '';
                 this.content = data.content || '';
-                this.category = data.category || 'general';
+                this.category = data.category || [];
                 this.priority = data.priority || 'medium';
                 this.created_at = data.created_at || new Date().toISOString();
                 this.updated_at = data.updated_at || new Date().toISOString();
@@ -911,7 +912,6 @@ function showCustomAlert(message) {
                 this.itemsPerPage = 10;
                 this.totalItems = 0;
                 this.filters = {};
-                this.searchTerm = '';
                 this.sortBy = 'created_at';
                 this.sortOrder = 'desc';
             }
@@ -1077,11 +1077,6 @@ function showCustomAlert(message) {
         });
 
         // Filter handlers
-        $(document).on('change', '#notes-category-filter', function() {
-            const category = $(this).val();
-            window.classNotesCollection.setFilter('category', category);
-            refreshNotesDisplay();
-        });
 
         $(document).on('change', '#qa-status-filter', function() {
             const status = $(this).val();
@@ -1163,13 +1158,8 @@ function showCustomAlert(message) {
         
         // Update notes count with search indication
         const totalCount = window.classNotesCollection.getFiltered().length;
-        const allCount = window.classNotesCollection.items.length;
-        const searchTerm = window.classNotesCollection.searchTerm;
         
         let countText = `${totalCount} note${totalCount !== 1 ? 's' : ''}`;
-        if (searchTerm) {
-            countText += ` (filtered from ${allCount})`;
-        }
         
         $('#notes-count').text(countText);
         
@@ -1187,16 +1177,13 @@ function showCustomAlert(message) {
             $('#notes-no-results').show();
             $('#notes-empty').hide();
             
-            // Update no results message with search context
+            // Update no results message
             const hasFilters = Object.keys(window.classNotesCollection.filters).length > 0;
-            const hasSearch = window.classNotesCollection.searchTerm;
             
-            if (hasSearch) {
-                $('#notes-no-results p').text(`No notes found matching "${window.classNotesCollection.searchTerm}"`);
-            } else if (hasFilters) {
+            if (hasFilters) {
                 $('#notes-no-results p').text('No notes found matching your filter criteria.');
             } else {
-                $('#notes-no-results p').text('No notes found matching your search criteria.');
+                $('#notes-no-results p').text('No notes found.');
             }
         } else if (totalCount === 0) {
             // Truly empty - no notes at all
@@ -1924,8 +1911,6 @@ function showCustomAlert(message) {
         const isUpdated = note.updated_at && note.updated_at !== note.created_at;
         const updatedTime = isUpdated ? getRelativeTime(note.updated_at) : null;
         
-        // Get current search term for highlighting
-        const currentSearchTerm = window.classNotesCollection ? window.classNotesCollection.searchTerm : '';
         
         // Generate category badges
         const categoryBadges = generateCategoryBadges(note.category);
@@ -1969,7 +1954,7 @@ function showCustomAlert(message) {
         const contentHtml = needsExpansion ? `
             <div class="note-content-expandable">
                 <div class="note-content-full note-content-collapsed" data-full-content="${escapeHtml(note.content)}">
-                    ${highlightSearchTerms(shortContent, currentSearchTerm)}
+                    ${escapeHtml(shortContent)}
                 </div>
                 <button type="button" class="note-expand-btn fs-10" onclick="toggleNoteContent(this)">
                     <i class="bi bi-chevron-down me-1"></i>Show More
@@ -1977,7 +1962,7 @@ function showCustomAlert(message) {
             </div>
         ` : `
             <div class="note-content-full">
-                ${highlightSearchTerms(note.content, currentSearchTerm)}
+                ${escapeHtml(note.content)}
             </div>
         `;
         
@@ -2024,8 +2009,7 @@ function showCustomAlert(message) {
         if ($contentDiv.hasClass('note-content-collapsed')) {
             // Expand
             const fullContent = $contentDiv.data('full-content');
-            const currentSearchTerm = window.classNotesCollection ? window.classNotesCollection.searchTerm : '';
-            $contentDiv.html(highlightSearchTerms(fullContent, currentSearchTerm));
+            $contentDiv.html(escapeHtml(fullContent));
             $contentDiv.removeClass('note-content-collapsed');
             $icon.removeClass('bi-chevron-down').addClass('bi-chevron-up');
             $button.html('<i class="bi bi-chevron-up me-1"></i>Show Less');
@@ -2033,8 +2017,7 @@ function showCustomAlert(message) {
             // Collapse
             const fullContent = $contentDiv.text();
             const shortContent = fullContent.substring(0, 200) + '...';
-            const currentSearchTerm = window.classNotesCollection ? window.classNotesCollection.searchTerm : '';
-            $contentDiv.html(highlightSearchTerms(shortContent, currentSearchTerm));
+            $contentDiv.html(escapeHtml(shortContent));
             $contentDiv.addClass('note-content-collapsed');
             $icon.removeClass('bi-chevron-up').addClass('bi-chevron-down');
             $button.html('<i class="bi bi-chevron-down me-1"></i>Show More');
@@ -2091,22 +2074,6 @@ function showCustomAlert(message) {
         return div.innerHTML;
     }
     
-    /**
-     * Highlight search terms in text (DRY helper for search functionality)
-     */
-    function highlightSearchTerms(text, searchTerm) {
-        if (!searchTerm || !text) {
-            return escapeHtml(text);
-        }
-        
-        const escapedText = escapeHtml(text);
-        const escapedSearchTerm = escapeHtml(searchTerm);
-        
-        // Create regex for case-insensitive search
-        const regex = new RegExp(`(${escapedSearchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-        
-        return escapedText.replace(regex, '<mark class="note-search-highlight">$1</mark>');
-    }
     
     // Removed filter state persistence - page loads with clean state
     
@@ -2116,54 +2083,10 @@ function showCustomAlert(message) {
     function initializeNotesDisplay() {
         // View toggle functionality removed - using table view only
         
-        // Search functionality with enhanced features
-        $('#notes-search').on('input', debounce(function() {
-            const searchTerm = $(this).val();
-            if (window.classNotesCollection) {
-                window.classNotesCollection.setSearch(searchTerm);
-                refreshNotesDisplay();
-            }
-        }, 300));
         
-        // Keyboard shortcuts for search
-        $('#notes-search').on('keydown', function(e) {
-            // Enter key: focus on first result
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                const firstResult = $('.note-card:first, .notes-table tbody tr:first');
-                if (firstResult.length > 0) {
-                    firstResult.get(0).scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    firstResult.addClass('highlight-result');
-                    setTimeout(() => firstResult.removeClass('highlight-result'), 2000);
-                }
-            }
-            // Escape key: clear search
-            else if (e.key === 'Escape') {
-                $(this).val('');
-                if (window.classNotesCollection) {
-                    window.classNotesCollection.setSearch('');
-                    refreshNotesDisplay();
-                }
-            }
-        });
         
-        // Clear search
-        $('#clear-notes-search').on('click', function() {
-            $('#notes-search').val('');
-            if (window.classNotesCollection) {
-                window.classNotesCollection.setSearch('');
-                refreshNotesDisplay();
-            }
-        });
         
-        // Category filter
-        $('#notes-category-filter').on('change', function() {
-            const category = $(this).val();
-            if (window.classNotesCollection) {
-                window.classNotesCollection.setFilter('category', category);
-                refreshNotesDisplay();
-            }
-        });
+        // Category filter - removed duplicate handler (already handled by delegated event on line 1080)
         
         // Priority filter
         $('#notes-priority-filter').on('change', function() {
@@ -2174,14 +2097,6 @@ function showCustomAlert(message) {
             }
         });
         
-        // Date range filter
-        $('#notes-date-filter').on('change', function() {
-            const dateRange = $(this).val();
-            if (window.classNotesCollection) {
-                window.classNotesCollection.setFilter('dateRange', dateRange);
-                refreshNotesDisplay();
-            }
-        });
         
         // Sort functionality
         $('#notes-sort').on('change', function() {
@@ -2218,18 +2133,12 @@ function showCustomAlert(message) {
         // Clear filters
         $('#clear-notes-filters').on('click', function() {
             // Clear all form inputs
-            $('#notes-search').val('');
-            $('#notes-category-filter').val('');
             $('#notes-priority-filter').val('');
-            $('#notes-date-filter').val('');
             $('#notes-sort').val('newest');
             
             if (window.classNotesCollection) {
                 // Clear all filters from collection
-                window.classNotesCollection.setSearch('');
-                window.classNotesCollection.setFilter('category', '');
                 window.classNotesCollection.setFilter('priority', '');
-                window.classNotesCollection.setFilter('dateRange', '');
                 window.classNotesCollection.setSort('created_at', 'desc');
                 refreshNotesDisplay();
                 
@@ -3412,7 +3321,6 @@ window.ClassNotesQAModels = (function() {
         this.sortBy = 'created_at';
         this.sortOrder = 'desc';
         this.filters = {};
-        this.searchTerm = '';
     }
     
     /**
@@ -3455,13 +3363,6 @@ window.ClassNotesQAModels = (function() {
         return null;
     };
     
-    /**
-     * Set search term
-     */
-    Collection.prototype.setSearch = function(term) {
-        this.searchTerm = term;
-        this.currentPage = 1; // Reset to first page when search changes
-    };
     
     /**
      * Set filter
@@ -3497,21 +3398,13 @@ window.ClassNotesQAModels = (function() {
     Collection.prototype.getFiltered = function() {
         let filtered = [...this.items];
         
-        // Apply search filter
-        if (this.searchTerm) {
-            filtered = this._applySearchFilter(filtered, this.searchTerm);
-        }
         
         // Apply filters
         Object.keys(this.filters).forEach(key => {
             const filterValue = this.filters[key];
             
-            if (key === 'category') {
-                filtered = filtered.filter(item => item.category === filterValue);
-            } else if (key === 'priority') {
+            if (key === 'priority') {
                 filtered = filtered.filter(item => item.priority === filterValue);
-            } else if (key === 'dateRange') {
-                filtered = this._applyDateFilter(filtered, filterValue);
             }
         });
         
@@ -3575,68 +3468,7 @@ window.ClassNotesQAModels = (function() {
         };
     };
     
-    /**
-     * Apply date filtering (DRY helper method)
-     */
-    Collection.prototype._applyDateFilter = function(items, filterValue) {
-        const today = new Date();
-        const filterDate = new Date(today);
-        
-        switch (filterValue) {
-            case 'today':
-                filterDate.setHours(0, 0, 0, 0);
-                return items.filter(item => new Date(item.created_at) >= filterDate);
-            case 'week':
-                filterDate.setDate(today.getDate() - 7);
-                return items.filter(item => new Date(item.created_at) >= filterDate);
-            case 'month':
-                filterDate.setMonth(today.getMonth() - 1);
-                return items.filter(item => new Date(item.created_at) >= filterDate);
-            case 'quarter':
-                filterDate.setMonth(today.getMonth() - 3);
-                return items.filter(item => new Date(item.created_at) >= filterDate);
-            default:
-                return items;
-        }
-    };
     
-    /**
-     * Apply search filtering (DRY helper method with enhanced search)
-     */
-    Collection.prototype._applySearchFilter = function(items, searchTerm) {
-        if (!searchTerm) return items;
-        
-        const searchLower = searchTerm.toLowerCase().trim();
-        
-        // Handle quoted phrases for exact matching
-        const isQuotedPhrase = searchLower.startsWith('"') && searchLower.endsWith('"');
-        if (isQuotedPhrase) {
-            const phrase = searchLower.slice(1, -1);
-            return items.filter(item => {
-                return (
-                    item.title.toLowerCase().includes(phrase) ||
-                    item.content.toLowerCase().includes(phrase) ||
-                    item.category.toLowerCase().includes(phrase) ||
-                    (Array.isArray(item.tags) && item.tags.some(tag => tag.toLowerCase().includes(phrase)))
-                );
-            });
-        }
-        
-        // Handle multiple search terms (AND logic)
-        const searchTerms = searchLower.split(' ').filter(term => term.length > 0);
-        
-        return items.filter(item => {
-            const searchableText = [
-                item.title.toLowerCase(),
-                item.content.toLowerCase(),
-                item.category.toLowerCase(),
-                ...(Array.isArray(item.tags) ? item.tags.map(tag => tag.toLowerCase()) : [])
-            ].join(' ');
-            
-            // All search terms must be found (AND logic)
-            return searchTerms.every(term => searchableText.includes(term));
-        });
-    };
     
     /**
      * Clear all data
@@ -3645,7 +3477,6 @@ window.ClassNotesQAModels = (function() {
         this.items = [];
         this.currentPage = 1;
         this.filters = {};
-        this.searchTerm = '';
     };
     
     // Return public API

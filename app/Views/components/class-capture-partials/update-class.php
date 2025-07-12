@@ -1093,7 +1093,6 @@ if (isset($data['class_data']) && $data['class_data']):
       <?php echo section_divider(); ?>
       <?php echo section_header('Class Notes & QA', 'Add operational notes and quality assurance information for this class.'); ?>
       <!-- Class Notes & QA Information -->
-      <div class="row">
          <div class="card-body card px-5">
          
          <!-- Add Note Button -->
@@ -1104,60 +1103,12 @@ if (isset($data['class_data']) && $data['class_data']):
                <!-- Notes Search and Filter Controls -->
                <div class="notes-controls mb-3">
                   <div class="row g-2 mb-2">
-
-
-                     <!-- Notes Display Header -->
-                     <div class="d-flex justify-content-between align-items-center mb-3 col-md-2">
-                        <div class="d-flex align-items-center gap-2">
-                           <span class="badge ms-2 badge badge-phoenix badge-phoenix-warning " id="notes-count">0 notes</span>
-                        </div>
-                     </div>
-                     <!-- Search Input -->
-                     <div class="col-md-4">
-                        <div class="input-group input-group-sm">
-                           <span class="input-group-text"><i class="bi bi-search"></i></span>
-                           <input type="text" class="form-control" id="notes-search" placeholder="Search notes... (use quotes for exact phrases)" autocomplete="off">
-                           <button class="btn btn-outline-secondary" type="button" id="clear-notes-search">
-                              <i class="bi bi-x"></i>
-                           </button>
-                        </div>
-                        <div class="small text-muted mt-1">
-                           <i class="bi bi-info-circle"></i> 
-                           Advanced search: Use quotes for exact phrases, separate words for AND search
-                        </div>
-                     </div>
                      <div class="col-md-2">
-                           <button type="button" class="btn btn-outline-secondary btn-sm" id="clear-notes-filters" title="Clear all filters">
-                              <i class="bi bi-arrow-clockwise"></i> Reset Filters
-                           </button>
-                     </div>
-                     <div class="col-md-4">
                         <button type="button" class="btn btn-primary w-100" id="add-class-note-btn" data-bs-toggle="modal" data-bs-target="#classNoteModal">
                            <i class="bi bi-plus-circle me-1"></i> Add New Class Note
                         </button>
                      </div>
-                  </div>
-                  <div class="row g-2">
-                     <div class="col-md-3">
-                        <select class="form-select form-select-sm" id="notes-date-filter">
-                           <option value="">All Time</option>
-                           <option value="today">Today</option>
-                           <option value="week">This Week</option>
-                           <option value="month">This Month</option>
-                           <option value="quarter">This Quarter</option>
-                        </select>
-                     </div>
-                     <div class="col-md-3">
-                        <select class="form-select form-select-sm" id="notes-category-filter">
-                           <option value="">All Categories</option>
-                           <option value="general">General</option>
-                           <option value="important">Important</option>
-                           <option value="reminder">Reminder</option>
-                           <option value="issue">Issue</option>
-                           <option value="progress">Progress Update</option>
-                        </select>
-                     </div>
-                     <div class="col-md-3">
+                     <div class="col-md-2">
                         <select class="form-select form-select-sm" id="notes-priority-filter">
                            <option value="">All Priorities</option>
                            <option value="high">High Priority</option>
@@ -1165,7 +1116,7 @@ if (isset($data['class_data']) && $data['class_data']):
                            <option value="low">Low Priority</option>
                         </select>
                      </div>
-                     <div class="col-md-3">
+                     <div class="col-md-2">
                         <select class="form-select form-select-sm" id="notes-sort">
                            <option value="newest">Newest First</option>
                            <option value="oldest">Oldest First</option>
@@ -1174,6 +1125,20 @@ if (isset($data['class_data']) && $data['class_data']):
                            <option value="category">By Category</option>
                            <option value="title">By Title</option>
                         </select>
+                     </div>
+                     <div class="col-md-2">
+                           <button type="button" class="btn btn-outline-secondary btn-sm" id="clear-notes-filters" title="Clear all filters">
+                              <i class="bi bi-arrow-clockwise"></i> Reset Filters
+                           </button>
+                     </div>
+                  </div>
+                  <div class="row g-2">
+
+                     <!-- Notes Display Header -->
+                     <div class="d-flex justify-content-between align-items-center mb-3 col-md-2 mt-4">
+                        <div class="d-flex align-items-center gap-2">
+                           <span class="badge ms-2 badge badge-phoenix badge-phoenix-warning " id="notes-count">0 notes</span>
+                        </div>
                      </div>
                   </div>
                </div>
@@ -1218,7 +1183,6 @@ if (isset($data['class_data']) && $data['class_data']):
             </div>
          </div>
          </div>
-      </div>
 
       <!-- QA Visit Dates and Reports Section -->
       <div class="mt-4">
