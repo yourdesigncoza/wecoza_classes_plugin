@@ -2146,6 +2146,22 @@ function showCustomAlert(message) {
             }
         });
         
+        // Add new note functionality - clear files when opening modal for new note
+        $(document).on('click', '#add-class-note-btn', function() {
+            // Clear the file list for new notes
+            const $fileList = $('#note-file-list');
+            $fileList.empty();
+            
+            // Reset uploaded files array
+            if (window.getUploadedFiles) {
+                const uploadedFiles = window.getUploadedFiles();
+                uploadedFiles.length = 0; // Clear the array
+            }
+            
+            // Set modal title for new note
+            $('#note-modal-title').text('Add Class Note');
+        });
+        
         // Edit note functionality
         $(document).on('click', '.edit-note-btn', function() {
             const noteId = $(this).data('note-id');
@@ -2158,6 +2174,45 @@ function showCustomAlert(message) {
                 // Handle multi-select class notes
                 $('#class_notes').val(Array.isArray(note.category) ? note.category : [note.category]);
                 $('#note_priority').val(note.priority || '');
+                
+                // Load existing attachments if any
+                if (note.attachments && note.attachments.length > 0) {
+                    const $fileList = $('#note-file-list');
+                    $fileList.empty(); // Clear any existing files
+                    
+                    note.attachments.forEach(attachment => {
+                        const fileId = 'existing_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                        const fileHtml = `
+                            <div class="uploaded-file" data-file-id="${fileId}">
+                                <div class="file-info">
+                                    <i class="bi bi-file-earmark me-2"></i>
+                                    <span class="file-name">${attachment.name}</span>
+                                    <small class="text-muted ms-2">(existing file)</small>
+                                </div>
+                                <div class="file-actions">
+                                    <a href="${attachment.url}" target="_blank" class="btn btn-sm btn-outline-info me-1" title="Download">
+                                        <i class="bi bi-download"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger remove-file-btn" data-file-id="${fileId}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        $fileList.append(fileHtml);
+                        
+                        // Add to uploadedFiles array to maintain consistency
+                        if (window.getUploadedFiles) {
+                            const uploadedFiles = window.getUploadedFiles();
+                            uploadedFiles.push({
+                                name: attachment.name,
+                                url: attachment.url,
+                                elementId: fileId,
+                                isExisting: true
+                            });
+                        }
+                    });
+                }
                 
                 // Update modal title
                 $('#note-modal-title').text('Edit Class Note');
@@ -2603,29 +2658,8 @@ function showCustomAlert(message) {
                     $('#note_priority').val(note.priority);
                     $charCount.text(note.content.length);
                 }
-            } else {
-                // Add mode - clear form first
-                $('#note-modal-title').text('Add Class Note');
-                $('#note_id').val('');
-                $('#note_content').val('');
-                $('#class_notes').val([]);
-                $('#note_priority').val('');
-                $charCount.text('0');
-                
-                // Optionally restore only content from draft (not required fields)
-                try {
-                    const draft = localStorage.getItem('wecoza_note_draft');
-                    if (draft) {
-                        const { data } = JSON.parse(draft);
-                        if (data && data.content) {
-                            $('#note_content').val(data.content);
-                            $charCount.text(data.content.length);
-                        }
-                    }
-                } catch (e) {
-                    // Ignore draft restoration errors
-                }
             }
+            // Form clearing is handled by hidden.bs.modal event
         });
         
         $noteModal.on('hidden.bs.modal', function() {
@@ -3152,8 +3186,12 @@ function showCustomAlert(message) {
          * Upload files to WordPress media library
          */
         window.uploadNotesFiles = function() {
+            // Get existing attachments from uploadedFiles array
+            const existingAttachments = uploadedFiles.filter(file => file.isExisting);
+            
             if (pendingFiles.length === 0) {
-                return Promise.resolve([]);
+                // Return existing attachments if no new files to upload
+                return Promise.resolve(existingAttachments);
             }
             
             return new Promise((resolve, reject) => {
@@ -3169,7 +3207,9 @@ function showCustomAlert(message) {
                     if (pendingFiles.length === 0) {
                         $uploadProgress.addClass('d-none');
                         uploadedFiles.push(...results);
-                        resolve(results);
+                        // Combine new uploads with existing attachments
+                        const allAttachments = [...existingAttachments, ...results];
+                        resolve(allAttachments);
                         return;
                     }
                     

@@ -1140,6 +1140,25 @@ if (isset($data['class_data']) && $data['class_data']):
                            <span class="badge ms-2 badge badge-phoenix badge-phoenix-warning " id="notes-count">0 notes</span>
                         </div>
                      </div>
+                     
+                     <!-- Priority Legend -->
+                     <div class="col-md-8 mt-4">
+                        <div class="priority-legend d-flex align-items-center gap-3 flex-wrap">
+                           <span class="legend-title small text-muted me-2">Priority:</span>
+                           <div class="legend-item d-flex align-items-center">
+                              <div class="legend-color-box priority-high"></div>
+                              <span class="legend-label small">High</span>
+                           </div>
+                           <div class="legend-item d-flex align-items-center">
+                              <div class="legend-color-box priority-medium"></div>
+                              <span class="legend-label small">Medium</span>
+                           </div>
+                           <div class="legend-item d-flex align-items-center">
+                              <div class="legend-color-box priority-low"></div>
+                              <span class="legend-label small">Low</span>
+                           </div>
+                        </div>
+                     </div>
                   </div>
                </div>
                
@@ -1970,26 +1989,32 @@ document.addEventListener('DOMContentLoaded', function() {
                <!-- File Attachments -->
                <div class="mb-3">
                   <label class="form-label">Attachments</label>
-                  <div id="note-dropzone" class="dropzone-area border border-2 border-dashed rounded p-4 text-center">
-                     <div class="dropzone-content">
-                        <i class="bi bi-cloud-upload fs-1 text-muted"></i>
-                        <p class="mb-2">Drag and drop files here or click to browse</p>
-                        <p class="text-muted small mb-3">Supported formats: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG (Max 10MB per file)</p>
-                        <button type="button" class="btn btn-outline-primary btn-sm" id="browse-files-btn">
+                  <div id="note-dropzone" class="dropzone-area border border-2 border-dashed rounded p-3">
+                     <div class="dropzone-content d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                           <i class="bi bi-cloud-upload fs-4 text-muted me-3"></i>
+                           <div>
+                              <p class="mb-1 fw-medium">Drag and drop files here or click to browse</p>
+                              <p class="text-muted small mb-0">Supported formats: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG (Max 10MB per file)</p>
+                           </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm ms-2" id="browse-files-btn">
                            <i class="bi bi-folder2-open me-1"></i> Browse Files
                         </button>
                         <input type="file" id="note-file-input" class="d-none" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
                      </div>
-                     <div class="dropzone-uploading d-none">
-                        <div class="spinner-border text-primary mb-2" role="status">
-                           <span class="visually-hidden">Uploading...</span>
+                     <div class="dropzone-uploading d-none text-center py-2">
+                        <div class="d-flex align-items-center justify-content-center">
+                           <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                              <span class="visually-hidden">Uploading...</span>
+                           </div>
+                           <span class="text-muted small">Uploading files...</span>
                         </div>
-                        <p class="mb-0">Uploading files...</p>
                      </div>
                   </div>
                   
                   <!-- File list -->
-                  <div id="note-file-list" class="mt-3">
+                  <div id="note-file-list" class="mt-3 fs-9">
                      <!-- Files will be listed here -->
                   </div>
                   

@@ -3463,7 +3463,7 @@ class ClassController {
         // Validate note data
         $note = [
             'id' => !empty($note_data['id']) ? sanitize_text_field($note_data['id']) : uniqid('note_'),
-            'content' => sanitize_textarea_field($note_data['content']),
+            'content' => stripslashes(sanitize_textarea_field($note_data['content'])),
             'category' => isset($note_data['category']) && is_array($note_data['category']) ? 
                 array_map('sanitize_text_field', $note_data['category']) : 
                 [sanitize_text_field($note_data['category'] ?? '')],
