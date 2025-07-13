@@ -1212,29 +1212,48 @@ if (isset($data['class_data']) && $data['class_data']):
          <!-- Hidden Template Row (initially d-none) -->
          <div class="row qa-visit-row align-items-center d-none" id="qa-visit-row-template">
             <!-- Visit Date -->
-            <div class="col-md-4 mb-2">
+            <div class="col-md-3 mb-2">
                <div class="mb-3">
                   <label class="form-label">Visit Date</label>
-                  <input type="date" name="qa_visit_dates[]" class="form-control" placeholder="YYYY-MM-DD">
+                  <input type="date" name="qa_visit_dates[]" class="form-control form-control-sm">
                   <div class="invalid-feedback">Please select a valid date.</div>
-                  <div class="valid-feedback">Looks good!</div>
+               </div>
+            </div>
+
+            <!-- Visit Type -->
+            <div class="col-md-2 mb-2">
+               <div class="mb-3">
+                  <label class="form-label">Type</label>
+                  <select name="qa_visit_types[]" class="form-select form-select-sm">
+                     <option value="Initial QA Visit">Initial QA</option>
+                     <option value="Follow-up QA">Follow-up</option>
+                     <option value="Compliance Check">Compliance</option>
+                     <option value="Final Assessment">Final</option>
+                  </select>
+               </div>
+            </div>
+
+            <!-- QA Officer -->
+            <div class="col-md-2 mb-2">
+               <div class="mb-3">
+                  <label class="form-label">QA Officer</label>
+                  <input type="text" name="qa_officers[]" class="form-control form-control-sm" placeholder="Officer name">
                </div>
             </div>
 
             <!-- Report Upload -->
-            <div class="col-md-6 mb-2">
-               <div class="mb-3 ydcoza-upload">
+            <div class="col-md-4 mb-2">
+               <div class="mb-3">
                   <label class="form-label">QA Report</label>
-                  <input type="file" name="qa_reports[]" class="form-control" accept="application/pdf">
-                  <div class="invalid-feedback">Please upload a report for this visit.</div>
-                  <div class="valid-feedback">Looks good!</div>
+                  <input type="file" name="qa_reports[]" class="form-control form-control-sm" accept=".pdf">
+                  <div class="invalid-feedback">Please upload a report.</div>
                </div>
             </div>
 
             <!-- Remove Button -->
-            <div class="col-md-2 mb-2">
+            <div class="col-md-1 mb-2">
                <div class="d-flex h-100 align-items-end">
-                  <button type="button" class="btn btn-outline-danger btn-sm remove-qa-visit-btn form-control date-remove-btn">Remove</button>
+                  <button type="button" class="btn btn-outline-danger btn-sm remove-qa-visit-btn">×</button>
                </div>
             </div>
          </div>
@@ -1622,15 +1641,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 newRow.removeAttribute('id');
 
                 const dateInput = newRow.querySelector('input[name="qa_visit_dates[]"]');
+                const typeSelect = newRow.querySelector('select[name="qa_visit_types[]"]');
+                const officerInput = newRow.querySelector('input[name="qa_officers[]"]');
                 const fileInput = newRow.querySelector('input[name="qa_reports[]"]');
                 
                 if (dateInput) {
                     dateInput.value = date;
                 }
                 
-                // If we have report metadata, show the filename
+                // If we have report metadata, populate type and officer fields
                 if (qaReportsMetadata && qaReportsMetadata[index]) {
                     const reportInfo = qaReportsMetadata[index];
+                    
+                    // Populate visit type
+                    if (typeSelect && reportInfo.type) {
+                        typeSelect.value = reportInfo.type;
+                    }
+                    
+                    // Populate QA officer
+                    if (officerInput && reportInfo.officer) {
+                        officerInput.value = reportInfo.officer;
+                    }
+                    
+                    // Show existing filename
                     if (reportInfo.filename && fileInput) {
                         // Create a display element for existing file
                         const fileDisplay = document.createElement('div');

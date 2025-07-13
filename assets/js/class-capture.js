@@ -722,6 +722,8 @@ function showCustomAlert(message) {
             // Generate unique names for form inputs to avoid conflicts
             const timestamp = Date.now();
             $newRow.find('input[name="qa_visit_dates[]"]').attr('id', 'qa_visit_date_' + timestamp);
+            $newRow.find('select[name="qa_visit_types[]"]').attr('id', 'qa_visit_type_' + timestamp);
+            $newRow.find('input[name="qa_officers[]"]').attr('id', 'qa_officer_' + timestamp);
             $newRow.find('input[name="qa_reports[]"]').attr('id', 'qa_report_' + timestamp);
             
             // Append to container
@@ -758,9 +760,11 @@ function showCustomAlert(message) {
                 
                 // Confirm removal if there's data
                 const dateValue = $row.find('input[name="qa_visit_dates[]"]').val();
+                const typeValue = $row.find('select[name="qa_visit_types[]"]').val();
+                const officerValue = $row.find('input[name="qa_officers[]"]').val();
                 const fileValue = $row.find('input[name="qa_reports[]"]').val();
                 
-                if (dateValue || fileValue) {
+                if (dateValue || typeValue || officerValue || fileValue) {
                     if (!confirm('Are you sure you want to remove this QA visit? Any unsaved data will be lost.')) {
                         return;
                     }

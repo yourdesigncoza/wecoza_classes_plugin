@@ -760,7 +760,9 @@ class ClassController {
         if (isset($formData['backup_agent_ids'])) $class->setBackupAgentIds($formData['backup_agent_ids']);
         if (isset($formData['schedule_data'])) $class->setScheduleData($formData['schedule_data']);
         if (isset($formData['stop_restart_dates'])) $class->setStopRestartDates($formData['stop_restart_dates']);
-        if (isset($formData['class_notes'])) $class->setClassNotesData($formData['class_notes']);
+        if (isset($formData['class_notes']) && !empty($formData['class_notes'])) {
+            $class->setClassNotesData($formData['class_notes']);
+        }
 
         return $class;
     }
@@ -2852,9 +2854,11 @@ class ClassController {
      *
      * @param array $files The $_FILES array data for qa_reports
      * @param array $dates The corresponding qa_visit_dates array
+     * @param array $types The corresponding qa_visit_types array
+     * @param array $officers The corresponding qa_officers array
      * @return array Processed file information with metadata
      */
-    private static function handleQAReportUploads($files, $dates) {
+    private static function handleQAReportUploads($files, $dates, $types = [], $officers = []) {
         $uploadedReports = [];
         
         if (empty($files['name']) || !is_array($files['name'])) {
@@ -2878,8 +2882,10 @@ class ClassController {
                 continue;
             }
             
-            // Get corresponding date
+            // Get corresponding date, type, and officer
             $visit_date = isset($dates[$i]) ? $dates[$i] : date('Y-m-d');
+            $visit_type = isset($types[$i]) ? $types[$i] : 'Initial QA Visit';
+            $qa_officer = isset($officers[$i]) ? $officers[$i] : '';
             
             // Prepare file upload
             $file = [
@@ -2906,6 +2912,8 @@ class ClassController {
             if (move_uploaded_file($file['tmp_name'], $file_path)) {
                 $uploadedReports[] = [
                     'date' => $visit_date,
+                    'type' => $visit_type,
+                    'officer' => $qa_officer,
                     'filename' => $new_filename,
                     'original_name' => $file['name'],
                     'file_path' => 'qa-reports/' . $new_filename,
@@ -2950,7 +2958,9 @@ class ClassController {
         if ($files && isset($files['qa_reports'])) {
             $new_reports = self::handleQAReportUploads(
                 $files['qa_reports'], 
-                $data['qa_visit_dates'] ?? []
+                $data['qa_visit_dates'] ?? [],
+                $data['qa_visit_types'] ?? [],
+                $data['qa_officers'] ?? []
             );
         }
         

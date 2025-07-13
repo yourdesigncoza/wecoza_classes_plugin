@@ -1194,6 +1194,7 @@ if (!empty($class['schedule_data'])) {
                                 <tr>
                                     <th>Report Date</th>
                                     <th>Report Type</th>
+                                    <th>QA Officer</th>
                                     <th>File Name</th>
                                     <th>Uploaded By</th>
                                     <th>Actions</th>
@@ -1210,6 +1211,9 @@ if (!empty($class['schedule_data'])) {
                                     </td>
                                     <td>
                                         <?php echo esc_html($report['type'] ?? 'Standard QA'); ?>
+                                    </td>
+                                    <td>
+                                        <?php echo esc_html($report['officer'] ?? 'N/A'); ?>
                                     </td>
                                     <td>
                                         <i class="bi bi-file-pdf text-danger me-1"></i>
