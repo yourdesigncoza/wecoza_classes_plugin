@@ -36,7 +36,14 @@ class ClassModel {
     private $deliveryDate;
     private $learnerIds = [];
     private $examLearners = [];
+    
+    // AGENT SYSTEM - TWO DISTINCT COMPONENTS:
+    // 1. BACKUP AGENTS: Pre-assigned standby agents (stored in classes.backup_agent_ids JSON field)
     private $backupAgentIds = [];
+    
+    // 2. AGENT REPLACEMENTS: Actual agent changes during delivery (stored in agent_replacements table)
+    private $agentReplacements = [];
+    
     private $scheduleData = [];
     private $stopRestartDates = [];
     private $classNotesData = [];
@@ -90,9 +97,15 @@ class ClassModel {
         $this->setLearnerIds($this->parseJsonField($data['learner_ids'] ?? $data['learnerIds'] ?? $data['add_learner'] ?? []));
         $this->setExamLearners($this->parseJsonField($data['exam_learners'] ?? $data['examLearners'] ?? []));
         $this->setBackupAgentIds($this->parseJsonField($data['backup_agent_ids'] ?? $data['backupAgentIds'] ?? $data['backup_agent'] ?? []));
+        $this->setAgentReplacements($this->parseJsonField($data['agent_replacements'] ?? $data['agentReplacements'] ?? []));
         $this->setScheduleData($this->parseJsonField($data['schedule_data'] ?? $data['scheduleData'] ?? []));
         $this->setStopRestartDates($this->parseJsonField($data['stop_restart_dates'] ?? []));
         $this->setClassNotesData($this->parseJsonField($data['class_notes_data'] ?? $data['classNotes'] ?? $data['class_notes'] ?? []));
+        
+        // Load agent replacements from database if this is an existing class
+        if ($this->getId()) {
+            $this->setAgentReplacements($this->loadAgentReplacements());
+        }
     }
 
     /**
@@ -183,6 +196,9 @@ class ClassModel {
             $classId = $db->lastInsertId();
             $this->setId($classId);
 
+            // Save agent replacements after the class is saved
+            $this->saveAgentReplacements();
+
             $db->commit();
             return true;
         } catch (\Exception $e) {
@@ -231,6 +247,10 @@ class ClassModel {
             ];
 
             $db->query($sql, $params);
+            
+            // Save agent replacements after the class is updated
+            $this->saveAgentReplacements();
+            
             $db->commit();
             return true;
         } catch (\Exception $e) {
@@ -394,6 +414,9 @@ class ClassModel {
 
     public function getBackupAgentIds() { return $this->backupAgentIds; }
     public function setBackupAgentIds($backupAgentIds) { $this->backupAgentIds = is_array($backupAgentIds) ? $backupAgentIds : []; return $this; }
+
+    public function getAgentReplacements() { return $this->agentReplacements; }
+    public function setAgentReplacements($agentReplacements) { $this->agentReplacements = is_array($agentReplacements) ? $agentReplacements : []; return $this; }
 
     public function getScheduleData() { return $this->scheduleData; }
     public function setScheduleData($scheduleData) { $this->scheduleData = is_array($scheduleData) ? $scheduleData : []; return $this; }
@@ -567,6 +590,83 @@ class ClassModel {
             return $classes;
         } catch (\Exception $e) {
             error_log('WeCoza Classes Plugin: Error searching classes: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Save agent replacements to the database
+     */
+    private function saveAgentReplacements() {
+        if (empty($this->agentReplacements) || !$this->getId()) {
+            return true;
+        }
+
+        try {
+            $db = DatabaseService::getInstance();
+            
+            // First, delete existing agent replacements for this class
+            $deleteStmt = $db->prepare("DELETE FROM agent_replacements WHERE class_id = ?");
+            $deleteStmt->execute([$this->getId()]);
+            
+            // Then insert new agent replacements
+            $insertStmt = $db->prepare("
+                INSERT INTO agent_replacements (class_id, original_agent_id, replacement_agent_id, start_date) 
+                VALUES (?, ?, ?, ?)
+            ");
+            
+            foreach ($this->agentReplacements as $replacement) {
+                if (isset($replacement['agent_id']) && isset($replacement['date'])) {
+                    // For now, we'll use the initial class agent as the original agent
+                    // This could be enhanced to track the actual agent being replaced
+                    $originalAgentId = $this->getInitialClassAgent() ?: $this->getClassAgent();
+                    
+                    $insertStmt->execute([
+                        $this->getId(),
+                        $originalAgentId,
+                        $replacement['agent_id'],
+                        $replacement['date']
+                    ]);
+                }
+            }
+            
+            return true;
+        } catch (\Exception $e) {
+            error_log('Error saving agent replacements: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Load agent replacements from the database
+     */
+    private function loadAgentReplacements() {
+        if (!$this->getId()) {
+            return [];
+        }
+
+        try {
+            $db = DatabaseService::getInstance();
+            $stmt = $db->prepare("
+                SELECT replacement_agent_id, start_date, reason 
+                FROM agent_replacements 
+                WHERE class_id = ? 
+                ORDER BY start_date ASC
+            ");
+            $stmt->execute([$this->getId()]);
+            
+            $replacements = [];
+            while ($row = $stmt->fetch()) {
+                $replacements[] = [
+                    'agent_id' => $row['replacement_agent_id'],
+                    'date' => $row['start_date'],
+                    'reason' => $row['reason']
+                ];
+            }
+            
+            return $replacements;
+        } catch (\Exception $e) {
+            error_log('Error loading agent replacements: ' . $e->getMessage());
             return [];
         }
     }

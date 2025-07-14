@@ -1,5 +1,138 @@
 # WeCoza Classes Plugin
 
+## Project Architecture Overview
+
+### **Core Structure: WordPress Plugin with External Database**
+The WeCoza Classes Plugin is a sophisticated **enterprise-level WordPress plugin** that follows a **clean MVC architecture** built for WordPress but uses **PostgreSQL** (not WordPress MySQL) as the primary database. This separation allows for complex training class management with JSONB data structures while maintaining WordPress integration.
+
+### **Technology Stack Integration**
+- **Backend**: PHP 7.4+ with PSR-4 autoloading, PostgreSQL via PDO
+- **Frontend**: Bootstrap 5, jQuery, Chart.js for analytics
+- **WordPress**: Hook system, capabilities, AJAX infrastructure
+- **AI Development**: Claude Code with MCP servers, Task Master AI
+
+## **Architectural Layers**
+
+### **1. Database Layer (PostgreSQL)**
+```
+External Database (DigitalOcean)
+├── classes (primary entity with JSONB fields)
+├── qa_visits, qa_metrics, qa_findings
+├── clients, agents, sites, learners, users
+└── 45+ tables for comprehensive training management
+```
+
+### **2. Application Layer (MVC)**
+```
+app/
+├── Controllers/     # Business logic (Class, QA, ClassTypes, PublicHolidays)
+├── Models/         # Data models with JSONB handling
+├── Views/          # Component-based templates
+├── Services/       # DatabaseService (singleton pattern)
+└── Helpers/        # ViewHelpers for consistent UI
+```
+
+### **3. Integration Layer**
+```
+WordPress Integration:
+├── Plugin bootstrap (wecoza-classes-plugin.php)
+├── Activation/Deactivation handlers
+├── Shortcode system (5 public shortcodes)
+├── AJAX endpoints (15+ handlers)
+└── Asset management with conditional loading
+```
+
+### **4. Frontend Architecture**
+```
+assets/js/
+├── class-capture.js (34K+ lines) - Main form handling
+├── class-schedule-form.js - Scheduling interface
+├── qa-dashboard.js - Chart.js analytics
+└── Utility modules for search, calendar, learner management
+```
+
+## **Documentation Architecture (3-Tier System)**
+
+### **AI-First Documentation Design**
+The project implements a sophisticated **3-tier documentation architecture** optimized for AI development:
+
+**Tier 1 (Foundation)**: `/docs/ai-context/` - Stable project-wide context
+**Tier 2 (Component)**: Component-level CONTEXT.md files  
+**Tier 3 (Feature)**: Implementation-specific docs co-located with code
+
+### **Claude Code Integration**
+```
+.claude/
+├── commands/ (8 specialized workflows)
+├── hooks/ (security, context injection, notifications)
+├── settings.json (model configuration)
+└── sessions/ (historical transcripts)
+```
+
+### **MCP Server Integration**
+- **task-master-ai**: Task management and planning
+- **postgres-do**: Read-only database access
+
+## **Key Architectural Patterns**
+
+### **External Database Pattern**
+Unlike typical WordPress plugins, you use PostgreSQL for complex data while WordPress handles authentication/authorization. This enables:
+- JSONB fields for flexible data structures
+- Complex analytics and reporting
+- Enterprise-grade data management
+
+### **Component-Based Frontend**
+- Reusable view components
+- Bootstrap 5 integration
+- Conditional asset loading
+- AJAX-driven interactions
+
+### **AI-Enhanced Development**
+- Multi-agent orchestration commands
+- Automated documentation maintenance
+- Context injection via hooks
+- Task Master AI integration for project planning
+
+## **Data Management Strategy**
+
+### **JSONB Data Structures**
+The plugin leverages PostgreSQL's JSONB for flexible data storage:
+- `learner_ids`: Complex learner assignments
+- `schedule_data`: Per-day scheduling
+- `class_notes_data`: Structured annotations
+- `qa_reports`: Report metadata and paths
+
+### **Quality Assurance System**
+Comprehensive QA tracking with:
+- Visit analytics and reporting
+- Chart.js dashboards
+- Performance metrics
+- Finding management
+
+## **Development Workflow Architecture**
+
+### **Task Master AI Integration**
+- PRD parsing and task generation
+- Complexity analysis and expansion
+- Research-enhanced planning
+- Dependency management
+
+### **Automated Quality Processes**
+- Documentation synchronization
+- Security scanning via MCP
+- Git safety workflows
+- Centralized CSS management
+
+## **Strengths and Architectural Insights**
+
+1. **Clean Separation**: External database allows complex data management without WordPress constraints
+2. **Scalable MVC**: Well-structured for maintenance and feature additions
+3. **AI-First Development**: Comprehensive AI tooling for enhanced productivity
+4. **Enterprise Features**: QA system, analytics, comprehensive reporting
+5. **Modern Frontend**: Bootstrap 5, Chart.js, responsive design
+
+---
+
 A comprehensive class management system for WeCoza training programs. This WordPress plugin handles class creation, scheduling, learner management, and calendar integration with full MVC architecture.
 
 ## Features

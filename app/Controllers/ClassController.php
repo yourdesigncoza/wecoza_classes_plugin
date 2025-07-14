@@ -758,6 +758,7 @@ class ClassController {
         if (isset($formData['learner_ids'])) $class->setLearnerIds($formData['learner_ids']);
         if (isset($formData['exam_learners'])) $class->setExamLearners($formData['exam_learners']);
         if (isset($formData['backup_agent_ids'])) $class->setBackupAgentIds($formData['backup_agent_ids']);
+        if (isset($formData['agent_replacements'])) $class->setAgentReplacements($formData['agent_replacements']);
         if (isset($formData['schedule_data'])) $class->setScheduleData($formData['schedule_data']);
         if (isset($formData['stop_restart_dates'])) $class->setStopRestartDates($formData['stop_restart_dates']);
         if (isset($formData['class_notes']) && !empty($formData['class_notes'])) {
@@ -893,6 +894,37 @@ class ClassController {
         }
         $processed['backup_agent_ids'] = $backupAgents;
         error_log('processFormData: Processed backup_agent_ids: ' . json_encode($backupAgents));
+        
+        // Process agent replacements from form arrays
+        // 
+        // IMPORTANT: Agent system has TWO distinct components:
+        // 1. BACKUP AGENTS (backup_agent_ids): Standby agents assigned to the class
+        //    - Stored in: classes.backup_agent_ids (JSON field)
+        //    - Purpose: Pre-assigned backup agents for the class
+        //    - Form fields: backup_agent_ids[], backup_agent_dates[]
+        // 
+        // 2. AGENT REPLACEMENTS (agent_replacements): When class agents actually change
+        //    - Stored in: agent_replacements table (separate table)
+        //    - Purpose: Track actual agent changes during class delivery
+        //    - Form fields: replacement_agent_ids[], replacement_agent_dates[]
+        //    - Schema: class_id, original_agent_id, replacement_agent_id, start_date, reason
+        //
+        $agentReplacements = [];
+        if (isset($data['replacement_agent_ids']) && is_array($data['replacement_agent_ids'])) {
+            $replacementAgentIds = $data['replacement_agent_ids'];
+            $replacementAgentDates = isset($data['replacement_agent_dates']) ? $data['replacement_agent_dates'] : [];
+            
+            for ($i = 0; $i < count($replacementAgentIds); $i++) {
+                if (!empty($replacementAgentIds[$i]) && isset($replacementAgentDates[$i]) && !empty($replacementAgentDates[$i])) {
+                    $agentReplacements[] = [
+                        'agent_id' => intval($replacementAgentIds[$i]),
+                        'date' => $replacementAgentDates[$i]
+                    ];
+                }
+            }
+        }
+        $processed['agent_replacements'] = $agentReplacements;
+        error_log('processFormData: Processed agent_replacements: ' . json_encode($agentReplacements));
         
         $processed['schedule_data'] = self::processJsonField($data, 'schedule_data');
         error_log('processFormData: Processed schedule_data: ' . json_encode($processed['schedule_data']));
@@ -1891,23 +1923,11 @@ class ClassController {
      * @return array|null Class data or null if not found
      */
     private function getSingleClass($class_id) {
-        $db = \WeCozaClasses\Services\Database\DatabaseService::getInstance();
-
-        $sql = "
-            SELECT
-                c.*,
-                cl.client_name
-            FROM public.classes c
-            LEFT JOIN public.clients cl ON c.client_id = cl.client_id
-            WHERE c.class_id = :class_id
-            LIMIT 1";
-
         try {
-            $stmt = $db->getPdo()->prepare($sql);
-            $stmt->execute(['class_id' => $class_id]);
-            $result = $stmt->fetch();
+            // Use ClassModel to get the class data - this ensures agent replacements are loaded
+            $classModel = ClassModel::getById($class_id);
 
-            if (!$result) {
+            if (!$classModel) {
                 // No class found - return sample data for testing
                 error_log('WeCoza Classes Plugin: No class found with ID ' . $class_id . ', returning sample data');
                 return [
@@ -2029,59 +2049,69 @@ class ClassController {
                 ];
             }
 
-            // Handle JSONB fields that come as strings from PostgreSQL
-            $jsonbFields = ['learner_ids', 'backup_agent_ids', 'schedule_data', 'stop_restart_dates', 'class_notes_data', 'qa_reports', 'exam_learners'];
+            // Convert ClassModel object to array format expected by the view
+            $result = [
+                'class_id' => $classModel->getId(),
+                'client_id' => $classModel->getClientId(),
+                'site_id' => $classModel->getSiteId(),
+                'class_address_line' => $classModel->getClassAddressLine(),
+                'class_type' => $classModel->getClassType(),
+                'class_subject' => $classModel->getClassSubject(),
+                'class_code' => $classModel->getClassCode(),
+                'class_duration' => $classModel->getClassDuration(),
+                'original_start_date' => $classModel->getOriginalStartDate(),
+                'seta_funded' => $classModel->getSetaFunded() ? 'Yes' : 'No',
+                'seta' => $classModel->getSeta(),
+                'exam_class' => $classModel->getExamClass() ? 'Yes' : 'No',
+                'exam_type' => $classModel->getExamType(),
+                'qa_visit_dates' => $classModel->getQaVisitDates(),
+                'qa_reports' => $classModel->getQaReports(),
+                'class_agent' => $classModel->getClassAgent(),
+                'initial_class_agent' => $classModel->getInitialClassAgent(),
+                'initial_agent_start_date' => $classModel->getInitialAgentStartDate(),
+                'project_supervisor_id' => $classModel->getProjectSupervisorId(),
+                'delivery_date' => $classModel->getDeliveryDate(),
+                'learner_ids' => $classModel->getLearnerIds(),
+                'exam_learners' => $classModel->getExamLearners(),
+                'backup_agent_ids' => $classModel->getBackupAgentIds(),
+                'agent_replacements' => $classModel->getAgentReplacements(), // This is the key addition!
+                'schedule_data' => $classModel->getScheduleData(),
+                'stop_restart_dates' => $classModel->getStopRestartDates(),
+                'class_notes_data' => $classModel->getClassNotesData(),
+                'created_at' => $classModel->getCreatedAt(),
+                'updated_at' => $classModel->getUpdatedAt(),
+            ];
             
-            // Also decode qa_visit_dates if stored as JSON
-            if (isset($result['qa_visit_dates']) && is_string($result['qa_visit_dates'])) {
-                $decoded = json_decode($result['qa_visit_dates'], true);
-                if ($decoded !== null) {
-                    $result['qa_visit_dates'] = $decoded;
-                }
-            }
-
-            foreach ($jsonbFields as $field) {
-                if (isset($result[$field]) && is_string($result[$field])) {
-                    $decoded = json_decode($result[$field], true);
-                    if ($decoded !== null) {
-                        $result[$field] = $decoded;
+            // Add client name
+            if ($classModel->getClientId()) {
+                $clients = $this->getClients();
+                foreach ($clients as $client) {
+                    if ($client['id'] == $classModel->getClientId()) {
+                        $result['client_name'] = $client['name'];
+                        break;
                     }
                 }
             }
-
-            // Enrich with agent names
+            
+            // Add agent names lookup
             $agents = $this->getAgents();
             $agentLookup = [];
             foreach ($agents as $agent) {
                 $agentLookup[$agent['id']] = $agent['name'];
             }
-
-            // Add current agent name (fallback to initial_class_agent if class_agent is empty)
+            
+            // Add current agent name
             $currentAgentId = $result['class_agent'] ?? $result['initial_class_agent'] ?? null;
             if (!empty($currentAgentId)) {
                 $result['agent_name'] = $agentLookup[$currentAgentId] ?? 'Unknown Agent';
-                $result['class_agent'] = $currentAgentId; // Ensure class_agent is set for display
+                $result['class_agent'] = $currentAgentId;
             }
-
+            
             // Add initial agent name
             if (!empty($result['initial_class_agent'])) {
                 $result['initial_agent_name'] = $agentLookup[$result['initial_class_agent']] ?? 'Unknown Agent';
             }
-
-            // Add backup agent names
-            if (!empty($result['backup_agent_ids']) && is_array($result['backup_agent_ids'])) {
-                $result['backup_agent_names'] = [];
-                foreach ($result['backup_agent_ids'] as $agentId) {
-                    if (isset($agentId['agent_id'])) {
-                        $id = $agentId['agent_id'];
-                        $result['backup_agent_names'][] = [
-                            'id' => $id,
-                            'name' => $agentLookup[$id] ?? 'Unknown Agent'
-                        ];
-                    }
-                }
-            }
-
+            
             // Add supervisor name
             if (!empty($result['project_supervisor_id'])) {
                 $supervisors = $this->getSupervisors();
@@ -2092,29 +2122,7 @@ class ClassController {
                     }
                 }
             }
-
-            // Schedule data expected to be in V2.0 format only
-
-            // Transform boolean fields to Yes/No for form compatibility
-            if (isset($result['seta_funded'])) {
-                $result['seta_funded'] = $result['seta_funded'] === true || $result['seta_funded'] === 't' || $result['seta_funded'] === '1' || $result['seta_funded'] === 'Yes' ? 'Yes' : 'No';
-            }
             
-            if (isset($result['exam_class'])) {
-                $result['exam_class'] = $result['exam_class'] === true || $result['exam_class'] === 't' || $result['exam_class'] === '1' || $result['exam_class'] === 'Yes' ? 'Yes' : 'No';
-            }
-
-            // Convert class_type string to ID if needed
-            if (isset($result['class_type']) && !is_numeric($result['class_type'])) {
-                $classTypes = $this->getClassType();
-                foreach ($classTypes as $type) {
-                    if (strcasecmp($type['name'], $result['class_type']) === 0) {
-                        $result['class_type'] = $type['id'];
-                        break;
-                    }
-                }
-            }
-
             return $result;
         } catch (\Exception $e) {
             error_log('WeCoza Classes Plugin: Error in getSingleClass: ' . $e->getMessage());

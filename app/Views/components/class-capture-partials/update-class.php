@@ -1306,6 +1306,11 @@ if (isset($data['class_data']) && $data['class_data']):
 
          <!-- Agent Replacements -->
          <?php echo section_header('Agent Replacements', 'If the class agent changes, add the replacement agent and takeover date here.'); ?>
+         
+         <!-- IMPORTANT: This section handles AGENT REPLACEMENTS (agent_replacements table)
+              NOT backup agents (backup_agent_ids field) - these are separate systems:
+              - Agent Replacements: Track actual agent changes during class delivery
+              - Backup Agents: Pre-assigned standby agents for the class -->
 
          <!-- Container for all agent replacement rows -->
          <div id="agent-replacements-container"></div>
@@ -1338,8 +1343,8 @@ if (isset($data['class_data']) && $data['class_data']):
             </div>
 
             <!-- Remove Button -->
-            <div class="col-md-2 mb-2">
-               <div class="d-flex h-100 align-items-end">
+            <div class="col-md-1 mb-2">
+               <div class="mt-4">
                   <button type="button" class="btn btn-outline-danger btn-sm remove-agent-replacement-btn form-control date-remove-btn">Remove</button>
                </div>
             </div>
@@ -1956,6 +1961,73 @@ document.addEventListener('DOMContentLoaded', function() {
             window.holidayOverrides = {};
         }
     }
+    
+    // ===== Agent Replacement Functionality =====
+    // Handle adding new agent replacement rows
+    const addAgentReplacementBtn = document.getElementById('add-agent-replacement-btn');
+    if (addAgentReplacementBtn) {
+        addAgentReplacementBtn.addEventListener('click', function() {
+            const agentReplacementsContainer = document.getElementById('agent-replacements-container');
+            const agentReplacementTemplate = document.getElementById('agent-replacement-row-template');
+            
+            if (agentReplacementsContainer && agentReplacementTemplate) {
+                // Clone the template row
+                const newRow = agentReplacementTemplate.cloneNode(true);
+                
+                // Remove the template class and ID
+                newRow.classList.remove('d-none');
+                newRow.removeAttribute('id');
+                
+                // Generate unique IDs for form elements to avoid conflicts
+                const timestamp = Date.now();
+                const agentSelect = newRow.querySelector('select[name="replacement_agent_ids[]"]');
+                const dateInput = newRow.querySelector('input[name="replacement_agent_dates[]"]');
+                const removeBtn = newRow.querySelector('.remove-agent-replacement-btn');
+                
+                if (agentSelect) {
+                    agentSelect.id = `replacement_agent_${timestamp}`;
+                    agentSelect.value = ''; // Reset selection
+                }
+                
+                if (dateInput) {
+                    dateInput.id = `replacement_date_${timestamp}`;
+                    dateInput.value = ''; // Reset value
+                }
+                
+                // Add remove functionality to the new row
+                if (removeBtn) {
+                    removeBtn.addEventListener('click', function() {
+                        newRow.remove();
+                    });
+                }
+                
+                // Append the new row to the container
+                agentReplacementsContainer.appendChild(newRow);
+                
+                // Focus on the first input (agent select)
+                if (agentSelect) {
+                    agentSelect.focus();
+                }
+                
+                <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
+                console.log('Added new agent replacement row');
+                <?php endif; ?>
+            }
+        });
+    }
+    
+    // Handle remove buttons for existing agent replacement rows
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.classList.contains('remove-agent-replacement-btn')) {
+            const row = e.target.closest('.agent-replacement-row');
+            if (row && !row.id.includes('template')) {
+                row.remove();
+                <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
+                console.log('Removed agent replacement row');
+                <?php endif; ?>
+            }
+        }
+    });
 });
 </script>
 
