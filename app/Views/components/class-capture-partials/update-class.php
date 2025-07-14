@@ -696,7 +696,7 @@ if (isset($data['class_data']) && $data['class_data']):
          </div>
 
          <!-- Public Holidays Section -->
-         <div class="mb-4">
+         <div class="mb-4 col-md-8">
             <?php echo section_header('Public Holidays in Schedule', 'By default, classes are not scheduled on public holidays. The system will only show holidays that conflict with your class schedule (when a holiday falls on a scheduled class day). You can override specific holidays to include them in the schedule.'); ?>
 
             <!-- No holidays message -->
@@ -887,7 +887,7 @@ if (isset($data['class_data']) && $data['class_data']):
          <!-- Hidden Template Row (initially d-none) -->
          <div class="row date-history-row d-none" id="date-history-row-template">
             <!-- Stop Date -->
-            <div class="col-md-5 mb-2">
+            <div class="col-md-3 mb-2">
                <label class="form-label">Stop Date</label>
                <input type="date" name="stop_dates[]" class="form-control form-control-sm">
                <div class="invalid-feedback">Please select a valid date.</div>
@@ -895,7 +895,7 @@ if (isset($data['class_data']) && $data['class_data']):
             </div>
 
             <!-- Restart Date -->
-            <div class="col-md-5 mb-2">
+            <div class="col-md-3 mb-2">
                <label class="form-label">Restart Date</label>
                <input type="date" name="restart_dates[]" class="form-control form-control-sm">
                <div class="invalid-feedback">Please select a valid date.</div>
@@ -921,7 +921,7 @@ if (isset($data['class_data']) && $data['class_data']):
       <?php echo section_header('Funding & Exam Details'); ?>
       <div class="row">
          <!-- SETA Funded -->
-         <div class="col-md-3 mb-3">
+         <div class="col-md-2 mb-3">
             <div class="mb-3">
                <label for="seta_funded" class="form-label">SETA Funded? <span class="text-danger">*</span></label>
                <select id="seta_funded" name="seta_funded" class="form-select" required>
@@ -940,7 +940,7 @@ if (isset($data['class_data']) && $data['class_data']):
          $setaFunded = $data['class_data']['seta_funded'] ?? '';
          $showSeta = ($setaFunded == 'Yes' || $setaFunded == '1');
          ?>
-         <div class="col-md-3 mb-3" id="seta_container" style="display: <?php echo $showSeta ? 'block' : 'none'; ?>;">
+         <div class="col-md-2 mb-3" id="seta_container" style="display: <?php echo $showSeta ? 'block' : 'none'; ?>;">
             <div class="mb-3">
                <label for="seta_id" class="form-label">SETA <span class="text-danger">*</span></label>
                <select id="seta_id" name="seta_id" class="form-select">
@@ -955,7 +955,7 @@ if (isset($data['class_data']) && $data['class_data']):
          </div>
 
          <!-- Exam Class -->
-         <div class="col-md-3 mb-3">
+         <div class="col-md-2 mb-3">
             <div class="mb-3">
                <label for="exam_class" class="form-label">Exam Class <span class="text-danger">*</span></label>
                <select id="exam_class" name="exam_class" class="form-select" required>
@@ -974,7 +974,7 @@ if (isset($data['class_data']) && $data['class_data']):
          $examClass = $data['class_data']['exam_class'] ?? '';
          $showExamType = ($examClass == 'Yes' || $examClass == '1');
          ?>
-         <div class="col-md-3 mb-3">
+         <div class="col-md-2 mb-3">
             <div id="exam_type_container" style="display: <?php echo $showExamType ? 'block' : 'none'; ?>;">
                <div class="mb-3">
                   <label for="exam_type" class="form-label">Exam Type</label>
@@ -988,7 +988,7 @@ if (isset($data['class_data']) && $data['class_data']):
 
       <!-- Class Learners Section -->
       <?php echo section_header('Class Learners <span class="text-danger">*</span>', 'Select learners for this class and manage their status.'); ?>
-      <div class="row mb-4">
+      <div class="row mb-4 col-md-9">
          <!-- Learner Selection -->
          <div class="col-md-4">
             <!-- For multi-select with floating labels, we need a custom approach -->
@@ -1011,7 +1011,7 @@ if (isset($data['class_data']) && $data['class_data']):
          <div class="col-md-8">
             <div class="mb-3">
                <div class="form-label mb-2">Class Learners</div>
-               <div id="class-learners-container" class="card-body card px-5">
+               <div id="class-learners-container" class="card-body card px-5 ">
                   <div class="bd-callout bd-callout-info" id="no-learners-message">
                      No learners added to this class yet. At least one learner is required. Select learners from the list and click "Add Selected Learners".
                   </div>
@@ -1041,7 +1041,7 @@ if (isset($data['class_data']) && $data['class_data']):
          <div class="col-12">
             <?php echo section_header('Select Learners Taking Exams', 'Not all learners in an exam class necessarily take exams. Select which learners will take exams.'); ?>
 
-            <div class="row mb-4">
+            <div class="row mb-4 col-md-9">
                <!-- Exam Learner Selection -->
                <div class="col-md-4">
                   <!-- For multi-select with floating labels, we need a custom approach -->
@@ -1210,9 +1210,9 @@ if (isset($data['class_data']) && $data['class_data']):
          <div id="qa-visits-container"></div>
 
          <!-- Hidden Template Row (initially d-none) -->
-         <div class="row qa-visit-row align-items-center d-none" id="qa-visit-row-template">
+         <div class="row qa-visit-row d-none" id="qa-visit-row-template">
             <!-- Visit Date -->
-            <div class="col-md-3 mb-2">
+            <div class="col-md-2 mb-2">
                <div class="mb-3">
                   <label class="form-label">Visit Date</label>
                   <input type="date" name="qa_visit_dates[]" class="form-control form-control-sm">
@@ -1242,7 +1242,7 @@ if (isset($data['class_data']) && $data['class_data']):
             </div>
 
             <!-- Report Upload -->
-            <div class="col-md-4 mb-2">
+            <div class="col-md-3 mb-2">
                <div class="mb-3">
                   <label class="form-label">QA Report</label>
                   <input type="file" name="qa_reports[]" class="form-control form-control-sm" accept=".pdf">
@@ -1251,9 +1251,12 @@ if (isset($data['class_data']) && $data['class_data']):
             </div>
 
             <!-- Remove Button -->
-            <div class="col-md-1 mb-2">
-               <div class="d-flex h-100 align-items-end">
-                  <button type="button" class="btn btn-outline-danger btn-sm remove-qa-visit-btn">×</button>
+            <div class="col-md-2 mb-2">
+               <div class="mt-4">
+                  <button type="button" class="btn btn-outline-danger btn-sm remove-qa-visit-btn">
+                                <i data-feather="trash-2" style="height:12.8px;width:12.8px;"></i>
+                                Remove
+                            </button>
                </div>
             </div>
          </div>
@@ -1278,7 +1281,7 @@ if (isset($data['class_data']) && $data['class_data']):
 
          <!-- Initial Class Agent -->
          <div class="row mb-3">
-            <div class="col-md-5 mb-3">
+            <div class="col-md-3 mb-3">
                <div class="mb-3">
                   <label for="initial_class_agent" class="form-label">Initial Class Agent <span class="text-danger">*</span></label>
                   <select id="initial_class_agent" name="initial_class_agent" class="form-select" required>
@@ -1291,7 +1294,7 @@ if (isset($data['class_data']) && $data['class_data']):
                   <div class="valid-feedback">Looks good!</div>
                </div>
             </div>
-            <div class="col-md-5 mb-3">
+            <div class="col-md-3 mb-3">
                <div class="mb-3">
                   <label for="initial_agent_start_date" class="form-label">Start Date <span class="text-danger">*</span></label>
                   <input type="date" id="initial_agent_start_date" name="initial_agent_start_date" class="form-control" placeholder="YYYY-MM-DD" value="<?php echo esc_attr($data['class_data']['initial_agent_start_date'] ?? ''); ?>" required>
@@ -1310,7 +1313,7 @@ if (isset($data['class_data']) && $data['class_data']):
          <!-- Hidden Template Row (initially d-none) -->
          <div class="row agent-replacement-row d-none" id="agent-replacement-row-template">
             <!-- Replacement Agent -->
-            <div class="col-md-5 mb-2">
+            <div class="col-md-3 mb-2">
                <div class="mb-3">
                   <label class="form-label">Replacement Agent</label>
                   <select name="replacement_agent_ids[]" class="form-select replacement-agent-select">
@@ -1325,7 +1328,7 @@ if (isset($data['class_data']) && $data['class_data']):
             </div>
 
             <!-- Takeover Date -->
-            <div class="col-md-5 mb-2">
+            <div class="col-md-3 mb-2">
                <div class="mb-3">
                   <label class="form-label">Takeover Date</label>
                   <input type="date" name="replacement_agent_dates[]" class="form-control" placeholder="YYYY-MM-DD">
@@ -1350,7 +1353,7 @@ if (isset($data['class_data']) && $data['class_data']):
 
       <!-- Project Supervisor and Delivery Date -->
       <div class="row mb-4">
-         <div class="col-md-5 mb-3">
+         <div class="col-md-3 mb-3">
             <div class="mb-3">
                <label for="project_supervisor" class="form-label">Project Supervisor <span class="text-danger">*</span></label>
                <select id="project_supervisor" name="project_supervisor" class="form-select" required>
@@ -1364,7 +1367,7 @@ if (isset($data['class_data']) && $data['class_data']):
             </div>
          </div>
 
-         <div class="col-md-5 mb-3">
+         <div class="col-md-3 mb-3">
             <div class="mb-3">
                <label for="delivery_date" class="form-label">Delivery Date <span class="text-danger">*</span></label>
                <input type="date" id="delivery_date" name="delivery_date" class="form-control" placeholder="YYYY-MM-DD" value="<?php echo esc_attr($data['class_data']['delivery_date'] ?? ''); ?>" required>
@@ -1384,7 +1387,7 @@ if (isset($data['class_data']) && $data['class_data']):
          <!-- Hidden Template Row (initially d-none) -->
          <div class="row backup-agent-row align-items-center d-none" id="backup-agent-row-template">
             <!-- Backup Agent -->
-            <div class="col-md-5 mb-2">
+            <div class="col-md-3 mb-2">
                <div class="mb-3">
                   <label class="form-label">Backup Agent</label>
                   <select name="backup_agent_ids[]" class="form-select backup-agent-select">
@@ -1399,7 +1402,7 @@ if (isset($data['class_data']) && $data['class_data']):
             </div>
 
             <!-- Backup Date -->
-            <div class="col-md-5 mb-2">
+            <div class="col-md-3 mb-2">
                <div class="mb-3">
                   <label class="form-label">Backup Date</label>
                   <input type="date" name="backup_agent_dates[]" class="form-control" placeholder="YYYY-MM-DD">
@@ -1409,8 +1412,8 @@ if (isset($data['class_data']) && $data['class_data']):
             </div>
 
             <!-- Remove Button -->
-            <div class="col-md-2 mb-2">
-               <div class="d-flex h-100 align-items-end">
+            <div class="col-md-1 mb-2">
+               <div class="mt-2">
                   <button type="button" class="btn btn-outline-danger btn-sm remove-backup-agent-btn form-control date-remove-btn">Remove</button>
                </div>
             </div>
