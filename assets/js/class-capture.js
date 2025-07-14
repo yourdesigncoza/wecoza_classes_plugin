@@ -102,7 +102,7 @@ function showCustomAlert(message) {
     modal.show();
 }
 
-(function($) {
+(function ($) {
     'use strict';
 
     // Global variables for holiday overrides
@@ -111,7 +111,7 @@ function showCustomAlert(message) {
     /**
      * Initialize the class capture form
      */
-    window.initClassCaptureForm = function() {
+    window.initClassCaptureForm = function () {
         // Initialize the client-site relationship
         initializeClientSiteRelationship();
 
@@ -132,60 +132,60 @@ function showCustomAlert(message) {
 
         // Initialize form submission
         initializeFormSubmission();
-        
+
         // Initialize QA Visit functionality
         initializeQAVisitHandlers();
-        
+
         // Add listener for class_start_date changes to trigger schedule updates
-        $('#class_start_date').on('change', function() {
+        $('#class_start_date').on('change', function () {
             const newDate = $(this).val();
             if (newDate) {
                 const today = new Date().toISOString().split('T')[0];
-                
+
                 // Update schedule start date if it's empty or still has default value
                 const $scheduleStartDate = $('#schedule_start_date');
                 const currentScheduleDate = $scheduleStartDate.val();
-                
+
                 if (!currentScheduleDate || currentScheduleDate === today) {
                     $scheduleStartDate.val(newDate);
-                    
+
                     // Trigger schedule data update
                     if (typeof updateScheduleData === 'function') {
                         setTimeout(updateScheduleData, 100);
                     }
                 }
-                
+
                 // Auto-populate initial agent start date
                 const $initialAgentStartDate = $('#initial_agent_start_date');
                 const currentInitialAgentDate = $initialAgentStartDate.val();
-                
+
                 if (!currentInitialAgentDate || currentInitialAgentDate === today) {
                     $initialAgentStartDate.val(newDate);
                 }
-                
+
                 // Auto-populate delivery date
                 const $deliveryDate = $('#delivery_date');
                 const currentDeliveryDate = $deliveryDate.val();
-                
+
                 if (!currentDeliveryDate || currentDeliveryDate === today) {
                     $deliveryDate.val(newDate);
                 }
-                
+
                 // Auto-populate backup agent dates
-                $('input[name="backup_agent_dates[]"]').each(function() {
+                $('input[name="backup_agent_dates[]"]').each(function () {
                     const $backupDate = $(this);
                     const currentBackupDate = $backupDate.val();
-                    
+
                     if (!currentBackupDate || currentBackupDate === today) {
                         $backupDate.val(newDate);
                     }
                 });
-                
+
                 // Auto-populate exception dates
-                $('input[name="exception_dates[]"]').each(function() {
+                $('input[name="exception_dates[]"]').each(function () {
                     const $exceptionDate = $(this);
                     const currentExceptionDate = $exceptionDate.val();
-                    
+
                     if (!currentExceptionDate || currentExceptionDate === today) {
                         $exceptionDate.val(newDate);
                     }
@@ -228,12 +228,12 @@ function showCustomAlert(message) {
         }
 
         // Apply restriction when day changes
-        $scheduleDay.on('change', function() {
+        $scheduleDay.on('change', function () {
             restrictStartDateByDay();
         });
 
         // Apply restriction when date changes
-        $startDate.on('change', function() {
+        $startDate.on('change', function () {
             const selectedDay = $scheduleDay.val();
 
             if (selectedDay && $scheduleDay.is(':visible')) {
@@ -266,7 +266,7 @@ function showCustomAlert(message) {
         const $siteDropdown = $("#site_id");
 
         // Add event listener to client dropdown
-        $clientDropdown.on("change", function() {
+        $clientDropdown.on("change", function () {
             const selectedClientId = $(this).val();
             const selectedClientName = $(this).find("option:selected").text();
 
@@ -279,7 +279,7 @@ function showCustomAlert(message) {
 
             // If a client is selected, hide other optgroups and disable their options
             if (selectedClientId) {
-                $siteDropdown.find("optgroup").each(function() {
+                $siteDropdown.find("optgroup").each(function () {
                     if ($(this).attr("label") !== selectedClientName) {
                         $(this).hide();
                         $(this).find("option").prop("disabled", true);
@@ -305,7 +305,7 @@ function showCustomAlert(message) {
         const siteAddresses = wecozaClass.siteAddresses || {};
 
         // On change of the select, look up the address and show/hide accordingly
-        $("#site_id").on("change", function() {
+        $("#site_id").on("change", function () {
             var selectedValue = $(this).val();
             var $addressWrapper = $("#address-wrapper");
             var $addressInput = $("#site_address");
@@ -329,21 +329,21 @@ function showCustomAlert(message) {
         // Handle SETA Funded selection change
         const setaFundedElement = document.getElementById('seta_funded');
         if (setaFundedElement) {
-            setaFundedElement.addEventListener('change', function() {
-            var setaContainer = document.getElementById('seta_container');
-            var setaSelect = document.getElementById('seta_id');
+            setaFundedElement.addEventListener('change', function () {
+                var setaContainer = document.getElementById('seta_container');
+                var setaSelect = document.getElementById('seta_id');
 
-            if (this.value === 'Yes') {
-                // Show SETA field and make it required
-                setaContainer.style.display = 'block';
-                setaSelect.setAttribute('required', 'required');
-            } else {
-                // Hide SETA field and remove required attribute
-                setaContainer.style.display = 'none';
-                setaSelect.removeAttribute('required');
-                // Reset the SETA selection
-                setaSelect.value = '';
-            }
+                if (this.value === 'Yes') {
+                    // Show SETA field and make it required
+                    setaContainer.style.display = 'block';
+                    setaSelect.setAttribute('required', 'required');
+                } else {
+                    // Hide SETA field and remove required attribute
+                    setaContainer.style.display = 'none';
+                    setaSelect.removeAttribute('required');
+                    // Reset the SETA selection
+                    setaSelect.value = '';
+                }
             });
         }
 
@@ -379,45 +379,45 @@ function showCustomAlert(message) {
         // Handle exam class selection change
         const examClassElement = document.getElementById('exam_class');
         if (examClassElement) {
-            examClassElement.addEventListener('change', function() {
-            if (this.value === 'Yes') {
-                // Show exam type field and make it required
-                $examTypeContainer.show();
-                document.getElementById('exam_type').setAttribute('required', 'required');
+            examClassElement.addEventListener('change', function () {
+                if (this.value === 'Yes') {
+                    // Show exam type field and make it required
+                    $examTypeContainer.show();
+                    document.getElementById('exam_type').setAttribute('required', 'required');
 
-                // Show exam learners container
-                $examLearnersContainer.show();
+                    // Show exam learners container
+                    $examLearnersContainer.show();
 
-                // Update the exam learner select options based on class learners
-                updateExamLearnerOptions();
+                    // Update the exam learner select options based on class learners
+                    updateExamLearnerOptions();
 
-                // Also trigger global synchronization to ensure consistency
-                setTimeout(function() {
-                    if (typeof window.classes_sync_exam_learner_options === 'function') {
-                        window.classes_sync_exam_learner_options();
+                    // Also trigger global synchronization to ensure consistency
+                    setTimeout(function () {
+                        if (typeof window.classes_sync_exam_learner_options === 'function') {
+                            window.classes_sync_exam_learner_options();
+                        }
+                    }, 100);
+
+                    // Validate exam learners immediately
+                    if (typeof validateExamLearners === 'function') {
+                        validateExamLearners();
                     }
-                }, 100);
+                } else {
+                    // Hide exam type field and remove required attribute
+                    $examTypeContainer.hide();
+                    document.getElementById('exam_type').removeAttribute('required');
 
-                // Validate exam learners immediately
-                if (typeof validateExamLearners === 'function') {
-                    validateExamLearners();
+                    // Hide exam learners container
+                    $examLearnersContainer.hide();
+
+                    // Clear exam learners data
+                    examLearners = [];
+                    updateExamLearnersData();
+
+                    // Remove any validation styling
+                    $('#exam_learners_container').removeClass('border-danger');
+                    $('#no-exam-learners-message').removeClass('alert-danger').addClass('alert-info');
                 }
-            } else {
-                // Hide exam type field and remove required attribute
-                $examTypeContainer.hide();
-                document.getElementById('exam_type').removeAttribute('required');
-
-                // Hide exam learners container
-                $examLearnersContainer.hide();
-
-                // Clear exam learners data
-                examLearners = [];
-                updateExamLearnersData();
-
-                // Remove any validation styling
-                $('#exam_learners_container').removeClass('border-danger');
-                $('#no-exam-learners-message').removeClass('alert-danger').addClass('alert-info');
-            }
             });
         }
 
@@ -430,7 +430,7 @@ function showCustomAlert(message) {
             $examLearnerSelect.empty();
 
             // Add options for each class learner
-            classLearnersData.forEach(function(learner) {
+            classLearnersData.forEach(function (learner) {
                 // Skip learners that are already in the exam learners list - ensure both IDs are strings for comparison
                 if (!examLearners.some(el => String(el.id) === String(learner.id))) {
                     $examLearnerSelect.append(`<option value="${learner.id}">${learner.name}</option>`);
@@ -475,22 +475,22 @@ function showCustomAlert(message) {
             $examLearnersTable.removeClass('d-none');
 
             // Add each exam learner to the table
-            examLearners.forEach(function(learner) {
+            examLearners.forEach(function (learner) {
                 const levelSelectHtml = classes_generate_learner_level_select_html(learner.id, learner.level || '');
                 const statusOptions = [
                     { value: 'CIC - Currently in Class', text: 'CIC - Currently in Class' },
                     { value: 'RBE - Removed by Employer', text: 'RBE - Removed by Employer' },
                     { value: 'DRO - Drop Out', text: 'DRO - Drop Out' }
                 ];
-                
+
                 const statusSelectHtml = `
                     <select class="form-select form-select-sm exam-learner-status-select" data-learner-id="${learner.id}">
-                        ${statusOptions.map(opt => 
-                            `<option value="${opt.value}" ${learner.status === opt.value ? 'selected' : ''}>${opt.text}</option>`
-                        ).join('')}
+                        ${statusOptions.map(opt =>
+                    `<option value="${opt.value}" ${learner.status === opt.value ? 'selected' : ''}>${opt.text}</option>`
+                ).join('')}
                     </select>
                 `;
-                
+
                 const row = `
                     <tr>
                         <td>${learner.name}</td>
@@ -516,16 +516,16 @@ function showCustomAlert(message) {
             const classSubjectSelect = document.getElementById('class_subject');
             if (classSubjectSelect && classSubjectSelect.value) {
                 const selectedSubject = classSubjectSelect.value;
-                
+
                 // Find all exam learner level selects and set them to current subject
                 const examLearnerLevelSelects = $examLearnersTbody.find('.learner-level-select');
-                
-                examLearnerLevelSelects.each(function() {
+
+                examLearnerLevelSelects.each(function () {
                     const $select = $(this);
-                    
+
                     // Set the select value to current subject
                     $select.val(selectedSubject);
-                    
+
                     // Trigger change event to ensure any handlers fire
                     $select.trigger('change');
                 });
@@ -534,7 +534,7 @@ function showCustomAlert(message) {
         }
 
         // Handle add selected exam learners button click
-        $addSelectedExamLearnersBtn.on('click', function() {
+        $addSelectedExamLearnersBtn.on('click', function () {
             const selectedOptions = $examLearnerSelect.find('option:selected');
 
             if (selectedOptions.length === 0) {
@@ -544,7 +544,7 @@ function showCustomAlert(message) {
 
 
             // Add each selected learner
-            selectedOptions.each(function() {
+            selectedOptions.each(function () {
                 const learnerId = $(this).val();
                 const learnerName = $(this).text();
 
@@ -559,7 +559,7 @@ function showCustomAlert(message) {
                 // Get learner's level and status from class learners data
                 const classLearnersData = JSON.parse($('#class_learners_data').val() || '[]');
                 const classLearner = classLearnersData.find(cl => String(cl.id) === learnerIdStr);
-                
+
                 // Add learner to exam learners array (store as string for consistency)
                 const examLearnerData = {
                     id: learnerIdStr,
@@ -581,7 +581,7 @@ function showCustomAlert(message) {
         });
 
         // Handle remove exam learner
-        $(document).on('click', '.remove-exam-learner-btn', function() {
+        $(document).on('click', '.remove-exam-learner-btn', function () {
             const learnerId = $(this).data('learner-id');
 
             // Convert to string to ensure consistent comparison
@@ -598,10 +598,10 @@ function showCustomAlert(message) {
         });
 
         // Handle exam learner level change
-        $(document).on('change', '#exam-learners-tbody .learner-level-select', function() {
+        $(document).on('change', '#exam-learners-tbody .learner-level-select', function () {
             const learnerId = String($(this).data('learner-id'));
             const newLevel = $(this).val();
-            
+
             // Find and update the learner's level in the array
             const learner = examLearners.find(l => String(l.id) === learnerId);
             if (learner) {
@@ -611,10 +611,10 @@ function showCustomAlert(message) {
         });
 
         // Handle exam learner status change
-        $(document).on('change', '.exam-learner-status-select', function() {
+        $(document).on('change', '.exam-learner-status-select', function () {
             const learnerId = String($(this).data('learner-id'));
             const newStatus = $(this).val();
-            
+
             // Find and update the learner's status in the array
             const learner = examLearners.find(l => String(l.id) === learnerId);
             if (learner) {
@@ -642,7 +642,7 @@ function showCustomAlert(message) {
     function validateScheduleData() {
         const errors = [];
         const result = { isValid: true, errors: errors };
-        
+
         // Check if schedule start date exists
         const scheduleStartDate = $('#schedule_start_date').val();
         if (!scheduleStartDate) {
@@ -658,13 +658,13 @@ function showCustomAlert(message) {
                 console.log('Used today\'s date as fallback for schedule start date:', today);
             }
         }
-        
+
         // Check if schedule pattern is selected
         const pattern = $('#schedule_pattern').val();
         if (!pattern) {
             errors.push('Schedule pattern must be selected');
         }
-        
+
         // For weekly/biweekly patterns, ensure at least one day is selected
         if ((pattern === 'weekly' || pattern === 'biweekly')) {
             const selectedDays = $('.schedule-day-checkbox:checked').length;
@@ -672,7 +672,7 @@ function showCustomAlert(message) {
                 errors.push('At least one day must be selected for weekly/biweekly schedules');
             }
         }
-        
+
         // For monthly pattern, ensure day of month is selected
         if (pattern === 'monthly') {
             const dayOfMonth = $('#schedule_day_of_month').val();
@@ -680,19 +680,19 @@ function showCustomAlert(message) {
                 errors.push('Day of month must be selected for monthly schedules');
             }
         }
-        
+
         // Check if class duration exists
         const duration = $('#class_duration').val();
         if (!duration || duration <= 0) {
             errors.push('Class duration is required and must be greater than 0');
         }
-        
+
         result.isValid = errors.length === 0;
-        
+
         if (!result.isValid) {
             console.error('Schedule validation errors:', errors);
         }
-        
+
         return result;
     }
 
@@ -704,101 +704,101 @@ function showCustomAlert(message) {
         const $container = $('#qa-visits-container');
         const $template = $('#qa-visit-row-template');
         const $addButton = $('#add-qa-visit-btn');
-        
+
         if (!$container.length || !$template.length || !$addButton.length) {
             console.log('QA Visit elements not found, skipping initialization');
             return;
         }
-        
+
         // Add new QA visit row
-        $addButton.on('click', function(e) {
+        $addButton.on('click', function (e) {
             e.preventDefault();
-            
+
             // Clone the template row
             const $newRow = $template.clone();
             $newRow.removeClass('d-none');
             $newRow.removeAttr('id');
-            
+
             // Generate unique names for form inputs to avoid conflicts
             const timestamp = Date.now();
             $newRow.find('input[name="qa_visit_dates[]"]').attr('id', 'qa_visit_date_' + timestamp);
             $newRow.find('select[name="qa_visit_types[]"]').attr('id', 'qa_visit_type_' + timestamp);
             $newRow.find('input[name="qa_officers[]"]').attr('id', 'qa_officer_' + timestamp);
             $newRow.find('input[name="qa_reports[]"]').attr('id', 'qa_report_' + timestamp);
-            
+
             // Append to container
             $container.append($newRow);
-            
+
             // Initialize remove button handler for this row
             initializeRemoveButton($newRow);
-            
+
             // Focus on the date input
             $newRow.find('input[name="qa_visit_dates[]"]').focus();
-            
+
             console.log('Added new QA visit row');
         });
-        
+
         // Initialize remove buttons for existing rows (if any from pre-population)
-        $container.find('.qa-visit-row').each(function() {
+        $container.find('.qa-visit-row').each(function () {
             initializeRemoveButton($(this));
         });
-        
+
         /**
          * Initialize remove button for a specific row
          */
         function initializeRemoveButton($row) {
-            $row.find('.remove-qa-visit-btn').on('click', function(e) {
+            $row.find('.remove-qa-visit-btn').on('click', function (e) {
                 e.preventDefault();
-                
+
                 // Check if this is the last row
                 const rowCount = $container.find('.qa-visit-row').length;
-                
+
                 if (rowCount <= 1) {
                     showCustomAlert('At least one QA visit row must remain.');
                     return;
                 }
-                
+
                 // Confirm removal if there's data
                 const dateValue = $row.find('input[name="qa_visit_dates[]"]').val();
                 const typeValue = $row.find('select[name="qa_visit_types[]"]').val();
                 const officerValue = $row.find('input[name="qa_officers[]"]').val();
                 const fileValue = $row.find('input[name="qa_reports[]"]').val();
-                
+
                 if (dateValue || typeValue || officerValue || fileValue) {
                     if (!confirm('Are you sure you want to remove this QA visit? Any unsaved data will be lost.')) {
                         return;
                     }
                 }
-                
+
                 // Remove the row with animation
-                $row.fadeOut(300, function() {
+                $row.fadeOut(300, function () {
                     $(this).remove();
                     console.log('Removed QA visit row');
                 });
             });
         }
-        
+
         // Add validation function that can be called during form submission
-        window.validateQAVisits = function() {
+        window.validateQAVisits = function () {
             let isValid = true;
             let hasAnyData = false;
-            
-            $container.find('.qa-visit-row:visible').each(function() {
+
+            $container.find('.qa-visit-row:visible').each(function () {
                 const $row = $(this);
                 const $dateInput = $row.find('input[name="qa_visit_dates[]"]');
                 const $fileInput = $row.find('input[name="qa_reports[]"]');
-                
+
                 // Remove previous validation classes
                 $dateInput.removeClass('is-invalid is-valid');
                 $fileInput.removeClass('is-invalid is-valid');
-                
+
                 // Check if row has any data
                 const hasDate = $dateInput.val() ? true : false;
                 const hasFile = $fileInput.val() ? true : false;
-                
+
                 if (hasDate || hasFile) {
                     hasAnyData = true;
-                    
+
                     // If there's a file but no date, it's invalid
                     if (hasFile && !hasDate) {
                         $dateInput.addClass('is-invalid');
@@ -811,14 +811,14 @@ function showCustomAlert(message) {
                     }
                 }
             });
-            
+
             return {
                 isValid: isValid,
                 hasData: hasAnyData,
                 errorMessage: isValid ? '' : 'Please provide dates for all QA visit entries with files.'
             };
         };
-        
+
         console.log('QA Visit handlers initialized');
     }
 
@@ -1004,7 +1004,7 @@ function showCustomAlert(message) {
                 filtered.sort((a, b) => {
                     let aVal = a[this.sortBy];
                     let bVal = b[this.sortBy];
-                    
+
                     // Handle date sorting
                     if (this.sortBy.includes('date') || this.sortBy.includes('_at')) {
                         aVal = new Date(aVal).getTime();
@@ -1021,7 +1021,7 @@ function showCustomAlert(message) {
                         aVal = aVal.toLowerCase();
                         bVal = bVal.toLowerCase();
                     }
-                    
+
                     if (this.sortOrder === 'asc') {
                         return aVal > bVal ? 1 : -1;
                     } else {
@@ -1036,7 +1036,7 @@ function showCustomAlert(message) {
                 const filtered = this.getFiltered();
                 const start = (this.currentPage - 1) * this.itemsPerPage;
                 const end = start + this.itemsPerPage;
-                
+
                 return {
                     items: filtered.slice(start, end),
                     totalItems: filtered.length,
@@ -1068,13 +1068,13 @@ function showCustomAlert(message) {
      */
     function initializeSearchFilter() {
         // Search input handler
-        $(document).on('input', '#notes-search-input', function() {
+        $(document).on('input', '#notes-search-input', function () {
             const searchTerm = $(this).val();
             window.classNotesCollection.setSearch(searchTerm);
             refreshNotesDisplay();
         });
 
-        $(document).on('input', '#qa-search-input', function() {
+        $(document).on('input', '#qa-search-input', function () {
             const searchTerm = $(this).val();
             window.qaVisitsCollection.setSearch(searchTerm);
             refreshQADisplay();
@@ -1082,17 +1082,17 @@ function showCustomAlert(message) {
 
         // Filter handlers
 
-        $(document).on('change', '#qa-status-filter', function() {
+        $(document).on('change', '#qa-status-filter', function () {
             const status = $(this).val();
             window.qaVisitsCollection.setFilter('status', status);
             refreshQADisplay();
         });
 
         // Date range filter
-        $(document).on('change', '#date-range-filter', function() {
+        $(document).on('change', '#date-range-filter', function () {
             const value = $(this).val();
             let dateRange = null;
-            
+
             if (value === 'today') {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
@@ -1110,7 +1110,7 @@ function showCustomAlert(message) {
                 start.setMonth(start.getMonth() - 1);
                 dateRange = { start, end };
             }
-            
+
             window.classNotesCollection.setFilter('dateRange', dateRange);
             window.qaVisitsCollection.setFilter('dateRange', dateRange);
             refreshNotesDisplay();
@@ -1118,15 +1118,15 @@ function showCustomAlert(message) {
         });
 
         // Sort handlers
-        $(document).on('click', '.sort-trigger', function() {
+        $(document).on('click', '.sort-trigger', function () {
             const field = $(this).data('sort-field');
             const currentOrder = $(this).data('sort-order') || 'asc';
             const newOrder = currentOrder === 'asc' ? 'desc' : 'asc';
-            
+
             $(this).data('sort-order', newOrder);
             $(this).find('i').removeClass('bi-chevron-up bi-chevron-down')
-                            .addClass(newOrder === 'asc' ? 'bi-chevron-up' : 'bi-chevron-down');
-            
+                .addClass(newOrder === 'asc' ? 'bi-chevron-up' : 'bi-chevron-down');
+
             if ($(this).closest('.notes-section').length) {
                 window.classNotesCollection.setSort(field, newOrder);
                 refreshNotesDisplay();
@@ -1137,11 +1137,11 @@ function showCustomAlert(message) {
         });
 
         // Pagination handlers
-        $(document).on('click', '.pagination-link', function(e) {
+        $(document).on('click', '.pagination-link', function (e) {
             e.preventDefault();
             const page = $(this).data('page');
             const target = $(this).data('target');
-            
+
             if (target === 'notes') {
                 window.classNotesCollection.setPage(page);
                 refreshNotesDisplay();
@@ -1157,33 +1157,33 @@ function showCustomAlert(message) {
      */
     function refreshNotesDisplay() {
         if (!window.classNotesCollection) return;
-        
+
         const paginatedData = window.classNotesCollection.getPaginated();
-        
+
         // Update notes count with search indication
         const totalCount = window.classNotesCollection.getFiltered().length;
-        
+
         let countText = `${totalCount} note${totalCount !== 1 ? 's' : ''}`;
-        
+
         $('#notes-count').text(countText);
-        
+
         // Notes controls are now always visible - no need to show/hide the container
         // The interface elements should remain visible even when there are no notes
-        
+
         // Render notes in enhanced card grid layout
         renderNotesGrid(paginatedData.items);
-        
+
         // Update pagination
         renderNotesPagination(paginatedData);
-        
+
         // Show no results message if search/filter returned empty
         if (totalCount === 0 && window.classNotesCollection.items.length > 0) {
             $('#notes-no-results').show();
             $('#notes-empty').hide();
-            
+
             // Update no results message
             const hasFilters = Object.keys(window.classNotesCollection.filters).length > 0;
-            
+
             if (hasFilters) {
                 $('#notes-no-results p').text('No notes found matching your filter criteria.');
             } else {
@@ -1206,20 +1206,20 @@ function showCustomAlert(message) {
     function refreshQADisplay() {
         const { items, totalPages, currentPage } = window.qaVisitsCollection.getPaginated();
         const $container = $('#qa-visits-list');
-        
+
         if (!$container.length) return;
-        
+
         $container.empty();
-        
+
         if (items.length === 0) {
             $container.html('<div class="alert alert-info">No QA visits found matching your criteria.</div>');
             return;
         }
-        
+
         // Render QA visits
         items.forEach(visit => {
-            const statusClass = visit.status === 'completed' ? 'success' : 
-                              visit.status === 'pending' ? 'warning' : 'danger';
+            const statusClass = visit.status === 'completed' ? 'success' :
+                visit.status === 'pending' ? 'warning' : 'danger';
             const visitHtml = `
                 <div class="qa-visit-item card mb-2" data-visit-id="${visit.id}">
                     <div class="card-body">
@@ -1230,8 +1230,8 @@ function showCustomAlert(message) {
                                 <span class="badge bg-${statusClass}">${visit.status}</span>
                             </div>
                             <div>
-                                ${visit.report_url ? 
-                                    `<a href="${visit.report_url}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                ${visit.report_url ?
+                    `<a href="${visit.report_url}" target="_blank" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-file-pdf"></i> View Report
                                     </a>` : ''}
                             </div>
@@ -1241,7 +1241,7 @@ function showCustomAlert(message) {
             `;
             $container.append(visitHtml);
         });
-        
+
         // Update pagination
         updatePagination('qa', currentPage, totalPages);
     }
@@ -1252,16 +1252,16 @@ function showCustomAlert(message) {
     function updatePagination(target, currentPage, totalPages) {
         const $pagination = $(`#${target}-pagination`);
         if (!$pagination.length || totalPages <= 1) return;
-        
+
         $pagination.empty();
-        
+
         // Previous button
         $pagination.append(`
             <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
                 <a class="page-link pagination-link" href="#" data-page="${currentPage - 1}" data-target="${target}">Previous</a>
             </li>
         `);
-        
+
         // Page numbers
         for (let i = 1; i <= totalPages; i++) {
             if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
@@ -1274,7 +1274,7 @@ function showCustomAlert(message) {
                 $pagination.append('<li class="page-item disabled"><span class="page-link">...</span></li>');
             }
         }
-        
+
         // Next button
         $pagination.append(`
             <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
@@ -1302,9 +1302,9 @@ function showCustomAlert(message) {
      */
     function formatDate(dateString) {
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'short', 
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
@@ -1318,7 +1318,7 @@ function showCustomAlert(message) {
         const $form = $('#classes-form');
         const $submitButton = $form.find('button[type="submit"]');
 
-        $form.on('submit', function(e) {
+        $form.on('submit', function (e) {
             e.preventDefault();
 
             // Show loading state
@@ -1333,7 +1333,7 @@ function showCustomAlert(message) {
                 updateScheduleData();
                 console.log('Called updateScheduleData before form submission');
             }
-            
+
             // Validate schedule data before submission
             const scheduleValidation = validateScheduleData();
             if (!scheduleValidation.isValid) {
@@ -1341,7 +1341,7 @@ function showCustomAlert(message) {
                 $submitButton.html(originalButtonText).prop('disabled', false);
                 return false;
             }
-            
+
             // Validate QA visits if the function exists
             if (typeof validateQAVisits === 'function') {
                 const qaValidation = validateQAVisits();
@@ -1351,16 +1351,16 @@ function showCustomAlert(message) {
                     return false;
                 }
             }
-            
+
             // Prepare form data
             const formData = new FormData(this);
 
             // Add AJAX action
             formData.append('action', 'save_class');
-            
+
             // Add nonce for security
             formData.append('nonce', wecozaClass.nonce);
-            
+
             // Debug logging
             if (wecozaClass.debug) {
                 console.log('Form submission initiated');
@@ -1380,25 +1380,25 @@ function showCustomAlert(message) {
                 data: formData,
                 processData: false,
                 contentType: false,
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
                         // Show success message
                         showSuccessMessage(response.data.message || 'Class saved successfully!');
 
                         // Check for redirect URL from server response first, then form field
                         const redirectUrl = response.data.redirect_url || $('#redirect_url').val();
-                        
+
                         if (redirectUrl) {
                             // Log the redirect for debugging
                             console.log('Redirecting to:', redirectUrl);
-                            
-                            setTimeout(function() {
+
+                            setTimeout(function () {
                                 window.location.href = redirectUrl;
                             }, 1500);
                         } else {
                             // Reset form for new entry
                             $form[0].reset();
-                            
+
                             // Optionally show the class ID
                             if (response.data.class_id) {
                                 console.log('Class created with ID:', response.data.class_id);
@@ -1409,16 +1409,16 @@ function showCustomAlert(message) {
                         showErrorMessage(response.data || 'An error occurred while saving the class.');
                     }
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error('AJAX Error:', {
                         status: status,
                         error: error,
                         responseText: xhr.responseText,
                         statusCode: xhr.status
                     });
-                    
+
                     let errorMessage = 'A network error occurred. ';
-                    
+
                     if (xhr.status === 0) {
                         errorMessage += 'Please check your internet connection.';
                     } else if (xhr.status === 404) {
@@ -1440,10 +1440,10 @@ function showCustomAlert(message) {
                     } else {
                         errorMessage += 'Status: ' + xhr.status + '. Please try again.';
                     }
-                    
+
                     showErrorMessage(errorMessage);
                 },
-                complete: function() {
+                complete: function () {
                     // Restore button state
                     $submitButton.html(originalButtonText).prop('disabled', false);
                 }
@@ -1493,7 +1493,7 @@ function showCustomAlert(message) {
      * Global function to synchronize exam learner options with class learners
      * This function can be called from other scripts when class learners change
      */
-    window.classes_sync_exam_learner_options = function() {
+    window.classes_sync_exam_learner_options = function () {
         // Check if exam learner functionality is initialized and visible
         const $examLearnersContainer = $('#exam_learners_container');
         const $examLearnerSelect = $('#exam_learner_select');
@@ -1512,7 +1512,7 @@ function showCustomAlert(message) {
         $examLearnerSelect.empty();
 
         // Add options for each class learner that's not already in exam learners - ensure both IDs are strings for comparison
-        classLearnersData.forEach(function(learner) {
+        classLearnersData.forEach(function (learner) {
             if (!examLearnersData.some(el => String(el.id) === String(learner.id))) {
                 $examLearnerSelect.append(`<option value="${learner.id}">${learner.name}</option>`);
             }
@@ -1525,7 +1525,7 @@ function showCustomAlert(message) {
      * Global function to remove a learner from exam learners when they're removed from class learners
      * This function can be called from other scripts for cascading removal
      */
-    window.classes_remove_exam_learner = function(learnerId) {
+    window.classes_remove_exam_learner = function (learnerId) {
         // Check if exam learner functionality is initialized
         const $examLearnersData = $('#exam_learners');
 
@@ -1569,14 +1569,14 @@ function showCustomAlert(message) {
      */
     function classes_setup_synchronization_listeners() {
         // Listen for custom event when class learners change
-        $(document).on('classLearnersChanged', function(event, classLearners) {
+        $(document).on('classLearnersChanged', function (event, classLearners) {
             if (typeof window.classes_sync_exam_learner_options === 'function') {
                 window.classes_sync_exam_learner_options();
             }
         });
 
         // Also listen for changes to the class_learners_data hidden field directly
-        $(document).on('change', '#class_learners_data', function() {
+        $(document).on('change', '#class_learners_data', function () {
             console.log('Class learners data field changed, synchronizing exam learner options');
             if (typeof window.classes_sync_exam_learner_options === 'function') {
                 window.classes_sync_exam_learner_options();
@@ -1584,7 +1584,7 @@ function showCustomAlert(message) {
         });
 
         // Listen for custom event when exam learners change (for cascading removal display updates)
-        $(document).on('examLearnersChanged', function(event, examLearners) {
+        $(document).on('examLearnersChanged', function (event, examLearners) {
             console.log('Exam learners changed event received, refreshing display');
             // Trigger a refresh of the exam learners display if the container is visible
             const $examLearnersContainer = $('#exam_learners_container');
@@ -1608,22 +1608,22 @@ function showCustomAlert(message) {
                     $examLearnersTable.removeClass('d-none');
 
                     // Add each exam learner to the table
-                    examLearners.forEach(function(learner) {
+                    examLearners.forEach(function (learner) {
                         const levelSelectHtml = classes_generate_learner_level_select_html(learner.id, learner.level || '');
                         const statusOptions = [
                             { value: 'CIC - Currently in Class', text: 'CIC - Currently in Class' },
                             { value: 'RBE - Removed by Employer', text: 'RBE - Removed by Employer' },
                             { value: 'DRO - Drop Out', text: 'DRO - Drop Out' }
                         ];
-                        
+
                         const statusSelectHtml = `
                             <select class="form-select form-select-sm exam-learner-status-select" data-learner-id="${learner.id}">
-                                ${statusOptions.map(opt => 
-                                    `<option value="${opt.value}" ${learner.status === opt.value ? 'selected' : ''}>${opt.text}</option>`
-                                ).join('')}
+                                ${statusOptions.map(opt =>
+                            `<option value="${opt.value}" ${learner.status === opt.value ? 'selected' : ''}>${opt.text}</option>`
+                        ).join('')}
                             </select>
                         `;
-                        
+
                         const row = `
                             <tr>
                                 <td>${learner.name}</td>
@@ -1654,17 +1654,17 @@ function showCustomAlert(message) {
      */
     function loadClassNotes(classId) {
         if (!classId) return;
-        
+
         const $loadingIndicator = $('#notes-loading');
         const $notesContainer = $('#class-notes-container');
-        
+
         if (!$notesContainer.length) return;
-        
+
         // Show loading state
         $loadingIndicator.removeClass('d-none');
         // Only hide no-results, let empty state be handled by the response
         $('#notes-no-results').addClass('d-none');
-        
+
         $.ajax({
             url: wecozaClass.ajaxUrl,
             type: 'POST',
@@ -1673,7 +1673,7 @@ function showCustomAlert(message) {
                 nonce: wecozaClass.nonce,
                 class_id: classId
             },
-            success: function(response) {
+            success: function (response) {
                 if (response.success && response.data.notes) {
                     // Clear collection and add loaded notes
                     if (window.classNotesCollection) {
@@ -1681,7 +1681,7 @@ function showCustomAlert(message) {
                         response.data.notes.forEach(note => {
                             window.classNotesCollection.add(note);
                         });
-                        
+
                         // Refresh display
                         refreshNotesDisplay();
                     }
@@ -1693,7 +1693,7 @@ function showCustomAlert(message) {
                     }
                 }
             },
-            error: function() {
+            error: function () {
                 // Show error in empty state area
                 $('#notes-empty').show().html(`
                     <div class="text-center py-4 text-danger">
@@ -1702,7 +1702,7 @@ function showCustomAlert(message) {
                     </div>
                 `);
             },
-            complete: function() {
+            complete: function () {
                 // Hide loading state
                 $loadingIndicator.addClass('d-none');
             }
@@ -1714,20 +1714,20 @@ function showCustomAlert(message) {
      */
     function loadQAVisits(classId) {
         if (!classId) return;
-        
+
         const $container = $('#qa-visits-display-container');
         if (!$container.length) return;
-        
+
         // Show loading state
         $container.html('<div class="text-center py-3"><i class="bi bi-spinner-border"></i> Loading QA visits...</div>');
-        
+
         // Get QA visit dates and reports from form or database
         const qaVisitDates = [];
-        $('#qa-visits-container .qa-visit-row:not(.d-none)').each(function() {
+        $('#qa-visits-container .qa-visit-row:not(.d-none)').each(function () {
             const date = $(this).find('.qa-visit-date').val();
             if (date) qaVisitDates.push(date);
         });
-        
+
         // For update mode, also load from database
         if (classId && classId !== 'new') {
             $.ajax({
@@ -1738,11 +1738,11 @@ function showCustomAlert(message) {
                     nonce: wecozaClass.nonce,
                     class_id: classId
                 },
-                success: function(response) {
+                success: function (response) {
                     if (response.success && response.data) {
                         // Clear collection and add loaded visits
                         window.qaVisitsCollection.items = [];
-                        
+
                         // Process visit dates
                         if (response.data.qa_visit_dates) {
                             response.data.qa_visit_dates.forEach((date, index) => {
@@ -1751,7 +1751,7 @@ function showCustomAlert(message) {
                                     visit_date: date,
                                     status: 'scheduled'
                                 };
-                                
+
                                 // Check if there's a corresponding report
                                 if (response.data.qa_reports && response.data.qa_reports[index]) {
                                     const report = response.data.qa_reports[index];
@@ -1760,11 +1760,11 @@ function showCustomAlert(message) {
                                     visit.status = 'completed';
                                     visit.notes = report.notes || '';
                                 }
-                                
+
                                 window.qaVisitsCollection.add(visit);
                             });
                         }
-                        
+
                         // Initialize QA display UI
                         if (!$('#qa-search-input').length) {
                             const qaDisplayHtml = `
@@ -1793,13 +1793,13 @@ function showCustomAlert(message) {
                             `;
                             $container.html(qaDisplayHtml);
                         }
-                        
+
                         refreshQADisplay();
                     } else {
                         $container.html('<div class="alert alert-info">No QA visits scheduled for this class.</div>');
                     }
                 },
-                error: function() {
+                error: function () {
                     $container.html('<div class="alert alert-danger">Failed to load QA visits. Please try again.</div>');
                 }
             });
@@ -1839,33 +1839,33 @@ function showCustomAlert(message) {
     }
 
     // Removed renderNotesCards function - using table view only
-    
+
     /**
      * Render notes in enhanced card grid layout
      */
     function renderNotesGrid(notes) {
         const $notesList = $('#notes-list');
         $notesList.empty();
-        
+
         if (!notes || notes.length === 0) {
             $('#notes-empty').show();
             $('#notes-no-results').hide();
             return;
         }
-        
+
         $('#notes-empty').hide();
         $('#notes-no-results').hide();
-        
+
         const $grid = $('<div class="notes-grid"></div>');
-        
+
         notes.forEach(note => {
             const noteCard = createEnhancedNoteCard(note);
             $grid.append(noteCard);
         });
-        
+
         $notesList.append($grid);
     }
-    
+
     /**
      * Generate CSS class name from category text
      */
@@ -1873,7 +1873,7 @@ function showCustomAlert(message) {
         if (!category || category === 'general') {
             return 'note-category-general';
         }
-        
+
         // Convert category text to CSS class name
         // e.g., "Client Cancelled" -> "note-category-client-cancelled"
         const className = category
@@ -1881,10 +1881,10 @@ function showCustomAlert(message) {
             .replace(/[^a-z0-9\s]/g, '') // Remove special characters
             .replace(/\s+/g, '-')        // Replace spaces with hyphens
             .trim();
-            
+
         return `note-category-${className}`;
     }
-    
+
     /**
      * Generate badges HTML for categories (supports multiple categories)
      */
@@ -1892,17 +1892,17 @@ function showCustomAlert(message) {
         if (!categories) {
             return '<span class="note-category-badge note-category-general">general</span>';
         }
-        
+
         // Handle both string and array categories
         const categoryArray = Array.isArray(categories) ? categories : [categories];
-        
+
         return categoryArray.map(category => {
             const categoryText = category.trim();
             const cssClass = generateCategoryClass(categoryText);
             return `<span class="note-category-badge ${cssClass}">${categoryText}</span>`;
         }).join(' ');
     }
-    
+
     /**
      * Create an enhanced note card with full feature display
      */
@@ -1910,19 +1910,19 @@ function showCustomAlert(message) {
         const createdDate = new Date(note.created_at).toLocaleDateString();
         const createdTime = new Date(note.created_at).toLocaleTimeString();
         const relativeTime = getRelativeTime(note.created_at);
-        
+
         // Check if note was updated
         const isUpdated = note.updated_at && note.updated_at !== note.created_at;
         const updatedTime = isUpdated ? getRelativeTime(note.updated_at) : null;
-        
-        
+
+
         // Generate category badges
         const categoryBadges = generateCategoryBadges(note.category);
-        
+
         // Priority class for card border - old notes default to medium priority
         const priority = note.priority || 'medium';
         const priorityClass = `priority-${priority.toLowerCase()}`;
-        
+
         // Attachments indicator with clickable dropdown
         let attachmentsIndicator = '';
         if (note.attachments && note.attachments.length > 0) {
@@ -1932,7 +1932,7 @@ function showCustomAlert(message) {
                     <i class="bi bi-download me-2"></i>${attachment.name}
                 </a></li>
             `).join('');
-            
+
             attachmentsIndicator = `
                 <div class="dropdown note-attachments-dropdown">
                     <button class="btn btn-sm btn-outline-secondary dropdown-toggle note-attachments-indicator" 
@@ -1949,12 +1949,12 @@ function showCustomAlert(message) {
                 </div>
             `;
         }
-        
+
         // Content with expand/collapse functionality
         const maxLength = 200;
         const needsExpansion = note.content.length > maxLength;
         const shortContent = needsExpansion ? note.content.substring(0, maxLength) + '...' : note.content;
-        
+
         const contentHtml = needsExpansion ? `
             <div class="note-content-expandable">
                 <div class="note-content-full note-content-collapsed" data-full-content="${escapeHtml(note.content)}">
@@ -1969,7 +1969,7 @@ function showCustomAlert(message) {
                 ${escapeHtml(note.content)}
             </div>
         `;
-        
+
         return $(`
             <div class="note-card ${priorityClass}" data-note-id="${note.id}">
                 <div class="note-card-header">
@@ -2001,7 +2001,7 @@ function showCustomAlert(message) {
             </div>
         `);
     }
-    
+
     /**
      * Toggle note content expand/collapse
      */
@@ -2009,7 +2009,7 @@ function showCustomAlert(message) {
         const $button = $(button);
         const $contentDiv = $button.siblings('.note-content-full');
         const $icon = $button.find('i');
-        
+
         if ($contentDiv.hasClass('note-content-collapsed')) {
             // Expand
             const fullContent = $contentDiv.data('full-content');
@@ -2027,12 +2027,12 @@ function showCustomAlert(message) {
             $button.html('<i class="bi bi-chevron-down me-1"></i>Show More');
         }
     }
-    
+
     // Make toggleNoteContent globally available
     window.toggleNoteContent = toggleNoteContent;
-    
+
     // Removed createNoteRow function - using enhanced card grid layout
-    
+
     /**
      * Get relative time string (e.g., "2 hours ago", "3 days ago")
      */
@@ -2043,7 +2043,7 @@ function showCustomAlert(message) {
         const diffMins = Math.floor(diffMs / 60000);
         const diffHours = Math.floor(diffMs / 3600000);
         const diffDays = Math.floor(diffMs / 86400000);
-        
+
         if (diffMins < 1) {
             return 'Just now';
         } else if (diffMins < 60) {
@@ -2063,12 +2063,12 @@ function showCustomAlert(message) {
             return `${years} year${years !== 1 ? 's' : ''} ago`;
         }
     }
-    
+
     /**
      * Get file icon based on file type
      */
     // Removed getFileIcon function - was only used in card view
-    
+
     /**
      * Escape HTML to prevent XSS
      */
@@ -2077,33 +2077,33 @@ function showCustomAlert(message) {
         div.textContent = text;
         return div.innerHTML;
     }
-    
-    
+
+
     // Removed filter state persistence - page loads with clean state
-    
+
     /**
      * Initialize notes display functionality
      */
     function initializeNotesDisplay() {
         // View toggle functionality removed - using table view only
-        
-        
-        
-        
+
+
+
+
         // Category filter - removed duplicate handler (already handled by delegated event on line 1080)
-        
+
         // Priority filter
-        $('#notes-priority-filter').on('change', function() {
+        $('#notes-priority-filter').on('change', function () {
             const priority = $(this).val();
             if (window.classNotesCollection) {
                 window.classNotesCollection.setFilter('priority', priority);
                 refreshNotesDisplay();
             }
         });
-        
-        
+
+
         // Sort functionality
-        $('#notes-sort').on('change', function() {
+        $('#notes-sort').on('change', function () {
             const sortValue = $(this).val();
             if (window.classNotesCollection) {
                 let field, order;
@@ -2116,61 +2116,53 @@ function showCustomAlert(message) {
                         field = 'created_at';
                         order = 'asc';
                         break;
-                    case 'priority':
-                        field = 'priority';
-                        order = 'desc';
-                        break;
-                    case 'category':
-                        field = 'category';
-                        order = 'asc';
-                        break;
                     default:
                         field = 'created_at';
                         order = 'desc';
                 }
-                
+
                 window.classNotesCollection.setSort(field, order);
                 refreshNotesDisplay();
             }
         });
-        
+
         // Clear filters
-        $('#clear-notes-filters').on('click', function() {
+        $('#clear-notes-filters').on('click', function () {
             // Clear all form inputs
             $('#notes-priority-filter').val('');
             $('#notes-sort').val('newest');
-            
+
             if (window.classNotesCollection) {
                 // Clear all filters from collection
                 window.classNotesCollection.setFilter('priority', '');
                 window.classNotesCollection.setSort('created_at', 'desc');
                 refreshNotesDisplay();
-                
+
                 // Filter persistence removed
             }
         });
-        
+
         // Add new note functionality - clear files when opening modal for new note
-        $(document).on('click', '#add-class-note-btn', function() {
+        $(document).on('click', '#add-class-note-btn', function () {
             // Clear the file list for new notes
             const $fileList = $('#note-file-list');
             $fileList.empty();
-            
+
             // Reset uploaded files array
             if (window.getUploadedFiles) {
                 const uploadedFiles = window.getUploadedFiles();
                 uploadedFiles.length = 0; // Clear the array
             }
-            
+
             // Set modal title for new note
             $('#note-modal-title').text('Add Class Note');
         });
-        
+
         // Edit note functionality
-        $(document).on('click', '.edit-note-btn', function() {
+        $(document).on('click', '.edit-note-btn', function () {
             const noteId = $(this).data('note-id');
             const note = window.classNotesCollection ? window.classNotesCollection.find(noteId) : null;
-            
+
             if (note) {
                 // Populate the modal with note data
                 $('#note_id').val(note.id);
@@ -2178,12 +2170,12 @@ function showCustomAlert(message) {
                 // Handle multi-select class notes
                 $('#class_notes').val(Array.isArray(note.category) ? note.category : [note.category]);
                 $('#note_priority').val(note.priority || '');
-                
+
                 // Load existing attachments if any
                 if (note.attachments && note.attachments.length > 0) {
                     const $fileList = $('#note-file-list');
                     $fileList.empty(); // Clear any existing files
-                    
+
                     note.attachments.forEach(attachment => {
                         const fileId = 'existing_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                         const fileHtml = `
@@ -2204,7 +2196,7 @@ function showCustomAlert(message) {
                             </div>
                         `;
                         $fileList.append(fileHtml);
-                        
+
                         // Add to uploadedFiles array to maintain consistency
                         if (window.getUploadedFiles) {
                             const uploadedFiles = window.getUploadedFiles();
@@ -2217,27 +2209,27 @@ function showCustomAlert(message) {
                         }
                     });
                 }
-                
+
                 // Update modal title
                 $('#note-modal-title').text('Edit Class Note');
-                
+
                 // Show modal
                 $('#classNoteModal').modal('show');
             }
         });
-        
+
         // Delete note functionality
-        $(document).on('click', '.delete-note-btn', function() {
+        $(document).on('click', '.delete-note-btn', function () {
             const noteId = $(this).data('note-id');
             const classId = $('#note_class_id').val() || $('#class_id').val();
-            
+
             console.log('Delete note - ID:', noteId, 'Class ID:', classId); // Debug log
-            
+
             if (!classId) {
                 alert('Error: Unable to determine class ID');
                 return;
             }
-            
+
             if (confirm('Are you sure you want to delete this note?')) {
                 // Call delete endpoint
                 $.ajax({
@@ -2249,7 +2241,7 @@ function showCustomAlert(message) {
                         class_id: classId,
                         note_id: noteId
                     },
-                    success: function(response) {
+                    success: function (response) {
                         if (response.success) {
                             // Remove from collection
                             if (window.classNotesCollection) {
@@ -2261,47 +2253,47 @@ function showCustomAlert(message) {
                             showErrorMessage(response.data || 'Failed to delete note');
                         }
                     },
-                    error: function() {
+                    error: function () {
                         showErrorMessage('Failed to delete note. Please try again.');
                     }
                 });
             }
         });
-        
+
         // Initialize collections
         if (!window.classNotesCollection) {
             window.classNotesCollection = new ClassNotesQAModels.Collection(ClassNotesQAModels.Note);
         }
-        
+
         // View preference removed - using table view only
-        
+
         // Initialize pagination and sorting handlers
         initializePaginationHandlers();
         initializeSortingHandlers();
-        
+
         // Filter persistence removed - page loads with clean state
     }
-    
-    
+
+
     /**
      * Render pagination for notes
      */
     function renderNotesPagination(paginatedData) {
         const $pagination = $('#notes-pagination');
         const $paginationNav = $('#notes-pagination-nav');
-        
+
         // Hide pagination if only one page
         if (paginatedData.totalPages <= 1) {
             $paginationNav.hide();
             return;
         }
-        
+
         $paginationNav.show();
         $pagination.empty();
-        
+
         const currentPage = paginatedData.currentPage;
         const totalPages = paginatedData.totalPages;
-        
+
         // Previous button
         const prevDisabled = currentPage === 1 ? 'disabled' : '';
         $pagination.append(`
@@ -2311,11 +2303,11 @@ function showCustomAlert(message) {
                 </a>
             </li>
         `);
-        
+
         // Page numbers
         const startPage = Math.max(1, currentPage - 2);
         const endPage = Math.min(totalPages, currentPage + 2);
-        
+
         if (startPage > 1) {
             $pagination.append(`
                 <li class="page-item">
@@ -2326,7 +2318,7 @@ function showCustomAlert(message) {
                 $pagination.append(`<li class="page-item disabled"><span class="page-link">...</span></li>`);
             }
         }
-        
+
         for (let i = startPage; i <= endPage; i++) {
             const active = i === currentPage ? 'active' : '';
             $pagination.append(`
@@ -2335,7 +2327,7 @@ function showCustomAlert(message) {
                 </li>
             `);
         }
-        
+
         if (endPage < totalPages) {
             if (endPage < totalPages - 1) {
                 $pagination.append(`<li class="page-item disabled"><span class="page-link">...</span></li>`);
@@ -2346,7 +2338,7 @@ function showCustomAlert(message) {
                 </li>
             `);
         }
-        
+
         // Next button
         const nextDisabled = currentPage === totalPages ? 'disabled' : '';
         $pagination.append(`
@@ -2356,7 +2348,7 @@ function showCustomAlert(message) {
                 </a>
             </li>
         `);
-        
+
         // Show pagination info
         const start = ((currentPage - 1) * paginatedData.itemsPerPage) + 1;
         const end = Math.min(currentPage * paginatedData.itemsPerPage, paginatedData.totalItems);
@@ -2376,16 +2368,16 @@ function showCustomAlert(message) {
                 </div>
             </div>
         `;
-        
+
         $paginationNav.append(paginationInfo);
     }
-    
+
     /**
      * Initialize pagination handlers
      */
     function initializePaginationHandlers() {
         // Page click handler
-        $(document).on('click', '#notes-pagination .page-link', function(e) {
+        $(document).on('click', '#notes-pagination .page-link', function (e) {
             e.preventDefault();
             const page = parseInt($(this).data('page'));
             if (page && !$(this).parent().hasClass('disabled')) {
@@ -2393,25 +2385,25 @@ function showCustomAlert(message) {
                 refreshNotesDisplay();
             }
         });
-        
+
         // Items per page change handler
-        $(document).on('change', '#notes-per-page', function() {
+        $(document).on('change', '#notes-per-page', function () {
             const itemsPerPage = parseInt($(this).val());
             window.classNotesCollection.itemsPerPage = itemsPerPage;
             window.classNotesCollection.currentPage = 1; // Reset to first page
             refreshNotesDisplay();
         });
     }
-    
+
     /**
      * Enhanced sorting functionality
      */
     function initializeSortingHandlers() {
         // Sort dropdown handler
-        $('#notes-sort').on('change', function() {
+        $('#notes-sort').on('change', function () {
             const sortValue = $(this).val();
             let field, order;
-            
+
             switch (sortValue) {
                 case 'newest':
                     field = 'created_at';
@@ -2421,51 +2413,35 @@ function showCustomAlert(message) {
                     field = 'created_at';
                     order = 'asc';
                     break;
-                case 'updated':
-                    field = 'updated_at';
-                    order = 'desc';
-                    break;
-                case 'priority':
-                    field = 'priority';
-                    order = 'desc';
-                    break;
-                case 'category':
-                    field = 'category';
-                    order = 'asc';
-                    break;
-                case 'title':
-                    field = 'title';
-                    order = 'asc';
-                    break;
                 default:
                     field = 'created_at';
                     order = 'desc';
             }
-            
+
             window.classNotesCollection.setSort(field, order);
             window.classNotesCollection.currentPage = 1; // Reset to first page
             refreshNotesDisplay();
         });
-        
+
         // Quick sort buttons for date
-        $(document).on('click', '.notes-sort-date', function() {
+        $(document).on('click', '.notes-sort-date', function () {
             const currentSort = window.classNotesCollection.sortBy;
             const currentOrder = window.classNotesCollection.sortOrder;
-            
+
             let newOrder = 'desc';
             if (currentSort === 'created_at') {
                 newOrder = currentOrder === 'desc' ? 'asc' : 'desc';
             }
-            
+
             window.classNotesCollection.setSort('created_at', newOrder);
             refreshNotesDisplay();
-            
+
             // Update button appearance
             const icon = newOrder === 'desc' ? 'bi-chevron-down' : 'bi-chevron-up';
             $(this).find('i').removeClass('bi-chevron-down bi-chevron-up').addClass(icon);
         });
     }
-    
+
     /**
      * Debounce function for search input
      */
@@ -2487,7 +2463,7 @@ function showCustomAlert(message) {
     function initializeDataLoading() {
         // Get class ID from hidden input or URL
         const classId = $('#class_id').val() || new URLSearchParams(window.location.search).get('class_id');
-        
+
         if (classId && classId !== 'new') {
             // Load existing data
             loadClassNotes(classId);
@@ -2498,12 +2474,12 @@ function showCustomAlert(message) {
                 refreshNotesDisplay();
             }
         }
-        
+
         // Initialize search/filter functionality
         initializeSearchFilter();
-        
+
         // Handle class selection change (if applicable)
-        $('#class_id, #class-select').on('change', function() {
+        $('#class_id, #class-select').on('change', function () {
             const newClassId = $(this).val();
             if (newClassId) {
                 loadClassNotes(newClassId);
@@ -2518,13 +2494,13 @@ function showCustomAlert(message) {
     function initializeFormProcessing() {
         // Initialize note form
         initializeNoteForm();
-        
+
         // Initialize QA form
         initializeQAForm();
-        
+
         // Initialize auto-save functionality
         initializeAutoSave();
-        
+
         // Initialize file upload functionality
         initializeFileUpload();
     }
@@ -2540,27 +2516,27 @@ function showCustomAlert(message) {
         const $errorMessage = $('#note-error-message');
         const $charCount = $('#note-char-count');
         const $noteContent = $('#note_content');
-        
+
         // Character counter
-        $noteContent.on('input', function() {
+        $noteContent.on('input', function () {
             $charCount.text($(this).val().length);
         });
-        
+
         // Form submission
-        $noteForm.on('submit', function(e) {
+        $noteForm.on('submit', function (e) {
             e.preventDefault();
-            
+
             // Reset validation states
             $noteForm.removeClass('was-validated');
             $errorAlert.addClass('d-none');
-            
+
             // Validate form
             if (!this.checkValidity()) {
                 e.stopPropagation();
                 $noteForm.addClass('was-validated');
                 return;
             }
-            
+
             // Get form data
             const formData = {
                 action: 'save_class_note',
@@ -2571,22 +2547,22 @@ function showCustomAlert(message) {
                 category: $('#class_notes').val() || [], // Multi-select array
                 priority: $('#note_priority').val()
             };
-            
+
             // Validate data
             const validation = validateNoteData(formData);
             if (!validation.isValid) {
                 showFormError($errorAlert, $errorMessage, validation.errors.join(', '));
                 return;
             }
-            
+
             // Show loading state
             setButtonLoading($saveBtn, true);
-            
+
             // Upload files first if any
             window.uploadNotesFiles().then(uploadedFiles => {
                 // Add uploaded files to form data
                 formData.attachments = uploadedFiles;
-                
+
                 // Submit via AJAX
                 $.ajax({
                     url: wecozaClass.ajaxUrl,
@@ -2603,39 +2579,39 @@ function showCustomAlert(message) {
                             attachments: uploadedFiles
                         }
                     },
-                    success: function(response) {
-                    if (response.success) {
-                        // Add/update note in collection
-                        const noteData = response.data.note;
-                        if (formData.note_id) {
-                            window.classNotesCollection.update(formData.note_id, noteData);
+                    success: function (response) {
+                        if (response.success) {
+                            // Add/update note in collection
+                            const noteData = response.data.note;
+                            if (formData.note_id) {
+                                window.classNotesCollection.update(formData.note_id, noteData);
+                            } else {
+                                window.classNotesCollection.add(noteData);
+                            }
+
+                            // Refresh display
+                            refreshNotesDisplay();
+
+                            // Reset form and close modal
+                            $noteForm[0].reset();
+                            $noteForm.removeClass('was-validated');
+                            $charCount.text('0');
+                            bootstrap.Modal.getInstance($noteModal[0]).hide();
+
+                            // Show success message
+                            showSuccessMessage('Note saved successfully!');
+
+                            // Clear auto-save draft
+                            clearAutoSaveDraft('note');
                         } else {
-                            window.classNotesCollection.add(noteData);
+                            showFormError($errorAlert, $errorMessage, response.data || 'Failed to save note');
                         }
-                        
-                        // Refresh display
-                        refreshNotesDisplay();
-                        
-                        // Reset form and close modal
-                        $noteForm[0].reset();
-                        $noteForm.removeClass('was-validated');
-                        $charCount.text('0');
-                        bootstrap.Modal.getInstance($noteModal[0]).hide();
-                        
-                        // Show success message
-                        showSuccessMessage('Note saved successfully!');
-                        
-                        // Clear auto-save draft
-                        clearAutoSaveDraft('note');
-                    } else {
-                        showFormError($errorAlert, $errorMessage, response.data || 'Failed to save note');
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Note save error:', error);
-                    showFormError($errorAlert, $errorMessage, 'An error occurred while saving the note');
                     },
-                    complete: function() {
+                    error: function (xhr, status, error) {
+                        console.error('Note save error:', error);
+                        showFormError($errorAlert, $errorMessage, 'An error occurred while saving the note');
+                    },
+                    complete: function () {
                         setButtonLoading($saveBtn, false);
                     }
                 });
@@ -2645,12 +2621,12 @@ function showCustomAlert(message) {
                 setButtonLoading($saveBtn, false);
             });
         });
-        
+
         // Handle modal events
-        $noteModal.on('show.bs.modal', function(e) {
+        $noteModal.on('show.bs.modal', function (e) {
             const $trigger = $(e.relatedTarget);
             const noteId = $trigger.data('note-id');
-            
+
             if (noteId) {
                 // Edit mode - load note data
                 const note = window.classNotesCollection.find(noteId);
@@ -2665,37 +2641,37 @@ function showCustomAlert(message) {
             }
             // Form clearing is handled by hidden.bs.modal event
         });
-        
-        $noteModal.on('hidden.bs.modal', function() {
+
+        $noteModal.on('hidden.bs.modal', function () {
             // Reset form
             $noteForm[0].reset();
             $noteForm.removeClass('was-validated');
             $('#note_id').val('');
             $charCount.text('0');
             $errorAlert.addClass('d-none');
-            
+
             // Fix accessibility: Make buttons non-focusable when modal is hidden
             $noteModal.find('button, input, select, textarea, [tabindex]:not([tabindex="-1"])').attr('tabindex', '-1');
         });
-        
-        $noteModal.on('show.bs.modal', function() {
+
+        $noteModal.on('show.bs.modal', function () {
             // Fix accessibility: Restore focusability when modal is shown
             $noteModal.find('[tabindex="-1"]').removeAttr('tabindex');
         });
-        
+
         // Handle edit/delete buttons
-        $(document).on('click', '.edit-note', function(e) {
+        $(document).on('click', '.edit-note', function (e) {
             e.preventDefault();
             const noteId = $(this).data('note-id');
             $('#classNoteModal').modal('show');
             // The show.bs.modal event will handle loading the note data
         });
-        
-        $(document).on('click', '.delete-note', function(e) {
+
+        $(document).on('click', '.delete-note', function (e) {
             e.preventDefault();
             const noteId = $(this).data('note-id');
             const note = window.classNotesCollection.find(noteId);
-            
+
             if (note && confirm(`Are you sure you want to delete this note?`)) {
                 deleteNote(noteId);
             }
@@ -2711,27 +2687,27 @@ function showCustomAlert(message) {
         const $submitBtn = $('#submit-question-btn');
         const $errorAlert = $('#qa-error-alert');
         const $errorMessage = $('#qa-error-message');
-        
+
         // Form submission
-        $qaForm.on('submit', function(e) {
+        $qaForm.on('submit', function (e) {
             e.preventDefault();
-            
+
             // Reset validation states
             $qaForm.removeClass('was-validated');
             $errorAlert.addClass('d-none');
-            
+
             // Validate form
             if (!this.checkValidity()) {
                 e.stopPropagation();
                 $qaForm.addClass('was-validated');
                 return;
             }
-            
+
             // Create FormData for file upload
             const formData = new FormData(this);
             formData.append('action', 'submit_qa_question');
             formData.append('nonce', wecozaClass.nonce);
-            
+
             // Validate file size
             const fileInput = $('#qa_attachment')[0];
             if (fileInput.files.length > 0) {
@@ -2741,10 +2717,10 @@ function showCustomAlert(message) {
                     return;
                 }
             }
-            
+
             // Show loading state
             setButtonLoading($submitBtn, true);
-            
+
             // Submit via AJAX
             $.ajax({
                 url: wecozaClass.ajaxUrl,
@@ -2752,19 +2728,19 @@ function showCustomAlert(message) {
                 data: formData,
                 processData: false,
                 contentType: false,
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
                         // Reset form and close modal
                         $qaForm[0].reset();
                         $qaForm.removeClass('was-validated');
                         bootstrap.Modal.getInstance($qaModal[0]).hide();
-                        
+
                         // Show success message
                         showSuccessMessage('Question submitted successfully!');
-                        
+
                         // Clear auto-save draft
                         clearAutoSaveDraft('qa');
-                        
+
                         // Optionally reload QA data
                         const classId = $('#qa_class_id').val();
                         if (classId) {
@@ -2774,33 +2750,33 @@ function showCustomAlert(message) {
                         showFormError($errorAlert, $errorMessage, response.data || 'Failed to submit question');
                     }
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     console.error('QA submit error:', error);
                     showFormError($errorAlert, $errorMessage, 'An error occurred while submitting the question');
                 },
-                complete: function() {
+                complete: function () {
                     setButtonLoading($submitBtn, false);
                 }
             });
         });
-        
+
         // Handle modal events
-        $qaModal.on('show.bs.modal', function() {
+        $qaModal.on('show.bs.modal', function () {
             // Restore draft if available
             restoreAutoSaveDraft('qa');
         });
-        
-        $qaModal.on('hidden.bs.modal', function() {
+
+        $qaModal.on('hidden.bs.modal', function () {
             // Reset form
             $qaForm[0].reset();
             $qaForm.removeClass('was-validated');
             $errorAlert.addClass('d-none');
-            
+
             // Fix accessibility: Make buttons non-focusable when modal is hidden
             $qaModal.find('button, input, select, textarea, [tabindex]:not([tabindex="-1"])').attr('tabindex', '-1');
         });
-        
-        $qaModal.on('show.bs.modal', function() {
+
+        $qaModal.on('show.bs.modal', function () {
             // Fix accessibility: Restore focusability when modal is shown
             $qaModal.find('[tabindex="-1"]').removeAttr('tabindex');
         });
@@ -2812,9 +2788,9 @@ function showCustomAlert(message) {
     function initializeAutoSave() {
         let autoSaveTimers = {};
         const autoSaveDelay = 3000; // 3 seconds
-        
+
         // Auto-save for note form
-        $('#note_content, #class_notes, #note_priority').on('input change', function() {
+        $('#note_content, #class_notes, #note_priority').on('input change', function () {
             clearTimeout(autoSaveTimers.note);
             autoSaveTimers.note = setTimeout(() => {
                 saveFormDraft('note', {
@@ -2824,9 +2800,9 @@ function showCustomAlert(message) {
                 });
             }, autoSaveDelay);
         });
-        
+
         // Auto-save for QA form
-        $('#qa_question, #qa_context').on('input', function() {
+        $('#qa_question, #qa_context').on('input', function () {
             clearTimeout(autoSaveTimers.qa);
             autoSaveTimers.qa = setTimeout(() => {
                 saveFormDraft('qa', {
@@ -2842,19 +2818,19 @@ function showCustomAlert(message) {
      */
     function validateNoteData(data) {
         const errors = [];
-        
+
         if (!data.content || data.content.length < 10) {
             errors.push('Content must be at least 10 characters long');
         }
-        
+
         if (!data.category || (Array.isArray(data.category) && data.category.length === 0)) {
             errors.push('Please select at least one class note type');
         }
-        
+
         if (!data.priority || data.priority === '') {
             errors.push('Please select a priority level');
         }
-        
+
         return {
             isValid: errors.length === 0,
             errors: errors
@@ -2866,7 +2842,7 @@ function showCustomAlert(message) {
      */
     function deleteNote(noteId) {
         const classId = $('#note_class_id').val() || $('#class_id').val();
-        
+
         $.ajax({
             url: wecozaClass.ajaxUrl,
             type: 'POST',
@@ -2876,21 +2852,21 @@ function showCustomAlert(message) {
                 class_id: classId,
                 note_id: noteId
             },
-            success: function(response) {
+            success: function (response) {
                 if (response.success) {
                     // Remove from collection
                     window.classNotesCollection.remove(noteId);
-                    
+
                     // Refresh display
                     refreshNotesDisplay();
-                    
+
                     // Show success message
                     showSuccessMessage('Note deleted successfully!');
                 } else {
                     showErrorMessage(response.data || 'Failed to delete note');
                 }
             },
-            error: function(xhr, status, error) {
+            error: function (xhr, status, error) {
                 console.error('Note delete error:', error);
                 showErrorMessage('An error occurred while deleting the note');
             }
@@ -2907,7 +2883,7 @@ function showCustomAlert(message) {
                 data: data,
                 timestamp: new Date().toISOString()
             }));
-            
+
             // Show auto-save indicator
             if (formType === 'note') {
                 $('#auto-save-indicator').removeClass('d-none');
@@ -2928,10 +2904,10 @@ function showCustomAlert(message) {
         try {
             const key = `wecoza_${formType}_draft`;
             const draft = localStorage.getItem(key);
-            
+
             if (draft) {
                 const { data, timestamp } = JSON.parse(draft);
-                
+
                 // Check if draft is less than 24 hours old
                 const draftAge = new Date() - new Date(timestamp);
                 if (draftAge < 24 * 60 * 60 * 1000) {
@@ -2940,7 +2916,7 @@ function showCustomAlert(message) {
                         $('#class_notes').val(data.category || []);
                         $('#note_priority').val(data.priority || '');
                         $('#note-char-count').text((data.content || '').length);
-                        
+
                         // Show indicator
                         $('#auto-save-indicator').removeClass('d-none');
                         $('#auto-save-message').text('Draft restored');
@@ -3004,20 +2980,20 @@ function showCustomAlert(message) {
         const $uploadProgress = $('#upload-progress');
         const $progressBar = $uploadProgress.find('.progress-bar');
         const $uploadStatus = $('#upload-status');
-        
+
         // File management
         let pendingFiles = [];
         let uploadedFiles = [];
         let isFileInputTriggering = false; // Flag to prevent recursive clicks
         const maxFileSize = 10 * 1024 * 1024; // 10MB
-        const allowedTypes = ['application/pdf', 'application/msword', 
-                            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                            'application/vnd.ms-excel', 
-                            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                            'image/jpeg', 'image/png'];
-        
+        const allowedTypes = ['application/pdf', 'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'image/jpeg', 'image/png'];
+
         // Browse button click - unbind first to prevent duplicate handlers
-        $browseBtn.off('click.fileupload').on('click.fileupload', function(e) {
+        $browseBtn.off('click.fileupload').on('click.fileupload', function (e) {
             e.preventDefault();
             e.stopImmediatePropagation();
             if (!isFileInputTriggering) {
@@ -3028,37 +3004,37 @@ function showCustomAlert(message) {
                 }, 0);
             }
         });
-        
+
         // File input change - unbind first to prevent duplicate handlers
-        $fileInput.off('change.fileupload').on('change.fileupload', function(e) {
+        $fileInput.off('change.fileupload').on('change.fileupload', function (e) {
             handleFiles(e.target.files);
             this.value = ''; // Reset input
         });
-        
+
         // Drag and drop events - unbind first to prevent duplicate handlers
-        $dropzone.off('dragover.fileupload dragenter.fileupload').on('dragover.fileupload dragenter.fileupload', function(e) {
+        $dropzone.off('dragover.fileupload dragenter.fileupload').on('dragover.fileupload dragenter.fileupload', function (e) {
             e.preventDefault();
             e.stopPropagation();
             $(this).addClass('dragover');
         });
-        
-        $dropzone.off('dragleave.fileupload dragend.fileupload').on('dragleave.fileupload dragend.fileupload', function(e) {
+
+        $dropzone.off('dragleave.fileupload dragend.fileupload').on('dragleave.fileupload dragend.fileupload', function (e) {
             e.preventDefault();
             e.stopPropagation();
             $(this).removeClass('dragover');
         });
-        
-        $dropzone.off('drop.fileupload').on('drop.fileupload', function(e) {
+
+        $dropzone.off('drop.fileupload').on('drop.fileupload', function (e) {
             e.preventDefault();
             e.stopPropagation();
             $(this).removeClass('dragover');
-            
+
             const files = e.originalEvent.dataTransfer.files;
             handleFiles(files);
         });
-        
+
         // Click to upload - unbind first to prevent duplicate handlers
-        $dropzone.off('click.fileupload').on('click.fileupload', function(e) {
+        $dropzone.off('click.fileupload').on('click.fileupload', function (e) {
             if (!$(e.target).is('button') && !$(e.target).closest('button').length && !isFileInputTriggering) {
                 e.preventDefault();
                 e.stopImmediatePropagation();
@@ -3069,7 +3045,7 @@ function showCustomAlert(message) {
                 }, 0);
             }
         });
-        
+
         /**
          * Handle dropped or selected files
          */
@@ -3081,7 +3057,7 @@ function showCustomAlert(message) {
                 }
             });
         }
-        
+
         /**
          * Validate file type and size
          */
@@ -3091,26 +3067,26 @@ function showCustomAlert(message) {
                 showErrorMessage(`Invalid file type: ${file.name}. Please upload PDF, DOC, DOCX, XLS, XLSX, JPG, or PNG files.`);
                 return false;
             }
-            
+
             // Check file size
             if (file.size > maxFileSize) {
                 showErrorMessage(`File too large: ${file.name}. Maximum file size is 10MB.`);
                 return false;
             }
-            
+
             // Check if file already added
-            const exists = [...pendingFiles, ...uploadedFiles].some(f => 
+            const exists = [...pendingFiles, ...uploadedFiles].some(f =>
                 f.name === file.name && f.size === file.size
             );
-            
+
             if (exists) {
                 showErrorMessage(`File already added: ${file.name}`);
                 return false;
             }
-            
+
             return true;
         }
-        
+
         /**
          * Add file to the display list
          */
@@ -3118,7 +3094,7 @@ function showCustomAlert(message) {
             const fileId = 'file_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             const fileIcon = getFileIcon(file.type);
             const fileSize = formatFileSize(file.size);
-            
+
             const fileHtml = `
                 <div class="file-item" id="${fileId}" data-file-name="${file.name}">
                     <i class="${fileIcon} file-icon"></i>
@@ -3138,13 +3114,13 @@ function showCustomAlert(message) {
                     </div>
                 </div>
             `;
-            
+
             $fileList.append(fileHtml);
-            
+
             // Store file reference
             file.elementId = fileId;
         }
-        
+
         /**
          * Get file icon based on type
          */
@@ -3155,7 +3131,7 @@ function showCustomAlert(message) {
             if (mimeType.includes('sheet') || mimeType.includes('excel')) return 'bi bi-file-excel';
             return 'bi bi-file-earmark';
         }
-        
+
         /**
          * Format file size
          */
@@ -3166,46 +3142,46 @@ function showCustomAlert(message) {
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
-        
+
         /**
          * Remove file from list
          */
-        $(document).on('click', '.remove-file-btn', function() {
+        $(document).on('click', '.remove-file-btn', function () {
             const fileId = $(this).data('file-id');
             const $fileItem = $('#' + fileId);
-            
+
             // Remove from pending files
             pendingFiles = pendingFiles.filter(f => f.elementId !== fileId);
-            
+
             // Remove from uploaded files
             uploadedFiles = uploadedFiles.filter(f => f.elementId !== fileId);
-            
+
             // Remove from DOM
-            $fileItem.fadeOut(300, function() {
+            $fileItem.fadeOut(300, function () {
                 $(this).remove();
             });
         });
-        
+
         /**
          * Upload files to WordPress media library
          */
-        window.uploadNotesFiles = function() {
+        window.uploadNotesFiles = function () {
             // Get existing attachments from uploadedFiles array
             const existingAttachments = uploadedFiles.filter(file => file.isExisting);
-            
+
             if (pendingFiles.length === 0) {
                 // Return existing attachments if no new files to upload
                 return Promise.resolve(existingAttachments);
             }
-            
+
             return new Promise((resolve, reject) => {
                 const totalFiles = pendingFiles.length;
                 let uploadedCount = 0;
                 const results = [];
-                
+
                 $uploadProgress.removeClass('d-none');
                 $uploadStatus.text(`Uploading ${totalFiles} file(s)...`);
-                
+
                 // Upload files sequentially
                 const uploadNext = () => {
                     if (pendingFiles.length === 0) {
@@ -3216,21 +3192,21 @@ function showCustomAlert(message) {
                         resolve(allAttachments);
                         return;
                     }
-                    
+
                     const file = pendingFiles.shift();
                     uploadFile(file)
                         .then(result => {
                             uploadedCount++;
                             results.push(result);
-                            
+
                             // Update progress
                             const progress = (uploadedCount / totalFiles) * 100;
                             $progressBar.css('width', progress + '%');
                             $uploadStatus.text(`Uploaded ${uploadedCount} of ${totalFiles} files`);
-                            
+
                             // Mark file as uploaded
                             $('#' + file.elementId).removeClass('uploading').find('.file-progress').addClass('d-none');
-                            
+
                             uploadNext();
                         })
                         .catch(error => {
@@ -3240,11 +3216,11 @@ function showCustomAlert(message) {
                             uploadNext();
                         });
                 };
-                
+
                 uploadNext();
             });
         };
-        
+
         /**
          * Upload single file to WordPress
          */
@@ -3255,21 +3231,21 @@ function showCustomAlert(message) {
                 formData.append('nonce', wecozaClass.nonce);
                 formData.append('file', file);
                 formData.append('context', 'class_notes');
-                
+
                 // Mark file as uploading
                 const $fileItem = $('#' + file.elementId);
                 $fileItem.addClass('uploading');
                 $fileItem.find('.file-progress').removeClass('d-none');
-                
+
                 $.ajax({
                     url: wecozaClass.ajaxUrl,
                     type: 'POST',
                     data: formData,
                     processData: false,
                     contentType: false,
-                    xhr: function() {
+                    xhr: function () {
                         const xhr = new window.XMLHttpRequest();
-                        xhr.upload.addEventListener('progress', function(e) {
+                        xhr.upload.addEventListener('progress', function (e) {
                             if (e.lengthComputable) {
                                 const percentComplete = (e.loaded / e.total) * 100;
                                 $fileItem.find('.progress-bar').css('width', percentComplete + '%');
@@ -3277,7 +3253,7 @@ function showCustomAlert(message) {
                         }, false);
                         return xhr;
                     },
-                    success: function(response) {
+                    success: function (response) {
                         if (response.success) {
                             resolve({
                                 id: response.data.id,
@@ -3290,39 +3266,39 @@ function showCustomAlert(message) {
                             reject(response.data || 'Upload failed');
                         }
                     },
-                    error: function(xhr, status, error) {
+                    error: function (xhr, status, error) {
                         reject(error);
                     }
                 });
             });
         }
-        
+
         // Reset files when modal is closed
-        $('#classNoteModal').on('hidden.bs.modal', function() {
+        $('#classNoteModal').on('hidden.bs.modal', function () {
             pendingFiles = [];
             uploadedFiles = [];
             $fileList.empty();
             $uploadProgress.addClass('d-none');
             $progressBar.css('width', '0%');
         });
-        
+
         // Make uploadedFiles accessible for form submission
-        window.getUploadedFiles = function() {
+        window.getUploadedFiles = function () {
             return uploadedFiles;
         };
     }
 
     // Initialize when document is ready
-    $(document).ready(function() {
+    $(document).ready(function () {
         // Check if we're on a page with the class capture form
         if ($('#classes-form').length > 0) {
             initClassCaptureForm();
             initializeDataLoading();
             initializeFormProcessing();
             initializeNotesDisplay();
-            
+
             // Ensure proper initial display state
-            setTimeout(function() {
+            setTimeout(function () {
                 if (window.classNotesCollection) {
                     refreshNotesDisplay();
                 }
@@ -3336,9 +3312,9 @@ function showCustomAlert(message) {
  * Class Notes and QA Data Models
  * Provides Collection class for managing notes data
  */
-window.ClassNotesQAModels = (function() {
+window.ClassNotesQAModels = (function () {
     'use strict';
-    
+
     /**
      * Note data model
      */
@@ -3353,7 +3329,7 @@ window.ClassNotesQAModels = (function() {
         this.class_id = data.class_id || null;
         this.user_id = data.user_id || null;
     }
-    
+
     /**
      * Collection class for managing arrays of data with pagination, sorting, and filtering
      */
@@ -3366,27 +3342,27 @@ window.ClassNotesQAModels = (function() {
         this.sortOrder = 'desc';
         this.filters = {};
     }
-    
+
     /**
      * Add item to collection
      */
-    Collection.prototype.add = function(data) {
+    Collection.prototype.add = function (data) {
         const item = new this.ModelClass(data);
         this.items.push(item);
         return item;
     };
-    
+
     /**
      * Find item by ID
      */
-    Collection.prototype.find = function(id) {
+    Collection.prototype.find = function (id) {
         return this.items.find(item => item.id == id);
     };
-    
+
     /**
      * Remove item by ID
      */
-    Collection.prototype.remove = function(id) {
+    Collection.prototype.remove = function (id) {
         const index = this.items.findIndex(item => item.id == id);
         if (index > -1) {
             this.items.splice(index, 1);
@@ -3394,11 +3370,11 @@ window.ClassNotesQAModels = (function() {
         }
         return false;
     };
-    
+
     /**
      * Update item by ID
      */
-    Collection.prototype.update = function(id, data) {
+    Collection.prototype.update = function (id, data) {
         const item = this.find(id);
         if (item) {
             Object.assign(item, data);
@@ -3406,12 +3382,12 @@ window.ClassNotesQAModels = (function() {
         }
         return null;
     };
-    
-    
+
+
     /**
      * Set filter
      */
-    Collection.prototype.setFilter = function(key, value) {
+    Collection.prototype.setFilter = function (key, value) {
         if (value === '' || value === null || value === undefined) {
             delete this.filters[key];
         } else {
@@ -3419,44 +3395,44 @@ window.ClassNotesQAModels = (function() {
         }
         this.currentPage = 1; // Reset to first page when filter changes
     };
-    
+
     /**
      * Set sort criteria
      */
-    Collection.prototype.setSort = function(field, order) {
+    Collection.prototype.setSort = function (field, order) {
         this.sortBy = field;
         this.sortOrder = order;
         this.currentPage = 1; // Reset to first page when sort changes
     };
-    
+
     /**
      * Set page number
      */
-    Collection.prototype.setPage = function(page) {
+    Collection.prototype.setPage = function (page) {
         this.currentPage = page;
     };
-    
+
     /**
      * Get filtered items based on search and filters
      */
-    Collection.prototype.getFiltered = function() {
+    Collection.prototype.getFiltered = function () {
         let filtered = [...this.items];
-        
-        
+
+
         // Apply filters
         Object.keys(this.filters).forEach(key => {
             const filterValue = this.filters[key];
-            
+
             if (key === 'priority') {
                 filtered = filtered.filter(item => item.priority === filterValue);
             }
         });
-        
+
         // Apply sorting
         filtered.sort((a, b) => {
             let aValue = a[this.sortBy];
             let bValue = b[this.sortBy];
-            
+
             // Handle different data types for sorting
             if (this.sortBy === 'created_at' || this.sortBy === 'updated_at') {
                 aValue = new Date(aValue);
@@ -3470,25 +3446,25 @@ window.ClassNotesQAModels = (function() {
                 aValue = aValue.toLowerCase();
                 bValue = bValue.toLowerCase();
             }
-            
+
             if (this.sortOrder === 'desc') {
                 return bValue > aValue ? 1 : bValue < aValue ? -1 : 0;
             } else {
                 return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
             }
         });
-        
+
         return filtered;
     };
-    
+
     /**
      * Get paginated data
      */
-    Collection.prototype.getPaginated = function() {
+    Collection.prototype.getPaginated = function () {
         const filtered = this.getFiltered();
         const totalItems = filtered.length;
         const totalPages = Math.ceil(totalItems / this.itemsPerPage);
-        
+
         // Ensure current page is within bounds
         if (this.currentPage > totalPages && totalPages > 0) {
             this.currentPage = totalPages;
@@ -3496,11 +3472,11 @@ window.ClassNotesQAModels = (function() {
         if (this.currentPage < 1) {
             this.currentPage = 1;
         }
-        
+
         const startIndex = (this.currentPage - 1) * this.itemsPerPage;
         const endIndex = startIndex + this.itemsPerPage;
         const items = filtered.slice(startIndex, endIndex);
-        
+
         return {
             items: items,
             currentPage: this.currentPage,
@@ -3511,18 +3487,18 @@ window.ClassNotesQAModels = (function() {
             hasPrev: this.currentPage > 1
         };
     };
-    
-    
-    
+
+
+
     /**
      * Clear all data
      */
-    Collection.prototype.clear = function() {
+    Collection.prototype.clear = function () {
         this.items = [];
         this.currentPage = 1;
         this.filters = {};
     };
-    
+
     // Return public API
     return {
         Note: Note,

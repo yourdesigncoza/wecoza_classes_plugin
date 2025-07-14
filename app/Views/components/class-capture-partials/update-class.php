@@ -1120,10 +1120,6 @@ if (isset($data['class_data']) && $data['class_data']):
                         <select class="form-select form-select-sm" id="notes-sort">
                            <option value="newest">Newest First</option>
                            <option value="oldest">Oldest First</option>
-                           <option value="updated">Recently Updated</option>
-                           <option value="priority">By Priority</option>
-                           <option value="category">By Category</option>
-                           <option value="title">By Title</option>
                         </select>
                      </div>
                      <div class="col-md-2">
