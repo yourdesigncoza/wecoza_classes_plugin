@@ -2870,12 +2870,10 @@ class ClassController {
      * Handle QA report file uploads
      *
      * @param array $files The $_FILES array data for qa_reports
-     * @param array $dates The corresponding qa_visit_dates array
-     * @param array $types The corresponding qa_visit_types array
-     * @param array $officers The corresponding qa_officers array
+     * @param array $visitData Array of visit objects with complete visit information
      * @return array Processed file information with metadata
      */
-    private static function handleQAReportUploads($files, $dates, $types = [], $officers = []) {
+    private static function handleQAReportUploads($files, $visitData) {
         $uploadedReports = [];
         
         if (empty($files['name']) || !is_array($files['name'])) {
@@ -2899,10 +2897,10 @@ class ClassController {
                 continue;
             }
             
-            // Get corresponding date, type, and officer
-            $visit_date = isset($dates[$i]) ? $dates[$i] : date('Y-m-d');
-            $visit_type = isset($types[$i]) ? $types[$i] : 'Initial QA Visit';
-            $qa_officer = isset($officers[$i]) ? $officers[$i] : '';
+            // Get corresponding visit data
+            $visit_date = isset($visitData[$i]['date']) ? $visitData[$i]['date'] : date('Y-m-d');
+            $visit_type = isset($visitData[$i]['type']) ? $visitData[$i]['type'] : 'Initial QA Visit';
+            $qa_officer = isset($visitData[$i]['officer']) ? $visitData[$i]['officer'] : '';
             
             // Prepare file upload
             $file = [
@@ -2995,19 +2993,29 @@ class ClassController {
         // Now delete existing QA visits from database
         QAVisitModel::deleteByClassId($classId);
         
-        // Get the form data arrays
-        $visitDates = $data['qa_visit_dates'] ?? [];
-        $visitTypes = $data['qa_visit_types'] ?? [];
-        $officers = $data['qa_officers'] ?? [];
-        
-        // Get existing document metadata from form
-        $existingDocuments = [];
-        if (isset($data['qa_latest_documents']) && !empty($data['qa_latest_documents'])) {
-            $decoded = json_decode(stripslashes($data['qa_latest_documents']), true);
+        // Get visit data from the simplified structure
+        $visitData = [];
+        if (isset($data['qa_visits_data']) && !empty($data['qa_visits_data'])) {
+            $decoded = json_decode(stripslashes($data['qa_visits_data']), true);
             if (is_array($decoded)) {
-                // Index by position
-                foreach ($decoded as $index => $document) {
-                    $existingDocuments[$index] = $document;
+                $visitData = $decoded;
+            }
+        }
+        
+        // Fallback to legacy arrays if new structure not available
+        if (empty($visitData)) {
+            $visitDates = $data['qa_visit_dates'] ?? [];
+            $visitTypes = $data['qa_visit_types'] ?? [];
+            $officers = $data['qa_officers'] ?? [];
+            
+            for ($i = 0; $i < count($visitDates); $i++) {
+                if (!empty($visitDates[$i])) {
+                    $visitData[] = [
+                        'date' => $visitDates[$i],
+                        'type' => $visitTypes[$i] ?? 'Initial QA Visit',
+                        'officer' => $officers[$i] ?? '',
+                        'hasNewFile' => false
+                    ];
                 }
             }
         }
@@ -3015,44 +3023,37 @@ class ClassController {
         // Handle file uploads
         $uploadedReports = [];
         if ($files && isset($files['qa_reports'])) {
-            $uploadedReports = self::handleQAReportUploads(
-                $files['qa_reports'], 
-                $visitDates,
-                $visitTypes,
-                $officers
-            );
-        }
-        
-        // Merge uploaded reports with existing documents (new uploads override existing)
-        $finalDocuments = $existingDocuments;
-        foreach ($uploadedReports as $index => $uploadedReport) {
-            $finalDocuments[$index] = $uploadedReport;
-        }
-        
-        // Handle "0" value override for update mode (clearing all visits)
-        if (is_array($visitDates) && count($visitDates) === 1 && $visitDates[0] === '0') {
-            return true; // All visits deleted, nothing to save
+            $uploadedReports = self::handleQAReportUploads($files['qa_reports'], $visitData);
         }
         
         // Save each visit
-        $visitCount = count($visitDates);
-        for ($i = 0; $i < $visitCount; $i++) {
-            // Skip empty dates
-            if (empty($visitDates[$i])) {
+        foreach ($visitData as $index => $visit) {
+            if (empty($visit['date'])) {
                 continue;
             }
             
-            $visitData = [
-                'class_id' => $classId,
-                'visit_date' => self::sanitizeText($visitDates[$i]),
-                'visit_type' => self::sanitizeText($visitTypes[$i] ?? 'Initial QA Visit'),
-                'officer_name' => self::sanitizeText($officers[$i] ?? 'Unknown'),
-                'latest_document' => $finalDocuments[$i] ?? null
-            ];
+            $document = null;
             
-            $qaVisit = new QAVisitModel($visitData);
-            if (!$qaVisit->save()) {
-                error_log("Failed to save QA visit for class {$classId}, visit index {$i}");
+            // Check if there's an existing document and no new file
+            if (isset($visit['existingDocument']) && empty($visit['hasNewFile'])) {
+                $document = $visit['existingDocument'];
+            }
+            
+            // Check if there's a new uploaded file
+            if (isset($uploadedReports[$index])) {
+                $document = $uploadedReports[$index];
+            }
+            
+            $visitModel = new QAVisitModel([
+                'class_id' => $classId,
+                'visit_date' => self::sanitizeText($visit['date']),
+                'visit_type' => self::sanitizeText($visit['type'] ?? 'Initial QA Visit'),
+                'officer_name' => self::sanitizeText($visit['officer'] ?? ''),
+                'latest_document' => $document
+            ]);
+            
+            if (!$visitModel->save()) {
+                error_log("Failed to save QA visit for class {$classId}, visit index {$index}");
                 // Continue with other visits even if one fails
             }
         }
@@ -3076,29 +3077,27 @@ class ClassController {
             $qaVisits = QAVisitModel::findByClassId($classId);
             error_log('WeCoza Classes Plugin: Found ' . count($qaVisits) . ' QA visits');
             
-            $result = [
-                'qa_visit_dates' => [],
-                'qa_visit_types' => [],
-                'qa_officers' => [],
-                'qa_reports' => []
-            ];
-            
+            // Return complete visit objects instead of separate arrays
+            $visits = [];
             foreach ($qaVisits as $visit) {
-                $result['qa_visit_dates'][] = $visit->getVisitDate();
-                $result['qa_visit_types'][] = $visit->getVisitType();
-                $result['qa_officers'][] = $visit->getOfficerName();
-                $result['qa_reports'][] = $visit->getLatestDocument();
+                $visits[] = [
+                    'date' => $visit->getVisitDate(),
+                    'type' => $visit->getVisitType(),
+                    'officer' => $visit->getOfficerName(),
+                    'document' => $visit->getLatestDocument(),
+                    'hasNewFile' => false,
+                    'existingDocument' => $visit->getLatestDocument()
+                ];
             }
             
-            return $result;
+            return [
+                'visits' => $visits
+            ];
         } catch (\Exception $e) {
             error_log('WeCoza Classes Plugin: Error loading QA visits: ' . $e->getMessage());
             error_log('WeCoza Classes Plugin: Stack trace: ' . $e->getTraceAsString());
             return [
-                'qa_visit_dates' => [],
-                'qa_visit_types' => [],
-                'qa_officers' => [],
-                'qa_reports' => []
+                'visits' => []
             ];
         }
     }

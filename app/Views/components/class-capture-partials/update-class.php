@@ -1262,7 +1262,8 @@ if (isset($data['class_data']) && $data['class_data']):
          <i class="bi bi-plus-circle me-1"></i> Add QA Visit Date
          </button>
          
-         <!-- Hidden field to store QA latest documents -->
+         <!-- Hidden fields for QA visits data -->
+         <input type="hidden" id="qa_visits_data" name="qa_visits_data" value="">
          <input type="hidden" id="qa_latest_documents" name="qa_latest_documents" value="<?php echo esc_attr(json_encode($data['class_data']['qa_reports'] ?? [])); ?>">
       </div>
 
@@ -1637,49 +1638,31 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     <?php endif; ?>
 
-    // Pre-populate QA visit dates and reports if available
+    // Pre-populate QA visits if available
     <?php 
     $qaVisitsData = $data['class_data']['qa_visits'] ?? [];
-    $qaVisitDates = $qaVisitsData['qa_visit_dates'] ?? [];
-    $hasQaVisitDates = is_array($qaVisitDates) && !empty($qaVisitDates);
+    $qaVisits = $qaVisitsData['visits'] ?? [];
+    $hasQaVisits = is_array($qaVisits) && !empty($qaVisits);
     
     // Debug logging
-    error_log('WeCoza Classes Plugin View: QA Visits Data: ' . print_r($qaVisitsData, true));
-    error_log('WeCoza Classes Plugin View: QA Visit Dates: ' . print_r($qaVisitDates, true));
-    error_log('WeCoza Classes Plugin View: Has QA Visit Dates: ' . ($hasQaVisitDates ? 'true' : 'false'));
+    error_log('WeCoza Classes Plugin View: QA Visits: ' . print_r($qaVisits, true));
+    error_log('WeCoza Classes Plugin View: Has QA Visits: ' . ($hasQaVisits ? 'true' : 'false'));
     ?>
-    <?php if ($hasQaVisitDates): ?>
-    const qaVisitDates = <?php echo json_encode($qaVisitDates); ?>;
-    const qaVisitTypes = <?php echo json_encode($qaVisitsData['qa_visit_types'] ?? []); ?>;
-    const qaOfficers = <?php echo json_encode($qaVisitsData['qa_officers'] ?? []); ?>;
-    const qaLatestDocuments = <?php echo json_encode($qaVisitsData['qa_reports'] ?? []); ?>;
+    <?php if ($hasQaVisits): ?>
+    const qaVisits = <?php echo json_encode($qaVisits); ?>;
     <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
-    console.log('QA Visit Dates from PHP:', qaVisitDates);
-    console.log('QA Visit Types:', qaVisitTypes);
-    console.log('QA Officers:', qaOfficers);
-    console.log('QA Latest Documents:', qaLatestDocuments);
+    console.log('QA Visits from PHP:', qaVisits);
     <?php endif; ?>
 
-    // Handle both array and string data for backwards compatibility
-    let processedQaVisitDates = qaVisitDates;
-    if (typeof qaVisitDates === 'string') {
-        try {
-            processedQaVisitDates = JSON.parse(qaVisitDates);
-        } catch (e) {
-            console.warn('Failed to parse QA visit dates:', e);
-            processedQaVisitDates = [];
-        }
-    }
-
-    if (processedQaVisitDates && Array.isArray(processedQaVisitDates) && processedQaVisitDates.length > 0) {
+    if (qaVisits && Array.isArray(qaVisits) && qaVisits.length > 0) {
         const qaVisitsContainer = document.getElementById('qa-visits-container');
         const qaVisitTemplate = document.getElementById('qa-visit-row-template');
 
         if (qaVisitsContainer && qaVisitTemplate) {
-            processedQaVisitDates.forEach(function(date, index) {
-                // Validate date is not empty
-                if (!date || date.trim() === '') {
-                    return; // Skip empty dates
+            qaVisits.forEach(function(visit, index) {
+                // Validate visit has a date
+                if (!visit.date || visit.date.trim() === '') {
+                    return; // Skip empty visits
                 }
 
                 const newRow = qaVisitTemplate.cloneNode(true);
@@ -1692,22 +1675,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 const fileInput = newRow.querySelector('input[name="qa_reports[]"]');
                 
                 if (dateInput) {
-                    dateInput.value = date.trim();
+                    dateInput.value = visit.date.trim();
                 }
                 
                 // Populate QA visit type
-                if (typeSelect && qaVisitTypes && qaVisitTypes[index]) {
-                    typeSelect.value = qaVisitTypes[index];
+                if (typeSelect && visit.type) {
+                    typeSelect.value = visit.type;
                 }
                 
                 // Populate QA officer
-                if (officerInput && qaOfficers && qaOfficers[index]) {
-                    officerInput.value = qaOfficers[index];
+                if (officerInput && visit.officer) {
+                    officerInput.value = visit.officer;
                 }
                 
                 // If we have document metadata, populate file information
-                if (qaLatestDocuments && qaLatestDocuments[index]) {
-                    const documentInfo = qaLatestDocuments[index];
+                if (visit.document) {
+                    const documentInfo = visit.document;
                     
                     // Show existing filename with download link
                     if (documentInfo.filename && fileInput) {
@@ -1780,8 +1763,13 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
-            console.log('Successfully populated ' + processedQaVisitDates.length + ' QA visit dates');
+            console.log('Successfully populated ' + qaVisits.length + ' QA visits');
             <?php endif; ?>
+            
+            // Initialize QA visits data after populating
+            if (typeof updateQAVisitsData === 'function') {
+                updateQAVisitsData();
+            }
         } else {
             <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
             console.error('Could not find QA visits container or template');
@@ -1789,12 +1777,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     } else {
         <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
-        console.log('No QA visit dates to populate or invalid data format');
+        console.log('No QA visits to populate or invalid data format');
         <?php endif; ?>
     }
     <?php else: ?>
     <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
-    console.log('No QA visit dates available in class data');
+    console.log('No QA visits available in class data');
     console.log('QA Visits Data from data:', <?php echo json_encode($data['class_data']['qa_visits'] ?? 'NOT_SET'); ?>);
     <?php endif; ?>
     <?php endif; ?>

@@ -754,6 +754,11 @@ function showCustomAlert(message) {
             initializeRemoveButton($(this));
         });
 
+        // Add event handlers for QA visit form changes
+        $(document).on('change', 'input[name="qa_visit_dates[]"], select[name="qa_visit_types[]"], input[name="qa_officers[]"]', function() {
+            updateQAVisitsData();
+        });
+
         // Add file change handler to update metadata and show preview
         $(document).on('change', 'input[name="qa_reports[]"]', function() {
             const $fileInput = $(this);
@@ -771,38 +776,46 @@ function showCustomAlert(message) {
                 $fileInput.after($preview);
             }
             
-            updateQALatestDocuments();
+            updateQAVisitsData();
         });
 
         /**
-         * Update QA latest documents field when files change
+         * Update QA visits data - simplified version
          */
-        function updateQALatestDocuments() {
-            const metadata = [];
+        function updateQAVisitsData() {
+            const visitData = [];
             
             $container.find('.qa-visit-row:visible').each(function(index) {
                 const $row = $(this);
+                const visitDate = $row.find('input[name="qa_visit_dates[]"]').val();
+                const visitType = $row.find('select[name="qa_visit_types[]"]').val();
+                const officerName = $row.find('input[name="qa_officers[]"]').val();
                 const $fileInput = $row.find('input[name="qa_reports[]"]');
                 
-                // Check if there's an existing file display
-                const $existingFile = $row.find('.qa-report-file-display');
-                
-                if ($existingFile.length > 0 && !$fileInput.val()) {
-                    // Preserve existing file metadata if no new file is selected
-                    const existingData = $existingFile.data('document-info');
-                    if (existingData) {
-                        metadata.push(existingData);
+                // Only include rows with at least a date
+                if (visitDate) {
+                    const visit = {
+                        date: visitDate,
+                        type: visitType || 'Initial QA Visit',
+                        officer: officerName || '',
+                        hasNewFile: $fileInput.val() ? true : false
+                    };
+                    
+                    // Check if there's existing file data
+                    const $existingFile = $row.find('.qa-report-file-display');
+                    if ($existingFile.length > 0 && !$fileInput.val()) {
+                        const existingData = $existingFile.data('document-info');
+                        if (existingData) {
+                            visit.existingDocument = existingData;
+                        }
                     }
-                } else if ($fileInput.val()) {
-                    // If a new file is selected, we'll handle it differently
-                    // The actual file metadata will be created on the server side during upload
-                    // For now, we just need to ensure this row isn't included in preserved metadata
-                    // This prevents old file data from being retained when a new file is selected
+                    
+                    visitData.push(visit);
                 }
             });
             
-            // Update the hidden metadata field
-            $('#qa_latest_documents').val(JSON.stringify(metadata));
+            // Store the complete visit data
+            $('#qa_visits_data').val(JSON.stringify(visitData));
         }
 
         /**
@@ -835,6 +848,7 @@ function showCustomAlert(message) {
                 // Remove the row with animation
                 $row.fadeOut(300, function () {
                     $(this).remove();
+                    updateQAVisitsData();
                     console.log('Removed QA visit row');
                 });
             });

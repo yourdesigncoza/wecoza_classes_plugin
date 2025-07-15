@@ -492,13 +492,39 @@
                            </div>
                         </td>
                         <td class="py-2">
-                           <p class="fw-semibold mb-0">
-                              <?php if (!empty($class['qa_visit_dates'])): ?>
-                              <?php echo esc_html($class['qa_visit_dates']); ?>
+                           <div class="fw-semibold mb-0">
+                              <?php if (!empty($class['qa_visits']['visits']) && is_array($class['qa_visits']['visits'])): ?>
+                              <?php foreach ($class['qa_visits']['visits'] as $visit): ?>
+                              <div class="mb-2">
+                                 <div class="d-flex align-items-center mb-1">
+                                    <span class="badge badge-phoenix fs-10 badge-phoenix-info me-2">
+                                       <?php echo esc_html($visit['type'] ?? 'QA Visit'); ?>
+                                    </span>
+                                    <span class="fw-semibold">
+                                       <?php echo esc_html(date('M j, Y', strtotime($visit['date']))); ?>
+                                    </span>
+                                 </div>
+                                 <?php if (!empty($visit['officer'])): ?>
+                                 <div class="fs-9 text-muted">
+                                    <i class="bi bi-person me-1"></i>
+                                    <?php echo esc_html($visit['officer']); ?>
+                                    <?php if (!empty($visit['document']) && !empty($visit['document']['file_url'])): ?>
+                                    <a href="<?php echo esc_url($visit['document']['file_url']); ?>" 
+                                       class="text-success ms-2 text-decoration-none" 
+                                       title="Download QA Report: <?php echo esc_attr($visit['document']['original_name'] ?? $visit['document']['filename']); ?>"
+                                       download>
+                                       <i class="bi bi-file-earmark-pdf"></i>
+                                       <small class="ms-1">Download</small>
+                                    </a>
+                                    <?php endif; ?>
+                                 </div>
+                                 <?php endif; ?>
+                              </div>
+                              <?php endforeach; ?>
                               <?php else: ?>
                               <span class="text-muted">N/A</span>
                               <?php endif; ?>
-                           </p>
+                           </div>
                         </td>
                      </tr>
                      <!-- Stop/Restart Periods -->
