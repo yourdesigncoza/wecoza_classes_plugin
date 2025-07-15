@@ -151,7 +151,7 @@ if (isset($data['class_data']) && $data['class_data']):
                   <tbody>
                      <!-- Class ID -->
                      <tr>
-                        <td class="py-2 ydcoza-w-150">
+                        <td class="py-2 ydcoza-w-150 ">
                            <div class="d-inline-flex align-items-center">
                               <div class="d-flex bg-primary-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
                                  <i class="bi bi-hash text-primary" style="font-size: 12px;"></i>
@@ -253,7 +253,7 @@ if (isset($data['class_data']) && $data['class_data']):
                   <tbody>
                      <!-- Duration -->
                      <tr>
-                        <td class="py-2 ydcoza-w-150">
+                        <td class="py-2 ydcoza-w-150 ">
                            <div class="d-flex align-items-center">
                               <div class="d-flex bg-warning-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
                                  <i class="bi bi-clock text-warning" style="font-size: 12px;"></i>

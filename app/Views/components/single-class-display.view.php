@@ -180,7 +180,8 @@
                <table class="w-100 table-stats table table-hover table-sm fs-9 mb-0">
                   <tbody>
                      <tr>
-                        <td class="py-2 ydcoza-w-150">
+                        
+                        <td class="py-2 ydcoza-w-150 ">
                            <div class="d-inline-flex align-items-center">
                               <div class="d-flex bg-primary-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
                                  <i class="bi bi-hash text-primary" style="font-size: 12px;"></i>
@@ -251,7 +252,7 @@
                         </td>
                      </tr>
                      <tr>
-                        <td class="py-2 ydcoza-w-150">
+                        <td class="py-2 ydcoza-w-150 ">
                            <div class="d-inline-flex align-items-center">
                               <div class="d-flex bg-success-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
                                  <i class="bi bi-check-circle text-success" style="font-size: 12px;"></i>
@@ -543,7 +544,7 @@
                      </tr>
                      <?php endif; ?>
                      <tr>
-                        <td class="py-2 ydcoza-w-150">
+                        <td class="py-2 ydcoza-w-150 ">
                            <div class="d-flex align-items-center">
                               <div class="d-flex bg-success-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
                                  <i class="bi bi-person-badge text-success" style="font-size: 12px;"></i>
