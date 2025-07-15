@@ -27,8 +27,6 @@ class ClassModel {
     private $seta;
     private $examClass;
     private $examType;
-    private $qaVisitDates;
-    private $qaReports = [];
     private $classAgent;
     private $initialClassAgent;
     private $initialAgentStartDate;
@@ -83,8 +81,6 @@ class ClassModel {
         $this->setSeta($data['seta'] ?? $data['seta_id'] ?? null);
         $this->setExamClass($data['exam_class'] ?? null);
         $this->setExamType($data['exam_type'] ?? null);
-        $this->setQaVisitDates($data['qa_visit_dates'] ?? null);
-        $this->setQaReports($this->parseJsonField($data['qa_reports'] ?? []));
         $this->setClassAgent($data['class_agent'] ?? null);
         $this->setInitialClassAgent($data['initial_class_agent'] ?? null);
         $this->setInitialAgentStartDate($data['initial_agent_start_date'] ?? null);
@@ -156,11 +152,11 @@ class ClassModel {
             $sql = "INSERT INTO classes (
                 client_id, site_id, class_address_line, class_type, class_subject,
                 class_code, class_duration, original_start_date, seta_funded, seta,
-                exam_class, exam_type, qa_visit_dates, qa_reports, class_agent, initial_class_agent,
+                exam_class, exam_type, class_agent, initial_class_agent,
                 initial_agent_start_date, project_supervisor_id, delivery_date,
                 learner_ids, exam_learners, backup_agent_ids, schedule_data, stop_restart_dates,
                 class_notes_data, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             $params = [
                 $this->getClientId(),
@@ -175,8 +171,6 @@ class ClassModel {
                 $this->getSeta(),
                 $this->getExamClass() ? 'true' : 'false',   // PostgreSQL boolean literal
                 $this->getExamType(),
-                $this->getQaVisitDates(),
-                json_encode($this->getQaReports()),
                 $this->getClassAgent(),
                 $this->getInitialClassAgent(),
                 $this->getInitialAgentStartDate(),
@@ -224,7 +218,7 @@ class ClassModel {
             $sql = "UPDATE classes SET
                 client_id = ?, site_id = ?, class_address_line = ?, class_type = ?,
                 class_subject = ?, class_code = ?, class_duration = ?, original_start_date = ?,
-                seta_funded = ?, seta = ?, exam_class = ?, exam_type = ?, qa_visit_dates = ?, qa_reports = ?,
+                seta_funded = ?, seta = ?, exam_class = ?, exam_type = ?, 
                 class_agent = ?, initial_class_agent = ?, initial_agent_start_date = ?,
                 project_supervisor_id = ?, delivery_date = ?, learner_ids = ?, exam_learners = ?, backup_agent_ids = ?,
                 schedule_data = ?, stop_restart_dates = ?, class_notes_data = ?, updated_at = ?
@@ -238,7 +232,7 @@ class ClassModel {
                 $this->getSeta(), 
                 $this->getExamClass() ? 'true' : 'false',   // PostgreSQL boolean literal
                 $this->getExamType(),
-                $this->getQaVisitDates(), json_encode($this->getQaReports()), $this->getClassAgent(), $this->getInitialClassAgent(),
+                $this->getClassAgent(), $this->getInitialClassAgent(),
                 $this->getInitialAgentStartDate(), $this->getProjectSupervisorId(),
                 $this->getDeliveryDate(), json_encode($this->getLearnerIds()),
                 json_encode($this->getExamLearners()), json_encode($this->getBackupAgentIds()), json_encode($this->getScheduleData()),
@@ -373,11 +367,6 @@ class ClassModel {
     public function getExamType() { return $this->examType; }
     public function setExamType($examType) { $this->examType = $examType; return $this; }
 
-    public function getQaVisitDates() { return $this->qaVisitDates; }
-    public function setQaVisitDates($qaVisitDates) { $this->qaVisitDates = $qaVisitDates; return $this; }
-
-    public function getQaReports() { return $this->qaReports; }
-    public function setQaReports($qaReports) { $this->qaReports = is_array($qaReports) ? $qaReports : []; return $this; }
 
     public function getClassAgent() { return $this->classAgent; }
     public function setClassAgent($classAgent) {
@@ -669,5 +658,21 @@ class ClassModel {
             error_log('Error loading agent replacements: ' . $e->getMessage());
             return [];
         }
+    }
+
+    /**
+     * Get QA visits for this class
+     *
+     * @return array QA visits
+     */
+    public function getQAVisits() {
+        if (!$this->getId()) {
+            return [];
+        }
+        
+        // Import QAVisitModel at the top of the file
+        require_once __DIR__ . '/QAVisitModel.php';
+        
+        return \WeCozaClasses\Models\QAVisitModel::findByClassId($this->getId());
     }
 }

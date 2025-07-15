@@ -1626,20 +1626,50 @@ document.addEventListener('DOMContentLoaded', function() {
     <?php endif; ?>
 
     // Pre-populate QA visit dates and reports if available
-    <?php if (isset($data['class_data']['qa_visit_dates']) && !empty($data['class_data']['qa_visit_dates'])): ?>
-    const qaVisitDates = <?php echo json_encode($data['class_data']['qa_visit_dates']); ?>;
-    const qaReportsMetadata = <?php echo json_encode($data['class_data']['qa_reports'] ?? []); ?>;
+    <?php 
+    $qaVisitsData = $data['class_data']['qa_visits'] ?? [];
+    $qaVisitDates = $qaVisitsData['qa_visit_dates'] ?? [];
+    $hasQaVisitDates = is_array($qaVisitDates) && !empty($qaVisitDates);
+    
+    // Debug logging
+    error_log('WeCoza Classes Plugin View: QA Visits Data: ' . print_r($qaVisitsData, true));
+    error_log('WeCoza Classes Plugin View: QA Visit Dates: ' . print_r($qaVisitDates, true));
+    error_log('WeCoza Classes Plugin View: Has QA Visit Dates: ' . ($hasQaVisitDates ? 'true' : 'false'));
+    ?>
+    <?php if ($hasQaVisitDates): ?>
+    const qaVisitDates = <?php echo json_encode($qaVisitDates); ?>;
+    const qaVisitTypes = <?php echo json_encode($qaVisitsData['qa_visit_types'] ?? []); ?>;
+    const qaOfficers = <?php echo json_encode($qaVisitsData['qa_officers'] ?? []); ?>;
+    const qaReportsMetadata = <?php echo json_encode($qaVisitsData['qa_reports'] ?? []); ?>;
     <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
-    console.log('QA Visit Dates:', qaVisitDates);
+    console.log('QA Visit Dates from PHP:', qaVisitDates);
+    console.log('QA Visit Types:', qaVisitTypes);
+    console.log('QA Officers:', qaOfficers);
     console.log('QA Reports Metadata:', qaReportsMetadata);
     <?php endif; ?>
 
-    if (qaVisitDates && Array.isArray(qaVisitDates)) {
+    // Handle both array and string data for backwards compatibility
+    let processedQaVisitDates = qaVisitDates;
+    if (typeof qaVisitDates === 'string') {
+        try {
+            processedQaVisitDates = JSON.parse(qaVisitDates);
+        } catch (e) {
+            console.warn('Failed to parse QA visit dates:', e);
+            processedQaVisitDates = [];
+        }
+    }
+
+    if (processedQaVisitDates && Array.isArray(processedQaVisitDates) && processedQaVisitDates.length > 0) {
         const qaVisitsContainer = document.getElementById('qa-visits-container');
         const qaVisitTemplate = document.getElementById('qa-visit-row-template');
 
         if (qaVisitsContainer && qaVisitTemplate) {
-            qaVisitDates.forEach(function(date, index) {
+            processedQaVisitDates.forEach(function(date, index) {
+                // Validate date is not empty
+                if (!date || date.trim() === '') {
+                    return; // Skip empty dates
+                }
+
                 const newRow = qaVisitTemplate.cloneNode(true);
                 newRow.classList.remove('d-none');
                 newRow.removeAttribute('id');
@@ -1650,22 +1680,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 const fileInput = newRow.querySelector('input[name="qa_reports[]"]');
                 
                 if (dateInput) {
-                    dateInput.value = date;
+                    dateInput.value = date.trim();
                 }
                 
-                // If we have report metadata, populate type and officer fields
+                // Populate QA visit type
+                if (typeSelect && qaVisitTypes && qaVisitTypes[index]) {
+                    typeSelect.value = qaVisitTypes[index];
+                }
+                
+                // Populate QA officer
+                if (officerInput && qaOfficers && qaOfficers[index]) {
+                    officerInput.value = qaOfficers[index];
+                }
+                
+                // If we have report metadata, populate file information
                 if (qaReportsMetadata && qaReportsMetadata[index]) {
                     const reportInfo = qaReportsMetadata[index];
-                    
-                    // Populate visit type
-                    if (typeSelect && reportInfo.type) {
-                        typeSelect.value = reportInfo.type;
-                    }
-                    
-                    // Populate QA officer
-                    if (officerInput && reportInfo.officer) {
-                        officerInput.value = reportInfo.officer;
-                    }
                     
                     // Show existing filename
                     if (reportInfo.filename && fileInput) {
@@ -1679,8 +1709,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 qaVisitsContainer.appendChild(newRow);
             });
+            
+            <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
+            console.log('Successfully populated ' + processedQaVisitDates.length + ' QA visit dates');
+            <?php endif; ?>
+        } else {
+            <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
+            console.error('Could not find QA visits container or template');
+            <?php endif; ?>
         }
+    } else {
+        <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
+        console.log('No QA visit dates to populate or invalid data format');
+        <?php endif; ?>
     }
+    <?php else: ?>
+    <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
+    console.log('No QA visit dates available in class data');
+    console.log('QA Visits Data from data:', <?php echo json_encode($data['class_data']['qa_visits'] ?? 'NOT_SET'); ?>);
+    <?php endif; ?>
     <?php endif; ?>
 
     // Pre-populate stop/restart dates if available

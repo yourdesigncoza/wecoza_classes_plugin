@@ -9,6 +9,7 @@
 namespace WeCozaClasses\Controllers;
 
 use WeCozaClasses\Models\ClassModel;
+use WeCozaClasses\Models\QAVisitModel;
 use WeCozaClasses\Controllers\ClassTypesController;
 use WeCozaClasses\Controllers\PublicHolidaysController;
 
@@ -649,6 +650,16 @@ class ClassController {
             if ($result) {
                 error_log('Class saved successfully with ID: ' . $class->getId());
                 
+                // Save QA visits to the new normalized structure
+                if (!empty($data) || !empty($files)) {
+                    $qaResult = self::saveQAVisits($class->getId(), $data, $files);
+                    if ($qaResult) {
+                        error_log('QA visits saved successfully for class ID: ' . $class->getId());
+                    } else {
+                        error_log('Failed to save QA visits for class ID: ' . $class->getId());
+                    }
+                }
+                
                 // Generate redirect URL to single class display page
                 $redirect_url = '';
                 $display_page = \get_page_by_path('app/display-single-class');
@@ -837,10 +848,9 @@ class ClassController {
         }
         error_log('processFormData: Processed exam_class: ' . var_export($processed['exam_class'], true));
         $processed['exam_type'] = isset($data['exam_type']) && !is_array($data['exam_type']) ? self::sanitizeText($data['exam_type']) : null;
-        // Process QA data (dates and reports) together
-        $qaData = self::processQAData($data, $files);
-        $processed['qa_visit_dates'] = $qaData['qa_visit_dates'];
-        $processed['qa_reports'] = $qaData['qa_reports'];
+        // QA visits are now handled separately in saveQAVisits method
+        // Remove old QA fields from processed data since they're no longer needed
+        // $processed['qa_visit_dates'] and $processed['qa_reports'] removed
         $processed['class_agent'] = isset($data['class_agent']) && !empty($data['class_agent']) ? intval($data['class_agent']) : null;
         $processed['initial_class_agent'] = isset($data['initial_class_agent']) && !empty($data['initial_class_agent']) ? intval($data['initial_class_agent']) : null;
         $processed['initial_agent_start_date'] = isset($data['initial_agent_start_date']) && !is_array($data['initial_agent_start_date']) ? self::sanitizeText($data['initial_agent_start_date']) : null;
@@ -2064,8 +2074,7 @@ class ClassController {
                 'seta' => $classModel->getSeta(),
                 'exam_class' => $classModel->getExamClass() ? 'Yes' : 'No',
                 'exam_type' => $classModel->getExamType(),
-                'qa_visit_dates' => $classModel->getQaVisitDates(),
-                'qa_reports' => $classModel->getQaReports(),
+                'qa_visits' => self::getQAVisitsForClass($classModel->getId()),
                 'class_agent' => $classModel->getClassAgent(),
                 'initial_class_agent' => $classModel->getInitialClassAgent(),
                 'initial_agent_start_date' => $classModel->getInitialAgentStartDate(),
@@ -2937,45 +2946,141 @@ class ClassController {
     }
     
     /**
-     * Process QA data for saving
+     * Save QA visits to the new normalized structure
      *
+     * @param int $classId Class ID
      * @param array $data Form data
      * @param array $files $_FILES data
-     * @return array Processed QA data
+     * @return bool Success status
      */
-    private static function processQAData($data, $files = null) {
-        $result = [
-            'qa_visit_dates' => null,
-            'qa_reports' => []
-        ];
+    private static function saveQAVisits($classId, $data, $files = null) {
+        // First, delete existing QA visits for this class
+        QAVisitModel::deleteByClassId($classId);
         
-        // Process visit dates
-        if (isset($data['qa_visit_dates']) && is_array($data['qa_visit_dates'])) {
-            $dates = array_values(array_filter(array_map([self::class, 'sanitizeText'], $data['qa_visit_dates'])));
-            $result['qa_visit_dates'] = json_encode($dates);
-        }
+        // Get the form data arrays
+        $visitDates = $data['qa_visit_dates'] ?? [];
+        $visitTypes = $data['qa_visit_types'] ?? [];
+        $officers = $data['qa_officers'] ?? [];
         
-        // Get existing reports if updating
-        $existing_reports = [];
-        if (isset($data['qa_reports_metadata']) && !empty($data['qa_reports_metadata'])) {
-            $existing_reports = json_decode($data['qa_reports_metadata'], true) ?: [];
-        }
-        
-        // Handle new file uploads
-        $new_reports = [];
+        // Handle file uploads
+        $uploadedReports = [];
         if ($files && isset($files['qa_reports'])) {
-            $new_reports = self::handleQAReportUploads(
+            $uploadedReports = self::handleQAReportUploads(
                 $files['qa_reports'], 
-                $data['qa_visit_dates'] ?? [],
-                $data['qa_visit_types'] ?? [],
-                $data['qa_officers'] ?? []
+                $visitDates,
+                $visitTypes,
+                $officers
             );
         }
         
-        // Merge existing and new reports
-        $result['qa_reports'] = array_merge($existing_reports, $new_reports);
+        // Handle "0" value override for update mode (clearing all visits)
+        if (is_array($visitDates) && count($visitDates) === 1 && $visitDates[0] === '0') {
+            return true; // All visits deleted, nothing to save
+        }
         
-        return $result;
+        // Save each visit
+        $visitCount = count($visitDates);
+        for ($i = 0; $i < $visitCount; $i++) {
+            // Skip empty dates
+            if (empty($visitDates[$i])) {
+                continue;
+            }
+            
+            $visitData = [
+                'class_id' => $classId,
+                'visit_date' => self::sanitizeText($visitDates[$i]),
+                'visit_type' => self::sanitizeText($visitTypes[$i] ?? 'Initial QA Visit'),
+                'officer_name' => self::sanitizeText($officers[$i] ?? 'Unknown'),
+                'report_metadata' => $uploadedReports[$i] ?? null
+            ];
+            
+            $qaVisit = new QAVisitModel($visitData);
+            if (!$qaVisit->save()) {
+                error_log("Failed to save QA visit for class {$classId}, visit index {$i}");
+                // Continue with other visits even if one fails
+            }
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Get QA visits for a class in a format suitable for the view
+     *
+     * @param int $classId Class ID
+     * @return array QA visits data with separate arrays for backward compatibility
+     */
+    private static function getQAVisitsForClass($classId) {
+        try {
+            error_log('WeCoza Classes Plugin: Loading QA visits for class ID: ' . $classId);
+            
+            // Ensure QAVisitModel is loaded
+            require_once __DIR__ . '/../Models/QAVisitModel.php';
+            
+            $qaVisits = QAVisitModel::findByClassId($classId);
+            error_log('WeCoza Classes Plugin: Found ' . count($qaVisits) . ' QA visits');
+            
+            $result = [
+                'qa_visit_dates' => [],
+                'qa_visit_types' => [],
+                'qa_officers' => [],
+                'qa_reports' => []
+            ];
+            
+            foreach ($qaVisits as $visit) {
+                $result['qa_visit_dates'][] = $visit->getVisitDate();
+                $result['qa_visit_types'][] = $visit->getVisitType();
+                $result['qa_officers'][] = $visit->getOfficerName();
+                $result['qa_reports'][] = $visit->getReportMetadata();
+            }
+            
+            return $result;
+        } catch (\Exception $e) {
+            error_log('WeCoza Classes Plugin: Error loading QA visits: ' . $e->getMessage());
+            error_log('WeCoza Classes Plugin: Stack trace: ' . $e->getTraceAsString());
+            return [
+                'qa_visit_dates' => [],
+                'qa_visit_types' => [],
+                'qa_officers' => [],
+                'qa_reports' => []
+            ];
+        }
+    }
+    
+    /**
+     * Parse QA visit dates from database format to array
+     *
+     * @param string|array|null $qaVisitDates Raw QA visit dates from database
+     * @return array Parsed QA visit dates as array
+     */
+    private static function parseQaVisitDates($qaVisitDates) {
+        if (empty($qaVisitDates)) {
+            return [];
+        }
+        
+        // Handle "0" value override
+        if ($qaVisitDates === '0') {
+            return [];
+        }
+        
+        // If already an array, return as is
+        if (is_array($qaVisitDates)) {
+            return $qaVisitDates;
+        }
+        
+        // If string, try to decode as JSON first
+        if (is_string($qaVisitDates)) {
+            $decoded = json_decode($qaVisitDates, true);
+            if ($decoded !== null && is_array($decoded)) {
+                return $decoded;
+            }
+            
+            // Fall back to comma-separated values
+            $dates = array_map('trim', explode(',', $qaVisitDates));
+            return array_filter($dates); // Remove empty values
+        }
+        
+        return [];
     }
     
     /**
