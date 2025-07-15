@@ -11,7 +11,7 @@ class QAVisitModel
     private $visitDate;
     private $visitType;
     private $officerName;
-    private $reportMetadata;
+    private $latestDocument;
     private $createdAt;
     private $updatedAt;
 
@@ -32,7 +32,7 @@ class QAVisitModel
         $this->setVisitDate($data['visit_date'] ?? null);
         $this->setVisitType($data['visit_type'] ?? null);
         $this->setOfficerName($data['officer_name'] ?? null);
-        $this->setReportMetadata($data['report_metadata'] ?? null);
+        $this->setLatestDocument($data['latest_document'] ?? null);
         $this->setCreatedAt($data['created_at'] ?? null);
         $this->setUpdatedAt($data['updated_at'] ?? null);
     }
@@ -59,7 +59,7 @@ class QAVisitModel
         $database = DatabaseService::getInstance();
         
         $sql = "INSERT INTO qa_visits (
-            class_id, visit_date, visit_type, officer_name, report_metadata, created_at, updated_at
+            class_id, visit_date, visit_type, officer_name, latest_document, created_at, updated_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?)";
         
         $params = [
@@ -67,7 +67,7 @@ class QAVisitModel
             $this->getVisitDate(),
             $this->getVisitType(),
             $this->getOfficerName(),
-            $this->getReportMetadata() ? json_encode($this->getReportMetadata()) : null,
+            $this->getLatestDocument() ? json_encode($this->getLatestDocument()) : null,
             date('Y-m-d H:i:s'),
             date('Y-m-d H:i:s')
         ];
@@ -87,7 +87,7 @@ class QAVisitModel
         
         $sql = "UPDATE qa_visits SET
             class_id = ?, visit_date = ?, visit_type = ?, officer_name = ?, 
-            report_metadata = ?, updated_at = ?
+            latest_document = ?, updated_at = ?
             WHERE id = ?";
         
         $params = [
@@ -95,7 +95,7 @@ class QAVisitModel
             $this->getVisitDate(),
             $this->getVisitType(),
             $this->getOfficerName(),
-            $this->getReportMetadata() ? json_encode($this->getReportMetadata()) : null,
+            $this->getLatestDocument() ? json_encode($this->getLatestDocument()) : null,
             date('Y-m-d H:i:s'),
             $this->getId()
         ];
@@ -247,12 +247,12 @@ class QAVisitModel
     public function getOfficerName() { return $this->officerName; }
     public function setOfficerName($officerName) { $this->officerName = $officerName; return $this; }
 
-    public function getReportMetadata() { return $this->reportMetadata; }
-    public function setReportMetadata($reportMetadata) { 
-        if (is_string($reportMetadata)) {
-            $this->reportMetadata = json_decode($reportMetadata, true);
+    public function getLatestDocument() { return $this->latestDocument; }
+    public function setLatestDocument($latestDocument) { 
+        if (is_string($latestDocument)) {
+            $this->latestDocument = json_decode($latestDocument, true);
         } else {
-            $this->reportMetadata = $reportMetadata;
+            $this->latestDocument = $latestDocument;
         }
         return $this; 
     }

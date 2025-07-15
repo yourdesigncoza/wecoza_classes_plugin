@@ -651,8 +651,8 @@ class ClassController {
                 error_log('Class saved successfully with ID: ' . $class->getId());
                 
                 // Save QA visits to the new normalized structure
-                if (!empty($data) || !empty($files)) {
-                    $qaResult = self::saveQAVisits($class->getId(), $data, $files);
+                if (!empty($_POST) || !empty($_FILES)) {
+                    $qaResult = self::saveQAVisits($class->getId(), $_POST, $_FILES);
                     if ($qaResult) {
                         error_log('QA visits saved successfully for class ID: ' . $class->getId());
                     } else {
@@ -2927,10 +2927,8 @@ class ClassController {
             
             // Move uploaded file
             if (move_uploaded_file($file['tmp_name'], $file_path)) {
+                // Only store file-related information, no redundant data
                 $uploadedReports[] = [
-                    'date' => $visit_date,
-                    'type' => $visit_type,
-                    'officer' => $qa_officer,
                     'filename' => $new_filename,
                     'original_name' => $file['name'],
                     'file_path' => 'qa-reports/' . $new_filename,
@@ -2946,6 +2944,35 @@ class ClassController {
     }
     
     /**
+     * Delete a QA report file from the server
+     *
+     * @param string $filePath Relative file path (e.g., 'qa-reports/filename.pdf')
+     * @return bool Success status
+     */
+    private static function deleteQAReportFile($filePath) {
+        if (empty($filePath)) {
+            return false;
+        }
+        
+        // Get WordPress upload directory
+        $upload_dir = wp_upload_dir();
+        $full_path = $upload_dir['basedir'] . '/' . $filePath;
+        
+        // Check if file exists and delete it
+        if (file_exists($full_path)) {
+            if (unlink($full_path)) {
+                error_log("Deleted QA report file: {$filePath}");
+                return true;
+            } else {
+                error_log("Failed to delete QA report file: {$filePath}");
+                return false;
+            }
+        }
+        
+        return false; // File doesn't exist
+    }
+    
+    /**
      * Save QA visits to the new normalized structure
      *
      * @param int $classId Class ID
@@ -2954,13 +2981,36 @@ class ClassController {
      * @return bool Success status
      */
     private static function saveQAVisits($classId, $data, $files = null) {
-        // First, delete existing QA visits for this class
+        // First, get existing QA visits to delete their files
+        $existingVisits = QAVisitModel::findByClassId($classId);
+        
+        // Delete physical files from existing visits
+        foreach ($existingVisits as $visit) {
+            $latestDocument = $visit->getLatestDocument();
+            if ($latestDocument && isset($latestDocument['file_path'])) {
+                self::deleteQAReportFile($latestDocument['file_path']);
+            }
+        }
+        
+        // Now delete existing QA visits from database
         QAVisitModel::deleteByClassId($classId);
         
         // Get the form data arrays
         $visitDates = $data['qa_visit_dates'] ?? [];
         $visitTypes = $data['qa_visit_types'] ?? [];
         $officers = $data['qa_officers'] ?? [];
+        
+        // Get existing document metadata from form
+        $existingDocuments = [];
+        if (isset($data['qa_latest_documents']) && !empty($data['qa_latest_documents'])) {
+            $decoded = json_decode(stripslashes($data['qa_latest_documents']), true);
+            if (is_array($decoded)) {
+                // Index by position
+                foreach ($decoded as $index => $document) {
+                    $existingDocuments[$index] = $document;
+                }
+            }
+        }
         
         // Handle file uploads
         $uploadedReports = [];
@@ -2971,6 +3021,12 @@ class ClassController {
                 $visitTypes,
                 $officers
             );
+        }
+        
+        // Merge uploaded reports with existing documents (new uploads override existing)
+        $finalDocuments = $existingDocuments;
+        foreach ($uploadedReports as $index => $uploadedReport) {
+            $finalDocuments[$index] = $uploadedReport;
         }
         
         // Handle "0" value override for update mode (clearing all visits)
@@ -2991,7 +3047,7 @@ class ClassController {
                 'visit_date' => self::sanitizeText($visitDates[$i]),
                 'visit_type' => self::sanitizeText($visitTypes[$i] ?? 'Initial QA Visit'),
                 'officer_name' => self::sanitizeText($officers[$i] ?? 'Unknown'),
-                'report_metadata' => $uploadedReports[$i] ?? null
+                'latest_document' => $finalDocuments[$i] ?? null
             ];
             
             $qaVisit = new QAVisitModel($visitData);
@@ -3031,7 +3087,7 @@ class ClassController {
                 $result['qa_visit_dates'][] = $visit->getVisitDate();
                 $result['qa_visit_types'][] = $visit->getVisitType();
                 $result['qa_officers'][] = $visit->getOfficerName();
-                $result['qa_reports'][] = $visit->getReportMetadata();
+                $result['qa_reports'][] = $visit->getLatestDocument();
             }
             
             return $result;

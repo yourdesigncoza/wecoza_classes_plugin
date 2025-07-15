@@ -1262,8 +1262,8 @@ if (isset($data['class_data']) && $data['class_data']):
          <i class="bi bi-plus-circle me-1"></i> Add QA Visit Date
          </button>
          
-         <!-- Hidden field to store QA reports metadata -->
-         <input type="hidden" id="qa_reports_metadata" name="qa_reports_metadata" value="<?php echo esc_attr(json_encode($data['class_data']['qa_reports'] ?? [])); ?>">
+         <!-- Hidden field to store QA latest documents -->
+         <input type="hidden" id="qa_latest_documents" name="qa_latest_documents" value="<?php echo esc_attr(json_encode($data['class_data']['qa_reports'] ?? [])); ?>">
       </div>
 
       <?php echo section_divider(); ?>
@@ -1512,6 +1512,18 @@ console.log('Update Form - Available Yes/No Options:', <?php echo json_encode($d
 <?php endif; ?>
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Helper function to format file sizes
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    // Make formatFileSize available globally for the QA visits code
+    window.formatFileSize = formatFileSize;
+    
     // Debug logging for update form
     <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
     console.log('Update Form Debug Mode Active');
@@ -1640,12 +1652,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const qaVisitDates = <?php echo json_encode($qaVisitDates); ?>;
     const qaVisitTypes = <?php echo json_encode($qaVisitsData['qa_visit_types'] ?? []); ?>;
     const qaOfficers = <?php echo json_encode($qaVisitsData['qa_officers'] ?? []); ?>;
-    const qaReportsMetadata = <?php echo json_encode($qaVisitsData['qa_reports'] ?? []); ?>;
+    const qaLatestDocuments = <?php echo json_encode($qaVisitsData['qa_reports'] ?? []); ?>;
     <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
     console.log('QA Visit Dates from PHP:', qaVisitDates);
     console.log('QA Visit Types:', qaVisitTypes);
     console.log('QA Officers:', qaOfficers);
-    console.log('QA Reports Metadata:', qaReportsMetadata);
+    console.log('QA Latest Documents:', qaLatestDocuments);
     <?php endif; ?>
 
     // Handle both array and string data for backwards compatibility
@@ -1693,17 +1705,56 @@ document.addEventListener('DOMContentLoaded', function() {
                     officerInput.value = qaOfficers[index];
                 }
                 
-                // If we have report metadata, populate file information
-                if (qaReportsMetadata && qaReportsMetadata[index]) {
-                    const reportInfo = qaReportsMetadata[index];
+                // If we have document metadata, populate file information
+                if (qaLatestDocuments && qaLatestDocuments[index]) {
+                    const documentInfo = qaLatestDocuments[index];
                     
-                    // Show existing filename
-                    if (reportInfo.filename && fileInput) {
+                    // Show existing filename with download link
+                    if (documentInfo.filename && fileInput) {
                         // Create a display element for existing file
                         const fileDisplay = document.createElement('div');
-                        fileDisplay.className = 'text-muted small mt-1';
-                        fileDisplay.innerHTML = '<i class="bi bi-file-pdf"></i> ' + reportInfo.filename;
+                        fileDisplay.className = 'small mt-1 qa-report-file-display';
+                        
+                        // Store document info as data attribute
+                        fileDisplay.setAttribute('data-document-info', JSON.stringify(documentInfo));
+                        
+                        // Create download link
+                        const downloadLink = document.createElement('a');
+                        downloadLink.href = documentInfo.file_url || '#';
+                        downloadLink.target = '_blank';
+                        downloadLink.className = 'text-decoration-none';
+                        downloadLink.innerHTML = '<i class="bi bi-file-pdf text-danger"></i> ' + documentInfo.filename;
+                        downloadLink.title = 'Click to download/view';
+                        
+                        // Add download attribute for better UX
+                        downloadLink.download = documentInfo.filename;
+                        
+                        fileDisplay.appendChild(downloadLink);
+                        
+                        // Add file size if available
+                        if (documentInfo.file_size) {
+                            const sizeSpan = document.createElement('span');
+                            sizeSpan.className = 'text-muted ms-2';
+                            sizeSpan.textContent = '(' + formatFileSize(documentInfo.file_size) + ')';
+                            fileDisplay.appendChild(sizeSpan);
+                        }
+                        
                         fileInput.parentNode.appendChild(fileDisplay);
+                        
+                        // Hide the file input and show a "Replace" button
+                        fileInput.style.display = 'none';
+                        
+                        const replaceBtn = document.createElement('button');
+                        replaceBtn.type = 'button';
+                        replaceBtn.className = 'btn btn-sm btn-outline-secondary mt-1';
+                        replaceBtn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Replace File';
+                        replaceBtn.onclick = function() {
+                            fileInput.style.display = 'block';
+                            fileDisplay.style.display = 'none';
+                            replaceBtn.style.display = 'none';
+                        };
+                        
+                        fileInput.parentNode.appendChild(replaceBtn);
                     }
                 }
 

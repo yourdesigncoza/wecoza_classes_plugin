@@ -743,6 +743,37 @@ function showCustomAlert(message) {
             initializeRemoveButton($(this));
         });
 
+        // Add file change handler to update metadata
+        $(document).on('change', 'input[name="qa_reports[]"]', function() {
+            updateQALatestDocuments();
+        });
+
+        /**
+         * Update QA latest documents field when files change
+         */
+        function updateQALatestDocuments() {
+            const metadata = [];
+            
+            $container.find('.qa-visit-row:visible').each(function(index) {
+                const $row = $(this);
+                const $fileInput = $row.find('input[name="qa_reports[]"]');
+                
+                // Check if there's an existing file display
+                const $existingFile = $row.find('.qa-report-file-display');
+                
+                if ($existingFile.length > 0 && !$fileInput.val()) {
+                    // Preserve existing file metadata if no new file is selected
+                    const existingData = $existingFile.data('document-info');
+                    if (existingData) {
+                        metadata.push(existingData);
+                    }
+                }
+            });
+            
+            // Update the hidden metadata field
+            $('#qa_latest_documents').val(JSON.stringify(metadata));
+        }
+
         /**
          * Initialize remove button for a specific row
          */
