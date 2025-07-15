@@ -697,6 +697,17 @@ function showCustomAlert(message) {
     }
 
     /**
+     * Helper function to format file sizes
+     */
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    /**
      * Initialize QA Visit functionality
      * Handles dynamic addition and removal of QA visit date/report rows
      */
@@ -743,8 +754,23 @@ function showCustomAlert(message) {
             initializeRemoveButton($(this));
         });
 
-        // Add file change handler to update metadata
+        // Add file change handler to update metadata and show preview
         $(document).on('change', 'input[name="qa_reports[]"]', function() {
+            const $fileInput = $(this);
+            const $row = $fileInput.closest('.qa-visit-row');
+            
+            // Remove any existing file display and replace button
+            $row.find('.qa-report-file-display').remove();
+            $row.find('.qa-new-file-preview').remove();
+            
+            // If a file is selected, show a preview
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                const $preview = $('<div class="qa-new-file-preview small mt-1 text-success"></div>');
+                $preview.html('<i class="bi bi-file-earmark-plus"></i> New file: ' + file.name + ' (' + formatFileSize(file.size) + ')');
+                $fileInput.after($preview);
+            }
+            
             updateQALatestDocuments();
         });
 
@@ -767,6 +793,11 @@ function showCustomAlert(message) {
                     if (existingData) {
                         metadata.push(existingData);
                     }
+                } else if ($fileInput.val()) {
+                    // If a new file is selected, we'll handle it differently
+                    // The actual file metadata will be created on the server side during upload
+                    // For now, we just need to ensure this row isn't included in preserved metadata
+                    // This prevents old file data from being retained when a new file is selected
                 }
             });
             

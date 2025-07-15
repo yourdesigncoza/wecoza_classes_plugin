@@ -225,7 +225,7 @@ class QAVisitModel
             'visit_date' => $this->getVisitDate(),
             'visit_type' => $this->getVisitType(),
             'officer_name' => $this->getOfficerName(),
-            'report_metadata' => $this->getReportMetadata(),
+            'latest_document' => $this->getLatestDocument(),
             'created_at' => $this->getCreatedAt(),
             'updated_at' => $this->getUpdatedAt()
         ];

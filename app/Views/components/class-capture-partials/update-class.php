@@ -1713,10 +1713,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (documentInfo.filename && fileInput) {
                         // Create a display element for existing file
                         const fileDisplay = document.createElement('div');
-                        fileDisplay.className = 'small mt-1 qa-report-file-display';
+                        fileDisplay.className = 'qa-report-file-display';
                         
                         // Store document info as data attribute
                         fileDisplay.setAttribute('data-document-info', JSON.stringify(documentInfo));
+                        
+                        // Create file info container
+                        const fileInfo = document.createElement('div');
+                        fileInfo.className = 'file-info';
                         
                         // Create download link
                         const downloadLink = document.createElement('a');
@@ -1729,32 +1733,46 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Add download attribute for better UX
                         downloadLink.download = documentInfo.filename;
                         
-                        fileDisplay.appendChild(downloadLink);
+                        fileInfo.appendChild(downloadLink);
                         
                         // Add file size if available
                         if (documentInfo.file_size) {
                             const sizeSpan = document.createElement('span');
-                            sizeSpan.className = 'text-muted ms-2';
+                            sizeSpan.className = 'text-muted';
                             sizeSpan.textContent = '(' + formatFileSize(documentInfo.file_size) + ')';
-                            fileDisplay.appendChild(sizeSpan);
+                            fileInfo.appendChild(sizeSpan);
                         }
                         
-                        fileInput.parentNode.appendChild(fileDisplay);
+                        fileDisplay.appendChild(fileInfo);
                         
-                        // Hide the file input and show a "Replace" button
-                        fileInput.style.display = 'none';
-                        
+                        // Create replace button
                         const replaceBtn = document.createElement('button');
                         replaceBtn.type = 'button';
-                        replaceBtn.className = 'btn btn-sm btn-outline-secondary mt-1';
+                        replaceBtn.className = 'btn btn-sm btn-outline-secondary btn-replace-file';
                         replaceBtn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Replace File';
                         replaceBtn.onclick = function() {
+                            // Remove the old file display and metadata
+                            fileDisplay.remove();
+                            
+                            // Show the file input
                             fileInput.style.display = 'block';
-                            fileDisplay.style.display = 'none';
-                            replaceBtn.style.display = 'none';
+                            
+                            // Clear the file input value to ensure change event fires
+                            fileInput.value = '';
+                            
+                            // Update the metadata to remove this document
+                            if (typeof updateQALatestDocuments === 'function') {
+                                updateQALatestDocuments();
+                            }
                         };
                         
-                        fileInput.parentNode.appendChild(replaceBtn);
+                        fileDisplay.appendChild(replaceBtn);
+                        
+                        // Hide the file input
+                        fileInput.style.display = 'none';
+                        
+                        // Add the file display after the file input
+                        fileInput.parentNode.appendChild(fileDisplay);
                     }
                 }
 
