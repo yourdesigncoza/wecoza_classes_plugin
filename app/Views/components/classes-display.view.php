@@ -299,34 +299,15 @@ $controller = $controller ?? null;
                                         </span>
                                         <?php endif; ?>
                                     </td>
-                                    <td class="pe-4">
-                                        <div class="dropdown">
-                                            <button class="btn btn-link text-body btn-sm dropdown-toggle"
-                                                    style="text-decoration: none;"
-                                                    type="button"
-                                                    id="dropdownMenuButton<?php echo $class['class_id']; ?>"
-                                                    data-bs-toggle="dropdown"
-                                                    aria-expanded="false">
-                                                <i class="bi bi-three-dots"></i>
-                                            </button>
-                                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton<?php echo $class['class_id']; ?>">
-                                                <?php if (current_user_can('edit_posts') || current_user_can('manage_options')): ?>
-                                                <li>
+                                    <td class="text-center">
 <?php
-// 1. Find the page object for “app/new-class” (or just “new-class”, depending on where it lives)
+// Generate Edit URL
 $page = get_page_by_path( 'app/new-class' ); 
-// If your “new-class” page lives directly under /app/, use exactly that path.
-// If it’s a top-level page called “new-class”, you can just do get_page_by_path('new-class').
-
-// 2. Grab its permalink (so WP will automatically use the correct domain/child-theme slug, etc.)
 if ( $page ) {
     $base_url = get_permalink( $page->ID ); 
 } else {
-    // Fallback if page not found:
     $base_url = home_url( '/app/new-class/' );
 }
-
-// 3. Append ?mode=update&class_id=… with add_query_arg()
 $edit_url = add_query_arg(
     [
         'mode'     => 'update',
@@ -334,27 +315,14 @@ $edit_url = add_query_arg(
     ],
     $base_url
 );
-?>
-                                                    <a class="dropdown-item" href="<?php echo esc_url( $edit_url ); ?>">
-                                                        Edit Class
-                                                        <i class="bi bi-pencil ms-2"></i>
-                                                    </a>
-                                                </li>
-                                                <?php endif; ?>
-                                                <li>
-<?php
-// 1. Find the page object for "app/display-single-class"
-$page = get_page_by_path( 'app/display-single-class' );
 
-// 2. Grab its permalink (so WP will automatically use the correct domain/child-theme slug, etc.)
+// Generate View URL
+$page = get_page_by_path( 'app/display-single-class' );
 if ( $page ) {
     $base_url = get_permalink( $page->ID );
 } else {
-    // Fallback if page not found:
     $base_url = home_url( '/app/display-single-class/' );
 }
-
-// 3. Append ?class_id=… with add_query_arg()
 $view_url = add_query_arg(
     [
         'class_id' => $class['class_id'],
@@ -362,21 +330,23 @@ $view_url = add_query_arg(
     $base_url
 );
 ?>
-                                                    <a class="dropdown-item" href="<?php echo esc_url( $view_url ); ?>">
-                                                        View Details
-                                                        <i class="bi bi-eye ms-2"></i>
-                                                    </a>
-                                                </li>
-                                                <?php if (current_user_can('manage_options')): ?>
-                                                <li><hr class="dropdown-divider"></li>
-                                                <li>
-                                                    <a class="dropdown-item text-danger" href="#" onclick="deleteClass(<?php echo $class['class_id']; ?>)">
-                                                        Delete Class
-                                                        <i class="bi bi-trash ms-2"></i>
-                                                    </a>
-                                                </li>
-                                                <?php endif; ?>
-                                            </ul>
+                                        <div class="d-flex justify-content-center gap-2" role="group">
+                                            <a href="<?php echo esc_url( $view_url ); ?>" class="btn btn-sm btn-outline-secondary border-0" title="View Details">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <?php if (current_user_can('edit_posts') || current_user_can('manage_options')): ?>
+                                            <a href="<?php echo esc_url( $edit_url ); ?>" class="btn btn-sm btn-outline-secondary border-0" title="Edit Class">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <?php endif; ?>
+                                            <?php if (current_user_can('manage_options')): ?>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary border-0 delete-class-btn" 
+                                                    data-class-id="<?php echo $class['class_id']; ?>" 
+                                                    title="Delete Class"
+                                                    onclick="deleteClass(<?php echo $class['class_id']; ?>)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                            <?php endif; ?>
                                         </div>
                                     </td>
                                 </tr>
