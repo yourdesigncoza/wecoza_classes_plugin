@@ -3069,7 +3069,7 @@ class ClassController {
      */
     private static function getQAVisitsForClass($classId) {
         try {
-            error_log('WeCoza Classes Plugin: Loading QA visits for class ID: ' . $classId);
+            // error_log('WeCoza Classes Plugin: Loading QA visits for class ID: ' . $classId);
             
             // Ensure QAVisitModel is loaded
             require_once __DIR__ . '/../Models/QAVisitModel.php';
