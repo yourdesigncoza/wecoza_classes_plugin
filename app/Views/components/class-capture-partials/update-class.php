@@ -1645,8 +1645,8 @@ document.addEventListener('DOMContentLoaded', function() {
     $hasQaVisits = is_array($qaVisits) && !empty($qaVisits);
     
     // Debug logging
-    error_log('WeCoza Classes Plugin View: QA Visits: ' . print_r($qaVisits, true));
-    error_log('WeCoza Classes Plugin View: Has QA Visits: ' . ($hasQaVisits ? 'true' : 'false'));
+    // error_log('WeCoza Classes Plugin View: QA Visits: ' . print_r($qaVisits, true));
+    // error_log('WeCoza Classes Plugin View: Has QA Visits: ' . ($hasQaVisits ? 'true' : 'false'));
     ?>
     <?php if ($hasQaVisits): ?>
     const qaVisits = <?php echo json_encode($qaVisits); ?>;

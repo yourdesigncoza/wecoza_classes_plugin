@@ -3075,7 +3075,7 @@ class ClassController {
             require_once __DIR__ . '/../Models/QAVisitModel.php';
             
             $qaVisits = QAVisitModel::findByClassId($classId);
-            error_log('WeCoza Classes Plugin: Found ' . count($qaVisits) . ' QA visits');
+            // error_log('WeCoza Classes Plugin: Found ' . count($qaVisits) . ' QA visits');
             
             // Return complete visit objects instead of separate arrays
             $visits = [];
