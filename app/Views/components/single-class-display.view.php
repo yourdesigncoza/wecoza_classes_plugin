@@ -81,27 +81,20 @@
       <?php else: ?>
       <!-- Class Details -->
       <!-- Action Buttons -->
-      <?php if (current_user_can('edit_posts') || current_user_can('manage_options')): ?>
       <div class="d-flex justify-content-end mb-4">
-         <div class="col-12 col-md-auto d-flex">
+          <div class="btn-group mt-2 me-2" role="group" aria-label="...">
+            <button class="btn btn-subtle-primary" type="button" onclick="backToClasses()">Back To Classes</button>
             <?php if (current_user_can('edit_posts') || current_user_can('manage_options')): ?>
-            <button class="btn btn-phoenix-secondary px-3 px-sm-5 me-2" onclick="editClass(<?php echo esc_js($class['class_id']); ?>)">
-            <i class="bi bi-pencil-square me-sm-2"></i>
-            <span class="d-none d-sm-inline">Edit</span>
-            </button>
+            <button class="btn btn-subtle-success" type="button" onclick="editClass(<?php echo esc_js($class['class_id']); ?>)">Edit</button>
             <?php endif; ?>
             <?php if (current_user_can('manage_options')): ?>
-            <button class="btn btn-phoenix-danger me-2" onclick="deleteClass(<?php echo esc_js($class['class_id']); ?>)">
-            <i class="bi bi-trash me-2"></i>
-            <span>Delete Class</span>
-            </button>
+            <button class="btn btn-subtle-danger" type="button" onclick="deleteClass(<?php echo esc_js($class['class_id']); ?>)">Delete</button>
             <?php endif; ?>
-         </div>
+          </div>
       </div>
-      <?php endif; ?>
       <!-- Top Summary Cards -->
       <div class="card mb-3">
-         <div class="card-body">
+         <div class="card-body ydcoza-mini-card-header">
             <div class="row g-4 justify-content-between">
                <!-- Client Card -->
                <div class="col-sm-auto">
@@ -2244,6 +2237,15 @@
    }
    
    /**
+    * Back To Classes Function
+    * Navigates back to the classes list page
+    */
+   function backToClasses() {
+       // Navigate to the classes list page using domain-relative URL
+       window.location.href = '<?php $url = esc_url(home_url('/app/all-classes')); echo $url; ?>';
+   }
+   
+   /**
     * Edit Class Function
     * Redirects to the edit page with the class ID
     */
@@ -2320,19 +2322,6 @@
            .then(data => {
                if (data.success) {
                    // Redirect to classes list with success message
-                   <?php
-      // Try to find the all-classes page using WordPress best practices
-      $classes_page = get_page_by_path('app/all-classes');
-      if ($classes_page) {
-          $classes_url = get_permalink($classes_page->ID);
-          echo "const classesUrl = '" . esc_url_raw($classes_url) . "';";
-      } else {
-          // Fallback using home_url for proper domain handling
-          $fallback_url = home_url('/app/all-classes/');
-          echo "const classesUrl = '" . esc_url_raw($fallback_url) . "';";
-      }
-      ?>
-   
                    // Add success parameters to URL for notification (same as all-classes page)
                    const successUrl = new URL(classesUrl);
                    successUrl.searchParams.set('deleted', 'success');
