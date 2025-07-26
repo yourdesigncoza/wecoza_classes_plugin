@@ -755,19 +755,19 @@ function showCustomAlert(message) {
         });
 
         // Add event handlers for QA visit form changes
-        $(document).on('change', 'input[name="qa_visit_dates[]"], select[name="qa_visit_types[]"], input[name="qa_officers[]"]', function() {
+        $(document).on('change', 'input[name="qa_visit_dates[]"], select[name="qa_visit_types[]"], input[name="qa_officers[]"]', function () {
             updateQAVisitsData();
         });
 
         // Add file change handler to update metadata and show preview
-        $(document).on('change', 'input[name="qa_reports[]"]', function() {
+        $(document).on('change', 'input[name="qa_reports[]"]', function () {
             const $fileInput = $(this);
             const $row = $fileInput.closest('.qa-visit-row');
-            
+
             // Remove any existing file display and replace button
             $row.find('.qa-report-file-display').remove();
             $row.find('.qa-new-file-preview').remove();
-            
+
             // If a file is selected, show a preview
             if (this.files && this.files[0]) {
                 const file = this.files[0];
@@ -775,7 +775,7 @@ function showCustomAlert(message) {
                 $preview.html('<i class="bi bi-file-earmark-plus"></i> New file: ' + file.name + ' (' + formatFileSize(file.size) + ')');
                 $fileInput.after($preview);
             }
-            
+
             updateQAVisitsData();
         });
 
@@ -784,14 +784,14 @@ function showCustomAlert(message) {
          */
         function updateQAVisitsData() {
             const visitData = [];
-            
-            $container.find('.qa-visit-row:visible').each(function(index) {
+
+            $container.find('.qa-visit-row:visible').each(function (index) {
                 const $row = $(this);
                 const visitDate = $row.find('input[name="qa_visit_dates[]"]').val();
                 const visitType = $row.find('select[name="qa_visit_types[]"]').val();
                 const officerName = $row.find('input[name="qa_officers[]"]').val();
                 const $fileInput = $row.find('input[name="qa_reports[]"]');
-                
+
                 // Only include rows with at least a date
                 if (visitDate) {
                     const visit = {
@@ -800,7 +800,7 @@ function showCustomAlert(message) {
                         officer: officerName || '',
                         hasNewFile: $fileInput.val() ? true : false
                     };
-                    
+
                     // Check if there's existing file data
                     const $existingFile = $row.find('.qa-report-file-display');
                     if ($existingFile.length > 0 && !$fileInput.val()) {
@@ -809,11 +809,11 @@ function showCustomAlert(message) {
                             visit.existingDocument = existingData;
                         }
                     }
-                    
+
                     visitData.push(visit);
                 }
             });
-            
+
             // Store the complete visit data
             $('#qa_visits_data').val(JSON.stringify(visitData));
         }
@@ -1849,7 +1849,7 @@ function showCustomAlert(message) {
                                         <input type="text" id="qa-search-input" class="form-control" placeholder="Search QA visits...">
                                     </div>
                                     <div class="col-md-3">
-                                        <select id="qa-status-filter" class="form-select">
+                                        <select id="qa-status-filter" class="form-select form-select-sm">
                                             <option value="">All Status</option>
                                             <option value="scheduled">Scheduled</option>
                                             <option value="completed">Completed</option>

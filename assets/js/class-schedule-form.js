@@ -4,7 +4,7 @@
  * Handles the client-side functionality for the class schedule form.
  * Extracted from WeCoza theme for standalone plugin
  */
-(function($) {
+(function ($) {
     'use strict';
 
     // Initialize holidayOverrides object globally to prevent undefined errors
@@ -17,9 +17,9 @@
      */
     function initClassScheduleForm() {
         // Don't set default values - let user choose
-        
+
         // Don't set default pattern - let user choose
-        
+
         // Initialize schedule pattern selection
         initSchedulePatternSelection();
 
@@ -66,10 +66,10 @@
         loadExistingScheduleData();
 
         // Initial auto-population after all initialization is complete
-        setTimeout(function() {
+        setTimeout(function () {
             // Auto-populate schedule start date if class start date exists but schedule start date is empty
             initAutoPopulateScheduleStartDate();
-            
+
             // Don't auto-fill schedule start date - let user choose
 
             // Check for holidays on initial load
@@ -78,19 +78,19 @@
             if (startDate) {
                 checkForHolidays(startDate, endDate);
             }
-            
+
             // Auto-calculate end date if we have duration and start date
             const duration = $('#class_duration').val();
             if (startDate && duration && !endDate) {
                 recalculateEndDate();
             }
-            
+
             // Don't set default pattern - let user choose
-            
+
             // Don't auto-select any days - let user choose
-            
+
             // Ensure updateScheduleData runs after fields are populated
-            setTimeout(function() {
+            setTimeout(function () {
                 updateScheduleData();
             }, 200);
         }, 100);
@@ -104,7 +104,7 @@
 
         // Don't auto-populate schedule start date - let user choose
         // User can manually copy from class start date if needed
-        
+
         // Don't auto-update schedule_start_date when class_start_date changes
         // Let user manually set schedule start date
     }
@@ -114,7 +114,7 @@
      */
     function initManualEndDateCalculation() {
         // Add click event handler for the manual end date calculation button
-        $('#calculate_schedule_end_date-btn').on('click', function() {
+        $('#calculate_schedule_end_date-btn').on('click', function () {
             // Call the existing recalculateEndDate function when button is clicked
             recalculateEndDate();
         });
@@ -128,7 +128,7 @@
         const $daySelection = $('#day-selection-container');
         const $dayOfMonth = $('#day-of-month-container');
 
-        $schedulePattern.on('change', function() {
+        $schedulePattern.on('change', function () {
             const pattern = $(this).val();
 
             // Reset visibility
@@ -166,7 +166,7 @@
         });
 
         // Initialize day selection buttons
-        $('#select-all-days').on('click', function() {
+        $('#select-all-days').on('click', function () {
             $('.schedule-day-checkbox').prop('checked', true);
             validateDaySelection(); // Update required attribute only
             updatePerDayTimeControls(); // Add conditional display logic
@@ -174,7 +174,7 @@
             restrictStartDateBySelectedDays();
         });
 
-        $('#clear-all-days').on('click', function() {
+        $('#clear-all-days').on('click', function () {
             $('.schedule-day-checkbox').prop('checked', false);
             validateDaySelection(); // Update required attribute only
             updatePerDayTimeControls(); // Add conditional display logic
@@ -182,7 +182,7 @@
         });
 
         // Handle day checkbox changes - using event delegation in case checkboxes are loaded dynamically
-        $(document).on('change', '.schedule-day-checkbox', function() {
+        $(document).on('change', '.schedule-day-checkbox', function () {
             validateDaySelection(); // Update required attribute only
             updatePerDayTimeControls(); // Add conditional display logic
             updateScheduleData();
@@ -197,7 +197,7 @@
         });
 
         // Handle day of month selection changes
-        $('#schedule_day_of_month').on('change', function() {
+        $('#schedule_day_of_month').on('change', function () {
             updateScheduleData();
 
             // Check for holidays that conflict with the new day selection
@@ -207,7 +207,7 @@
                 checkForHolidays(startDate, endDate);
             }
         });
-        
+
         // Trigger initial change to set correct visibility based on current pattern
         $schedulePattern.trigger('change');
     }
@@ -267,7 +267,7 @@
      */
     function getSelectedDays() {
         const selectedDays = [];
-        $('.schedule-day-checkbox:checked').each(function() {
+        $('.schedule-day-checkbox:checked').each(function () {
             selectedDays.push($(this).val());
         });
         return selectedDays;
@@ -327,7 +327,7 @@
         $container.empty();
 
         // Create section for each selected day
-        selectedDays.forEach(function(day, index) {
+        selectedDays.forEach(function (day, index) {
             const $section = $template.clone();
             $section.removeClass('d-none').removeAttr('id');
             $section.attr('data-day', day);
@@ -338,7 +338,7 @@
             // Update data-day attributes for form elements
             $section.find('.day-start-time').attr('data-day', day).attr('name', 'day_start_time[' + day + ']');
             $section.find('.day-end-time').attr('data-day', day).attr('name', 'day_end_time[' + day + ']');
-            
+
             // Don't set default times - let user choose
 
             // Show copy button only on first day
@@ -368,7 +368,7 @@
      * Ensures each section has proper time selection behavior
      */
     function initPerDayTimeSections() {
-        $('.per-day-time-section').each(function() {
+        $('.per-day-time-section').each(function () {
             const day = $(this).attr('data-day');
             const $startTime = $(this).find('.day-start-time');
             const $endTime = $(this).find('.day-end-time');
@@ -390,7 +390,7 @@
      */
     function initPerDayTimeHandlers() {
         // Handle time changes for validation and duration calculation
-        $('.day-start-time, .day-end-time').off('change.perday').on('change.perday', function() {
+        $('.day-start-time, .day-end-time').off('change.perday').on('change.perday', function () {
             const day = $(this).attr('data-day');
             const $section = $('.per-day-time-section[data-day="' + day + '"]');
             const $startTime = $section.find('.day-start-time');
@@ -413,7 +413,7 @@
         });
 
         // Handle copy to all days functionality
-        $('.copy-to-all-btn').off('click.perday').on('click.perday', function() {
+        $('.copy-to-all-btn').off('click.perday').on('click.perday', function () {
             const $section = $(this).closest('.per-day-time-section');
             const startTime = $section.find('.day-start-time').val();
             const endTime = $section.find('.day-end-time').val();
@@ -425,7 +425,7 @@
 
                 if (validateTimeSelection($startTimeElement, $endTimeElement)) {
                     // Copy times to all other day sections
-                    $('.per-day-time-section').not($section).each(function() {
+                    $('.per-day-time-section').not($section).each(function () {
                         const $targetStartTime = $(this).find('.day-start-time');
                         const $targetEndTime = $(this).find('.day-end-time');
 
@@ -521,7 +521,7 @@
      */
     function initSingleTimeControls($startTime, $endTime, $duration) {
         // Calculate duration when times change
-        $startTime.add($endTime).on('change', function() {
+        $startTime.add($endTime).on('change', function () {
             // Validate time selection
             validateTimeSelection($startTime, $endTime);
 
@@ -650,7 +650,7 @@
         } else {
             // Any days selected: use per-day time mode (even for single day)
             const perDayTimes = {};
-            $('.per-day-time-section').each(function() {
+            $('.per-day-time-section').each(function () {
                 const day = $(this).attr('data-day');
                 const startTime = $(this).find('.day-start-time').val();
                 const endTime = $(this).find('.day-end-time').val();
@@ -700,7 +700,7 @@
         const dayTimes = [];
 
         // First pass: validate each day individually and collect time data
-        $('.per-day-time-section').each(function() {
+        $('.per-day-time-section').each(function () {
             const day = $(this).attr('data-day');
             const $startTime = $(this).find('.day-start-time');
             const $endTime = $(this).find('.day-end-time');
@@ -910,7 +910,7 @@
      * Update validation indicators for per-day time controls
      */
     function updatePerDayTimeIndicators() {
-        $('.per-day-time-section').each(function() {
+        $('.per-day-time-section').each(function () {
             const $section = $(this);
             const day = $section.attr('data-day');
             const $startTime = $section.find('.day-start-time');
@@ -946,7 +946,7 @@
         const $classStartDate = $('#class_start_date');
 
         // Auto-populate schedule start date when class start date changes
-        $classStartDate.on('change', function() {
+        $classStartDate.on('change', function () {
             const classStartDate = $(this).val();
             if (classStartDate) {
                 // Auto-populate schedule start date with the same value
@@ -962,7 +962,7 @@
         });
 
         // Update end date when start date or class type changes
-        $startDate.add($classType).on('change', function() {
+        $startDate.add($classType).on('change', function () {
 
             // If start date changed, validate against class original start date
             if ($(this).attr('id') === 'schedule_start_date') {
@@ -991,8 +991,8 @@
     function getClassTypeHours(classTypeId) {
         // Use the actual value from class_duration field instead of hard-coded values
         const duration = $('#class_duration').val();
-        
-        
+
+
         // Return the parsed float value, or 0 if not set
         return duration ? parseFloat(duration) : 0;
     }
@@ -1004,16 +1004,16 @@
     function calculateActualMonths(startDate, endDate) {
         const start = new Date(startDate);
         const end = new Date(endDate);
-        
+
         // Calculate the difference in months
         let months = (end.getFullYear() - start.getFullYear()) * 12;
         months += end.getMonth() - start.getMonth();
-        
+
         // Add partial month if end date is after start date's day
         if (end.getDate() >= start.getDate()) {
             months += 1;
         }
-        
+
         return Math.max(0, months); // Ensure non-negative result
     }
 
@@ -1026,16 +1026,16 @@
         const $addButton = $('#add-exception-date-btn');
 
         // Set up event delegation for remove buttons (works for all rows, including PHP-populated ones)
-        $container.on('click', '.remove-exception-btn', function() {
+        $container.on('click', '.remove-exception-btn', function () {
             console.log('Exception date remove button clicked - event delegation working');
             $(this).closest('.exception-date-row').remove();
             updateScheduleData();
         });
 
         // Set up event delegation for input/select changes
-        $container.on('change', '.exception-date-row input, .exception-date-row select', function() {
+        $container.on('change', '.exception-date-row input, .exception-date-row select', function () {
             const $row = $(this).closest('.exception-date-row');
-            
+
             // Validate exception date against class start date
             const exceptionDate = $row.find('input[name="exception_dates[]"]').val();
             const startDate = $('#schedule_start_date').val();
@@ -1054,11 +1054,11 @@
         });
 
         // Add exception date row (simplified - no individual event binding needed)
-        $addButton.on('click', function() {
+        $addButton.on('click', function () {
             const $newRow = $template.clone();
             $newRow.removeClass('d-none').removeAttr('id');
             $container.append($newRow);
-            
+
             // Event handlers are automatically available via delegation above
             // No need to manually attach them to new rows
         });
@@ -1073,19 +1073,19 @@
         const $addButton = $('#add-date-history-btn');
 
         // Add date history row
-        $addButton.on('click', function() {
+        $addButton.on('click', function () {
             const $newRow = $template.clone();
             $newRow.removeClass('d-none').removeAttr('id');
             $container.append($newRow);
 
             // Initialize remove button
-            $newRow.find('.date-remove-btn').on('click', function() {
+            $newRow.find('.date-remove-btn').on('click', function () {
                 $newRow.remove();
                 updateScheduleData();
             });
 
             // Update schedule data when dates change
-            $newRow.find('input[name="stop_dates[]"], input[name="restart_dates[]"]').on('change', function() {
+            $newRow.find('input[name="stop_dates[]"], input[name="restart_dates[]"]').on('change', function () {
                 updateScheduleData();
             });
         });
@@ -1106,7 +1106,7 @@
         }
 
         // Handle exam class selection change
-        $examClass.on('change', function() {
+        $examClass.on('change', function () {
             const examClassValue = $(this).val();
 
             if (examClassValue === 'Yes' || examClassValue === '1' || examClassValue === 1) {
@@ -1162,7 +1162,7 @@
 
 
         // Handle add selected learners button click
-        $addSelectedLearnersBtn.on('click', function() {
+        $addSelectedLearnersBtn.on('click', function () {
             const selectedOptions = $addLearnerSelect.find('option:selected');
 
             if (selectedOptions.length === 0) {
@@ -1172,7 +1172,7 @@
 
 
             // Add each selected learner
-            selectedOptions.each(function() {
+            selectedOptions.each(function () {
                 const learnerId = $(this).val();
                 const learnerName = $(this).text();
 
@@ -1234,7 +1234,7 @@
             $classLearnersTable.removeClass('d-none');
 
             // Add rows for each learner
-            classLearners.forEach(function(learner) {
+            classLearners.forEach(function (learner) {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${learner.name}</td>
@@ -1249,7 +1249,7 @@
                         </select>
                     </td>
                     <td>
-                        <button type="button" class="btn btn-outline-danger btn-sm remove-learner-btn" data-learner-id="${learner.id}">Remove</button>
+                        <button type="button" class="btn btn-subtle-danger btn-sm remove-learner-btn" data-learner-id="${learner.id}">Remove</button>
                     </td>
                 `;
                 $classLearnersTbody.append(row);
@@ -1258,7 +1258,7 @@
 
             // Debug: Check if remove buttons were created correctly
             const removeButtons = $classLearnersTbody.find('.remove-learner-btn');
-            removeButtons.each(function(index) {
+            removeButtons.each(function (index) {
                 const learnerId = $(this).data('learner-id');
             });
 
@@ -1266,7 +1266,7 @@
             const classSubjectSelect = document.getElementById('class_subject');
             if (classSubjectSelect && classSubjectSelect.value) {
                 // Use setTimeout to ensure DOM is fully updated
-                setTimeout(function() {
+                setTimeout(function () {
                     if (typeof classes_populate_learner_levels === 'function') {
                         classes_populate_learner_levels(classSubjectSelect.value);
                     } else if (typeof window.wecoza_auto_populate_learner_levels === 'function') {
@@ -1287,7 +1287,7 @@
         }
 
         // Handle level/status changes
-        $(document).on('change', '.learner-level-select, .learner-status-select', function() {
+        $(document).on('change', '.learner-level-select, .learner-status-select', function () {
             const learnerId = $(this).data('learner-id');
             const field = $(this).hasClass('learner-level-select') ? 'level' : 'status';
             const value = $(this).val();
@@ -1307,7 +1307,7 @@
         });
 
         // Handle remove learner
-        $(document).on('click', '.remove-learner-btn', function(e) {
+        $(document).on('click', '.remove-learner-btn', function (e) {
             e.preventDefault();
             e.stopPropagation();
 
@@ -1361,7 +1361,7 @@
                 updateLearnersDisplay();
 
                 // Synchronize exam learner options after loading existing data
-                setTimeout(function() {
+                setTimeout(function () {
                     if (typeof window.classes_sync_exam_learner_options === 'function') {
                         window.classes_sync_exam_learner_options();
                     }
@@ -1371,7 +1371,7 @@
                 const classSubjectSelect = document.getElementById('class_subject');
                 if (classSubjectSelect && classSubjectSelect.value) {
                     // Use setTimeout to ensure DOM is fully updated
-                    setTimeout(function() {
+                    setTimeout(function () {
                         if (typeof classes_populate_learner_levels === 'function') {
                             classes_populate_learner_levels(classSubjectSelect.value);
                         } else if (typeof window.wecoza_auto_populate_learner_levels === 'function') {
@@ -1391,7 +1391,7 @@
      */
     function initSubjectChangeLevelPopulation() {
         const classSubjectSelect = document.getElementById('class_subject');
-        
+
         if (!classSubjectSelect) {
             return;
         }
@@ -1415,7 +1415,7 @@
 
 
         // Handle add backup agent button click
-        $addButton.on('click', function() {
+        $addButton.on('click', function () {
 
             // Clone the template
             const $newRow = $template.clone();
@@ -1427,7 +1427,7 @@
             $container.append($newRow);
 
             // Initialize remove button for this row
-            $newRow.find('.remove-backup-agent-btn, .date-remove-btn').on('click', function() {
+            $newRow.find('.remove-backup-agent-btn, .date-remove-btn').on('click', function () {
                 $newRow.remove();
 
                 // Update any form data if needed
@@ -1440,7 +1440,7 @@
 
         // Handle remove buttons for any existing rows (in case of editing)
         // Use event delegation but be more specific to avoid conflicts with other .date-remove-btn handlers
-        $(document).on('click', '.backup-agent-row .remove-backup-agent-btn, .backup-agent-row .date-remove-btn', function() {
+        $(document).on('click', '.backup-agent-row .remove-backup-agent-btn, .backup-agent-row .date-remove-btn', function () {
             // Check if this is a backup agent row (should always be true due to selector)
             const $row = $(this).closest('.backup-agent-row');
             if ($row.length && !$row.is('#backup-agent-row-template')) {
@@ -1468,7 +1468,7 @@
         // Load existing overrides if available
         try {
             const existingOverrides = $holidayOverridesInput.val();
-            
+
             if (existingOverrides) {
                 const overrides = JSON.parse(existingOverrides);
                 Object.assign(window.holidayOverrides, overrides);
@@ -1478,7 +1478,7 @@
         }
 
         // Handle individual holiday override checkboxes
-        $(document).on('change', '.holiday-override-checkbox', function() {
+        $(document).on('change', '.holiday-override-checkbox', function () {
             const $checkbox = $(this);
             const date = $checkbox.data('date');
             const isChecked = $checkbox.is(':checked');
@@ -1503,7 +1503,7 @@
 
         // Handle "Override All" checkbox
         if ($overrideAllCheckbox.length) {
-            $overrideAllCheckbox.on('change', function() {
+            $overrideAllCheckbox.on('change', function () {
                 const isChecked = $(this).is(':checked');
                 $('.holiday-override-checkbox').prop('checked', isChecked).trigger('change');
             });
@@ -1511,8 +1511,8 @@
 
         // Handle "Skip All" button
         if ($skipAllBtn.length) {
-            $skipAllBtn.on('click', function() {
-                $('.holiday-override-checkbox').each(function() {
+            $skipAllBtn.on('click', function () {
+                $('.holiday-override-checkbox').each(function () {
                     $(this).prop('checked', false).trigger('change');
                 });
             });
@@ -1520,15 +1520,15 @@
 
         // Handle "Override All" button
         if ($overrideAllBtn.length) {
-            $overrideAllBtn.on('click', function() {
-                $('.holiday-override-checkbox').each(function() {
+            $overrideAllBtn.on('click', function () {
+                $('.holiday-override-checkbox').each(function () {
                     $(this).prop('checked', true).trigger('change');
                 });
             });
         }
 
         // Check for holidays when start date changes
-        $('#schedule_start_date').on('change', function() {
+        $('#schedule_start_date').on('change', function () {
             const startDate = $(this).val();
             const endDate = $('#schedule_end_date').val();
             const pattern = $('#schedule_pattern').val();
@@ -1540,7 +1540,7 @@
         });
 
         // Check for holidays when end date changes
-        $('#schedule_end_date').on('change', function() {
+        $('#schedule_end_date').on('change', function () {
             const startDate = $('#schedule_start_date').val();
             const endDate = $(this).val();
             const pattern = $('#schedule_pattern').val();
@@ -1715,7 +1715,7 @@
                 const overrideValue = window.holidayOverrides[holiday.date];
                 // Handle both direct boolean values and objects with override property
                 isOverridden = typeof overrideValue === 'boolean' ? overrideValue : overrideValue.override;
-                
+
                 console.log(`Holiday ${holiday.date} (${holiday.name}) override value:`, overrideValue, 'resolved to:', isOverridden);
 
                 // Update checkbox
@@ -1747,7 +1747,7 @@
      * Initialize schedule statistics toggle functionality
      */
     function initScheduleStatisticsToggle() {
-        $('#toggle-statistics-btn').on('click', function() {
+        $('#toggle-statistics-btn').on('click', function () {
             const $section = $('#schedule-statistics-section');
             const $button = $(this);
 
@@ -1775,7 +1775,7 @@
         const $form = $('#schedule_pattern').closest('form');
 
         if ($form.length > 0) {
-            $form.on('submit', function(e) {
+            $form.on('submit', function (e) {
                 // Validate day selection for custom validation
                 validateDaySelection();
 
@@ -1888,7 +1888,7 @@
         if (window.wecozaScheduleData) {
             return window.wecozaScheduleData;
         }
-        
+
         // 2b. Check for existingScheduleData set by update form
         if (window.existingScheduleData) {
             return window.existingScheduleData;
@@ -1927,7 +1927,7 @@
      */
     function populateFormWithScheduleData(data) {
         try {
-            
+
             // Set basic schedule fields
             if (data.pattern) {
                 $('#schedule_pattern').val(data.pattern).trigger('change');
@@ -1979,7 +1979,7 @@
 
             // Set selected days for weekly/biweekly patterns (handle both selectedDays and days)
             const days = data.selectedDays || data.days || [];
-            
+
             if (days.length > 0) {
                 days.forEach(day => {
                     const checkbox = $(`.schedule-day-checkbox[value="${day}"]`);
@@ -2007,7 +2007,7 @@
             if (data.exceptionDates && data.exceptionDates.length > 0) {
                 const exceptionDatesContainer = $('#exception-dates-container');
                 const isAlreadyPopulated = exceptionDatesContainer.attr('data-populated');
-                
+
                 if (isAlreadyPopulated === 'php') {
                     console.log('JS: Exception dates already populated by PHP, skipping JavaScript population');
                 } else {
@@ -2022,7 +2022,7 @@
 
             // Set holiday overrides (handle both holidayOverrides and holiday_overrides)
             const holidayOverrides = data.holidayOverrides || data.holiday_overrides;
-            
+
             if (holidayOverrides) {
                 Object.keys(holidayOverrides).forEach(date => {
                     const $checkbox = $(`.holiday-override-checkbox[data-date="${date}"]`);
@@ -2033,7 +2033,7 @@
                         console.log(`Checkbox for ${date} not found in DOM yet`);
                     }
                 });
-                
+
                 // Store holiday overrides in global object for later application
                 if (typeof window.holidayOverrides !== 'object' || window.holidayOverrides === null) {
                     window.holidayOverrides = {};
@@ -2057,7 +2057,7 @@
      * Apply per-day times to the generated sections
      */
     function applyPerDayTimes(perDayTimes) {
-        
+
         if (!perDayTimes || typeof perDayTimes !== 'object') {
             console.warn('Invalid perDayTimes data:', perDayTimes);
             return;
@@ -2067,15 +2067,15 @@
             const dayData = perDayTimes[day];
             const $section = $(`.per-day-time-section[data-day="${day}"]`);
 
-            
+
             if ($section.length > 0) {
                 const $startTime = $section.find('.day-start-time');
                 const $endTime = $section.find('.day-end-time');
-                
+
                 if ($startTime.length && dayData.startTime) {
                     $startTime.val(dayData.startTime);
                 }
-                
+
                 if ($endTime.length && dayData.endTime) {
                     $endTime.val(dayData.endTime);
                 }
@@ -2096,17 +2096,17 @@
     function addExceptionDateRow(date, reason) {
         // Check if this date already exists to prevent duplicates
         const existingDates = [];
-        $('#exception-dates-container input[name="exception_dates[]"]').each(function() {
+        $('#exception-dates-container input[name="exception_dates[]"]').each(function () {
             if ($(this).val()) {
                 existingDates.push($(this).val());
             }
         });
-        
+
         if (existingDates.includes(date)) {
             console.log(`JS: Exception date ${date} already exists, skipping duplicate`);
             return;
         }
-        
+
         // Trigger the add button to create a new row
         $('#add-exception-date-btn').trigger('click');
 
@@ -2126,7 +2126,7 @@
      * Global function to get schedule data in current format
      * Provides access to the full new data structure
      */
-    window.getScheduleDataCurrent = function() {
+    window.getScheduleDataCurrent = function () {
         return collectScheduleData();
     };
 
@@ -2161,7 +2161,7 @@
             startDate = new Date().toISOString().split('T')[0];
             $('#schedule_start_date').val(startDate);
         }
-        
+
         const data = {
             // Basic schedule information with fallbacks
             pattern: $('#schedule_pattern').val() || 'weekly',
@@ -2184,14 +2184,14 @@
             // Metadata
             lastUpdated: new Date().toISOString(),
             version: '2.0', // Version for backward compatibility tracking
-            
+
             // Add validation metadata
             metadata: {
                 lastUpdated: new Date().toISOString(),
                 validatedAt: new Date().toISOString()
             }
         };
-        
+
         // Debug logging
 
         return data;
@@ -2203,7 +2203,7 @@
     function collectExceptionDates() {
         const exceptions = [];
 
-        $('#exception-dates-container .exception-date-row').each(function() {
+        $('#exception-dates-container .exception-date-row').each(function () {
             const date = $(this).find('input[name="exception_dates[]"]').val();
             const reason = $(this).find('select[name="exception_reasons[]"]').val();
 
@@ -2224,7 +2224,7 @@
     function collectHolidayOverrides() {
         const overrides = {};
 
-        $('.holiday-override-checkbox:checked').each(function() {
+        $('.holiday-override-checkbox:checked').each(function () {
             const date = $(this).attr('data-date');
             if (date) {
                 overrides[date] = true;
@@ -2240,7 +2240,7 @@
      */
     function updateHiddenFormFields(scheduleData) {
         const $container = $('#schedule-data-container');
-        
+
 
         // Clear existing hidden fields
         $container.empty();
@@ -2297,10 +2297,10 @@
         $('#holiday_overrides').val(JSON.stringify(scheduleData.holidayOverrides));
 
         // Legacy compatibility fields removed - V2.0 format only
-        
+
         // Log final hidden field count
         const hiddenFieldCount = $container.find('input[type="hidden"]').length;
-        
+
         // Verify critical fields exist and show status
         const criticalFields = ['schedule_data[pattern]', 'schedule_data[start_date]'];
         let allFieldsValid = true;
@@ -2325,7 +2325,7 @@
                 value: value
             });
             $container.append($field);
-        } 
+        }
         // else {
         //             console.warn(`Skipped empty hidden field: ${name}`);
         //         }
@@ -2590,11 +2590,11 @@
      * Recalculate end date based on class type, start date, selected days, and per-day durations
      */
     function recalculateEndDate() {
-        
+
         const startDate = $('#schedule_start_date').val();
         const classType = $('#class_type').val();
         const pattern = $('#schedule_pattern').val();
-        
+
 
         // Get session duration from per-day time data or fallback
         let sessionDuration = 0;
@@ -2610,12 +2610,12 @@
                     hoursPerWeek += parseFloat(timeData.perDayTimes[day].duration);
                 }
             });
-            
+
             // For biweekly, this represents hours every two weeks
             if (pattern === 'biweekly') {
                 hoursPerWeek = hoursPerWeek; // Keep as is - we'll handle biweekly in the main loop
             }
-            
+
             useWeeklyCalculation = true;
         } else if (timeData.mode === 'per-day' && timeData.perDayTimes) {
             // For other patterns, use average duration
@@ -2626,21 +2626,21 @@
         } else if (timeData.duration) {
             sessionDuration = parseFloat(timeData.duration);
         }
-        
+
 
         if (startDate && classType && pattern && (sessionDuration > 0 || hoursPerWeek > 0)) {
             // Get total hours for this class type
             const classHours = getClassTypeHours(classType);
             $('#schedule_total_hours').val(classHours);
-            
+
 
             if (classHours > 0) {
                 // Get exception dates
                 const exceptionDates = [];
                 const $exceptionRows = $('#exception-dates-container .exception-date-row');
-                
 
-                $exceptionRows.each(function(index) {
+
+                $exceptionRows.each(function (index) {
                     const $row = $(this);
                     // Skip template row (has id)
                     if ($row.attr('id') === 'exception-date-row-template') {
@@ -2658,7 +2658,7 @@
 
                 // Get stop/restart dates
                 const stopRestartPeriods = [];
-                $('#date-history-container .date-history-row:not(.d-none)').each(function() {
+                $('#date-history-container .date-history-row:not(.d-none)').each(function () {
                     const stopDate = $(this).find('input[name="stop_dates[]"]').val();
                     const restartDate = $(this).find('input[name="restart_dates[]"]').val();
 
@@ -2669,12 +2669,12 @@
                         });
                     }
                 });
-                
+
 
                 // Calculate number of sessions/weeks needed based on calculation method
                 let unitsNeeded = 0;
                 let unitType = 'sessions';
-                
+
                 if (useWeeklyCalculation && hoursPerWeek > 0) {
                     // Calculate weeks needed
                     unitsNeeded = Math.ceil(classHours / hoursPerWeek);
@@ -2684,7 +2684,7 @@
                     unitsNeeded = Math.ceil(classHours / sessionDuration);
                     unitType = 'sessions';
                 }
-                
+
                 // Create session tracking array for debugging
                 const sessionLog = [];
 
@@ -2726,7 +2726,7 @@
                         // Track weeks for weekly calculation
                         let currentWeekDays = [];
                         let lastWeekStart = null;
-                        
+
                         // Add days until we have enough units (sessions or weeks)
                         while (unitsScheduled < unitsNeeded) {
                             const dateStr = date.toISOString().split('T')[0];
@@ -2763,13 +2763,13 @@
                                 !isExceptionDate &&
                                 !isInStopPeriod &&
                                 (!isPublicHoliday || isHolidayOverridden)) {
-                                
+
                                 if (useWeeklyCalculation) {
                                     // For weekly calculation, track which days of the week we've scheduled
                                     const weekStart = new Date(date);
                                     weekStart.setDate(date.getDate() - date.getDay()); // Get Sunday of this week
                                     const weekStartStr = weekStart.toISOString().split('T')[0];
-                                    
+
                                     // Check if this is a new week
                                     if (weekStartStr !== lastWeekStart) {
                                         // New week - check if we completed the previous week
@@ -2777,7 +2777,7 @@
                                             unitsScheduled++;
                                             if (unitsScheduled <= 5 || unitsScheduled >= unitsNeeded - 2) {
                                             }
-                                            
+
                                             // Check if we've reached our target weeks
                                             if (unitsScheduled >= unitsNeeded) {
                                                 // We've scheduled enough weeks - use the last scheduled date
@@ -2789,10 +2789,10 @@
                                         currentWeekDays = [];
                                         lastWeekStart = weekStartStr;
                                     }
-                                    
+
                                     // Add this day to the current week
                                     currentWeekDays.push(dateStr);
-                                    
+
                                     // Add to session log
                                     sessionLog.push({
                                         sessionNumber: `Week ${unitsScheduled + 1} - Day ${currentWeekDays.length}`,
@@ -2804,13 +2804,13 @@
                                         isInStopPeriod: false,
                                         status: 'scheduled'
                                     });
-                                    
+
                                     if (unitsScheduled < 3 || (currentWeekDays.length === 1 && unitsScheduled >= unitsNeeded - 2)) {
                                     }
                                 } else {
                                     // Regular session-based calculation
                                     unitsScheduled++;
-                                    
+
                                     // Add to session log
                                     sessionLog.push({
                                         sessionNumber: unitsScheduled,
@@ -2822,10 +2822,10 @@
                                         isInStopPeriod: false,
                                         status: 'scheduled'
                                     });
-                                    
+
                                     if (unitsScheduled <= 5 || unitsScheduled >= unitsNeeded - 2) {
                                     }
-                                    
+
                                     // Safety check - break if we've reached our target
                                     if (unitsScheduled >= unitsNeeded) {
                                         break;
@@ -2835,7 +2835,7 @@
                                 // Debug why this day was skipped
                                 const dayName = getDayName(currentDayIndex);
                                 const isSelectedDay = dayIndices.includes(currentDayIndex);
-                                
+
                                 if (isSelectedDay) {
                                     sessionLog.push({
                                         sessionNumber: 'skipped',
@@ -2847,30 +2847,30 @@
                                         status: 'skipped',
                                         reason: isExceptionDate ? 'exception' : isInStopPeriod ? 'stop_period' : isPublicHoliday ? 'holiday' : 'unknown'
                                     });
-                                    
+
                                     // Log important skips
                                     if (isPublicHoliday) {
                                     }
                                     if (isExceptionDate || isInStopPeriod) {
                                     }
                                 }
-                                
+
                             }
 
                             // Move to next day
                             date.setDate(date.getDate() + 1);
-                            
+
                             // Emergency break to prevent infinite loops
                             if (unitsScheduled > unitsNeeded + 100) {
                                 console.error('🚨 EMERGENCY BREAK: Too many units scheduled!', unitsScheduled, 'vs needed:', unitsNeeded);
                                 break;
                             }
                         }
-                        
+
                         // For weekly calculation, check if we need to count the last partial week
                         if (useWeeklyCalculation && currentWeekDays.length > 0 && unitsScheduled < unitsNeeded) {
                             unitsScheduled++;
-                            
+
                             // Use the last scheduled date from the current week
                             if (currentWeekDays.length > 0) {
                                 const lastScheduledDate = currentWeekDays[currentWeekDays.length - 1];
@@ -3015,7 +3015,7 @@
                     // The date variable is now one day past the last scheduled session
                     // We need to move back to the actual last session date
                     let finalEndDate = date;
-                    
+
                     // Find the last scheduled session from our log
                     const lastScheduledSession = sessionLog.filter(s => s.status === 'scheduled').pop();
                     if (lastScheduledSession) {
@@ -3024,11 +3024,11 @@
                         // If no sessions in log, move back one day as we've advanced past the end
                         finalEndDate.setDate(finalEndDate.getDate() - 1);
                     }
-                    
+
                     // Format date as YYYY-MM-DD
                     const endDate = finalEndDate.toISOString().split('T')[0];
                     $('#schedule_end_date').val(endDate);
-                    
+
 
                     // Validate that calculated hours match expected hours
                     let calculatedHours = 0;
@@ -3039,19 +3039,19 @@
                     }
                     const expectedHours = parseFloat($('#class_duration').val()) || 0;
                     const hoursDifference = Math.abs(calculatedHours - expectedHours);
-                    
-                    
+
+
                     // Show warning if there's a significant mismatch (more than 0.1 hours difference)
                     if (hoursDifference > 0.1) {
                         console.warn('⚠️ Hours mismatch detected!');
                         console.warn('Expected hours:', expectedHours);
                         console.warn('Calculated hours:', calculatedHours);
                         console.warn('Difference:', hoursDifference.toFixed(2), 'hours');
-                        
+
                         // You could also show a visual warning to the user here if needed
                         // For example: $('#hours-warning').show().text('Warning: Calculated hours (' + calculatedHours + ') do not match expected hours (' + expectedHours + ')');
                     }
-                    
+
 
                     // Update schedule tables
                     updateScheduleTables();
@@ -3088,7 +3088,7 @@
 
         // Format pattern for display
         let patternDisplay = '';
-        switch(pattern) {
+        switch (pattern) {
             case 'weekly':
                 patternDisplay = 'Weekly';
                 break;
@@ -3106,7 +3106,7 @@
         }
 
         // Format dates for display
-        const formatDate = function(dateStr) {
+        const formatDate = function (dateStr) {
             if (!dateStr) return '';
             const date = new Date(dateStr);
             return date.toLocaleDateString('en-ZA', {
@@ -3151,7 +3151,7 @@
 
         // Get all exception date rows
         const exceptionDates = [];
-        $('#exception-dates-container .exception-date-row:not(.d-none)').each(function() {
+        $('#exception-dates-container .exception-date-row:not(.d-none)').each(function () {
             const $row = $(this);
             const date = $row.find('input[name="exception_dates[]"]').val();
             const reason = $row.find('select[name="exception_reasons[]"]').val();
@@ -3176,7 +3176,7 @@
         }
 
         // Format dates for display
-        const formatDate = function(dateStr) {
+        const formatDate = function (dateStr) {
             if (!dateStr) return '';
             const date = new Date(dateStr);
             return date.toLocaleDateString('en-ZA', {
@@ -3188,7 +3188,7 @@
         };
 
         // Add a row for each exception date
-        exceptionDates.forEach(function(exceptionDate) {
+        exceptionDates.forEach(function (exceptionDate) {
             const formattedDate = formatDate(exceptionDate.date);
             const reasonText = exceptionDate.reason || 'No reason specified';
 
@@ -3262,7 +3262,7 @@
         }
 
         // Format dates for display
-        const formatDate = function(dateStr) {
+        const formatDate = function (dateStr) {
             if (!dateStr) return '';
             const date = new Date(dateStr);
             return date.toLocaleDateString('en-ZA', {
@@ -3274,7 +3274,7 @@
         };
 
         // Add a row for each holiday
-        conflictingHolidays.forEach(function(holiday) {
+        conflictingHolidays.forEach(function (holiday) {
             const formattedDate = formatDate(holiday.start);
             const holidayName = holiday.title;
 
@@ -3305,13 +3305,13 @@
     }
 
     // Initialize when document is ready
-    $(document).ready(function() {
+    $(document).ready(function () {
         // Check if we're on a page with the class schedule form
         if ($('#schedule_pattern').length > 0) {
             initClassScheduleForm();
         } else {
             // Try again after a short delay in case of timing issues
-            setTimeout(function() {
+            setTimeout(function () {
                 if ($('#schedule_pattern').length > 0) {
                     initClassScheduleForm();
                 }

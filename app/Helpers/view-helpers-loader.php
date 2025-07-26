@@ -39,7 +39,7 @@ if (!function_exists('section_divider')) {
 }
 
 if (!function_exists('section_header')) {
-    function section_header($title, $description = '', $title_tag = 'h5') {
+    function section_header($title, $description = '', $title_tag = 'h6') {
         return \WeCozaClasses\Helpers\section_header($title, $description, $title_tag);
     }
 }

@@ -504,7 +504,7 @@ if (isset($data['class_data']) && $data['class_data']):
          <div class="row">
             <div class="col-md-4 ">
                   <label for="schedule_start_date" class="form-label">Start Date <span class="text-danger">*</span></label>
-                  <input type="date" id="schedule_start_date" name="schedule_start_date" class="form-control" placeholder="YYYY-MM-DD" value="<?php echo esc_attr($scheduleStartDate); ?>" required>
+                  <input type="date" id="schedule_start_date" name="schedule_start_date" class="form-control form-control-sm" placeholder="YYYY-MM-DD" value="<?php echo esc_attr($scheduleStartDate); ?>" required>
                   <div class="invalid-feedback">Please select a start date.</div>
                   <div class="valid-feedback">Looks good!</div>
             </div>
@@ -516,7 +516,7 @@ if (isset($data['class_data']) && $data['class_data']):
             <div class="col-md-4 mb-3">
                <div class="mb-3">
                   <label for="schedule_pattern" class="form-label">Schedule Pattern <span class="text-danger">*</span></label>
-                  <select id="schedule_pattern" name="schedule_pattern" class="form-select" required>
+                  <select id="schedule_pattern" name="schedule_pattern" class="form-select form-select-sm" required>
                      <option value="">Select</option>
                      <option value="weekly" <?php echo ($schedulePattern == 'weekly') ? 'selected' : ''; ?>>Weekly (Every Week)</option>
                      <option value="biweekly" <?php echo ($schedulePattern == 'biweekly') ? 'selected' : ''; ?>>Bi-Weekly (Every Two Weeks)</option>
@@ -545,8 +545,8 @@ if (isset($data['class_data']) && $data['class_data']):
                   <?php endforeach; ?>
                </div>
                <div class="mt-2">
-                  <button type="button" class="btn btn-sm btn-outline-primary" id="select-all-days">Select All</button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary" id="clear-all-days">Clear All</button>
+                  <button type="button" class="btn btn-sm btn-subtle-primary" id="select-all-days">Select All</button>
+                  <button type="button" class="btn btn-sm btn-subtle-secondary" id="clear-all-days">Clear All</button>
                </div>
                <div class="invalid-feedback d-none">Please select at least one day.</div>
                <div class="valid-feedback d-none">Looks good!</div>
@@ -556,7 +556,7 @@ if (isset($data['class_data']) && $data['class_data']):
             <div class="col-md-4 mb-3 d-none" id="day-of-month-container">
                <div class="mb-3">
                   <label for="schedule_day_of_month" class="form-label">Day of Month <span class="text-danger">*</span></label>
-                  <select id="schedule_day_of_month" name="schedule_day_of_month" class="form-select">
+                  <select id="schedule_day_of_month" name="schedule_day_of_month" class="form-select form-select-sm">
                      <option value="">Select</option>
                      <?php for ($i = 1; $i <= 31; $i++): ?>
                         <option value="<?php echo $i; ?>"><?php echo $i; ?></option>
@@ -590,13 +590,13 @@ if (isset($data['class_data']) && $data['class_data']):
                   <div class="card-body">
                      <div class="d-flex justify-content-between align-items-center ">
                         <h6 class="card-title  day-name"></h6>
-                        <button type="button" class="btn btn-sm btn-outline-secondary copy-to-all-btn" title="Copy to all days">
+                        <button type="button" class="btn btn-sm btn-subtle-secondary copy-to-all-btn" title="Copy to all days">
                         <i class="bi bi-files"></i>
                         </button>
                      </div>
                      <div class="">
                         <label class="form-label">Start Time <span class="text-danger">*</span></label>
-                        <select class="form-select day-start-time" data-day="" required>
+                        <select class="form-select form-select-sm day-start-time" data-day="" required>
                            <option value="">Select</option>
                            <?php
                               // Generate time options from 6:00 AM to 8:00 PM in 30-minute increments
@@ -614,7 +614,7 @@ if (isset($data['class_data']) && $data['class_data']):
                      </div>
                      <div class="mb-2">
                         <label class="form-label">End Time <span class="text-danger">*</span></label>
-                        <select class="form-select day-end-time" data-day="" required>
+                        <select class="form-select form-select-sm day-end-time" data-day="" required>
                            <option value="">Select</option>
                            <?php
                               // Generate time options from 6:30 AM to 8:30 PM in 30-minute increments
@@ -639,7 +639,7 @@ if (isset($data['class_data']) && $data['class_data']):
          <div class="col-md-4" id="schedule-update-end-date-container">
             <?php echo section_header('Class End Date', 'If you make any changes to the schedule, you will need to recalculate the end date.'); ?>
             <label for="schedule_end_date" class="form-label">Estimated End Date <span class="text-danger">*</span></label>
-            <input type="date" id="schedule_end_date" name="schedule_end_date" class="form-control readonly-field" placeholder="YYYY-MM-DD" required>
+            <input type="date" id="schedule_end_date" name="schedule_end_date" class="form-control form-control-sm readonly-field" placeholder="YYYY-MM-DD" required>
             <div class="invalid-feedback">Please generate the end date.</div>
             <div class="valid-feedback">Looks good!</div>
             <button type="button" class="btn btn-subtle-warning mb-2 mt-2" id="calculate_schedule_end_date-btn">
@@ -659,7 +659,7 @@ if (isset($data['class_data']) && $data['class_data']):
                <div class="col-md-3 mb-2">
                   <div class="mb-1">
                      <label class="form-label">Date</label>
-                     <input type="date" name="exception_dates[]" class="form-control" placeholder="YYYY-MM-DD">
+                     <input type="date" name="exception_dates[]" class="form-control form-control-sm" placeholder="YYYY-MM-DD">
                      <div class="invalid-feedback">Please select a valid date.</div>
                      <div class="valid-feedback">Looks good!</div>
                   </div>
@@ -669,7 +669,7 @@ if (isset($data['class_data']) && $data['class_data']):
                <div class="col-md-3 mb-2">
                   <div class="mb-1">
                      <label class="form-label">Reason</label>
-                     <select name="exception_reasons[]" class="form-select">
+                     <select name="exception_reasons[]" class="form-select form-select-sm">
                         <option value="">Select</option>
                         <option value="Client Cancelled">Client Cancelled</option>
                         <option value="Agent Absent">Agent Absent</option>
@@ -684,13 +684,13 @@ if (isset($data['class_data']) && $data['class_data']):
                <!-- Remove Button -->
                <div class="col-md-2 mt-2">
                   <div class="d-flex h-100 align-items-end">
-                     <button type="button" class="btn btn-outline-danger btn-sm remove-exception-btn form-control date-remove-btn">Remove</button>
+                     <button type="button" class="btn btn-subtle-danger btn-sm remove-exception-btn form-control form-control-sm date-remove-btn">Remove</button>
                   </div>
                </div>
             </div>
 
             <!-- Add Exception Button -->
-            <button type="button" class="btn btn-outline-primary btn-sm" id="add-exception-date-btn">
+            <button type="button" class="btn btn-subtle-primary btn-sm" id="add-exception-date-btn">
             <i class="bi bi-plus-circle me-1"></i> Add Exception Date
             </button>
          </div>
@@ -726,8 +726,8 @@ if (isset($data['class_data']) && $data['class_data']):
 
                <div class="d-flex justify-content-between mt-2">
                   <div>
-                     <button type="button" class="btn btn-outline-secondary btn-sm" id="skip-all-holidays-btn">Skip All Holidays</button>
-                     <button type="button" class="btn btn-outline-primary btn-sm" id="override-all-holidays-btn">Override All Holidays</button>
+                     <button type="button" class="btn btn-subtle-secondary btn-sm" id="skip-all-holidays-btn">Skip All Holidays</button>
+                     <button type="button" class="btn btn-subtle-primary btn-sm" id="override-all-holidays-btn">Override All Holidays</button>
                   </div>
                </div>
             </div>
@@ -762,7 +762,7 @@ if (isset($data['class_data']) && $data['class_data']):
          <!-- Schedule Statistics Section -->
          <!-- Schedule Statistics Toggle Button -->
          <div class="mt-3 mb-3">
-            <button type="button" class="btn btn-outline-primary btn-sm" id="toggle-statistics-btn">
+            <button type="button" class="btn btn-subtle-primary btn-sm" id="toggle-statistics-btn">
                <i class="bi bi-bar-chart-line me-1"></i> View Schedule Statistics
             </button>
             <div class="clearfix"></div>
@@ -905,12 +905,12 @@ if (isset($data['class_data']) && $data['class_data']):
             <!-- Remove Button -->
             <div class="col-md-2 mb-2">
                <label class="form-label invisible">&nbsp;</label>
-               <button type="button" class="btn btn-outline-danger btn-sm remove-date-row-btn form-control date-remove-btn">Remove</button>
+               <button type="button" class="btn btn-subtle-danger btn-sm remove-date-row-btn form-control form-control-sm date-remove-btn">Remove</button>
             </div>
          </div>
 
          <!-- Add Row Button -->
-         <button type="button" class="btn btn-outline-primary btn-sm" id="add-date-history-btn">
+         <button type="button" class="btn btn-subtle-primary btn-sm" id="add-date-history-btn">
          <i class="bi bi-plus-circle me-1"></i> Add Stop/Restart Dates
          </button>
       </div>
@@ -924,7 +924,7 @@ if (isset($data['class_data']) && $data['class_data']):
          <div class="col-md-2 mb-3">
             <div class="mb-3">
                <label for="seta_funded" class="form-label">SETA Funded? <span class="text-danger">*</span></label>
-               <select id="seta_funded" name="seta_funded" class="form-select" required>
+               <select id="seta_funded" name="seta_funded" class="form-select form-select-sm" required>
                   <option value="">Select</option>
                   <?php foreach ($data['yes_no_options'] as $option): ?>
                      <option value="<?php echo $option['id']; ?>" <?php echo (isset($data['class_data']['seta_funded']) && $data['class_data']['seta_funded'] == $option['id']) ? 'selected' : ''; ?>><?php echo $option['name']; ?></option>
@@ -943,7 +943,7 @@ if (isset($data['class_data']) && $data['class_data']):
          <div class="col-md-2 mb-3" id="seta_container" style="display: <?php echo $showSeta ? 'block' : 'none'; ?>;">
             <div class="mb-3">
                <label for="seta_id" class="form-label">SETA <span class="text-danger">*</span></label>
-               <select id="seta_id" name="seta_id" class="form-select">
+               <select id="seta_id" name="seta_id" class="form-select form-select-sm">
                   <option value="">Select</option>
                   <?php foreach ($data['setas'] as $seta): ?>
                      <option value="<?php echo $seta['id']; ?>" <?php echo (isset($data['class_data']['seta']) && $data['class_data']['seta'] == $seta['id']) ? 'selected' : ''; ?>><?php echo $seta['name']; ?></option>
@@ -958,7 +958,7 @@ if (isset($data['class_data']) && $data['class_data']):
          <div class="col-md-2 mb-3">
             <div class="mb-3">
                <label for="exam_class" class="form-label">Exam Class <span class="text-danger">*</span></label>
-               <select id="exam_class" name="exam_class" class="form-select" required>
+               <select id="exam_class" name="exam_class" class="form-select form-select-sm" required>
                   <option value="">Select</option>
                   <?php foreach ($data['yes_no_options'] as $option): ?>
                      <option value="<?php echo $option['id']; ?>" <?php echo (isset($data['class_data']['exam_class']) && $data['class_data']['exam_class'] == $option['id']) ? 'selected' : ''; ?>><?php echo $option['name']; ?></option>
@@ -978,7 +978,7 @@ if (isset($data['class_data']) && $data['class_data']):
             <div id="exam_type_container" style="display: <?php echo $showExamType ? 'block' : 'none'; ?>;">
                <div class="mb-3">
                   <label for="exam_type" class="form-label">Exam Type</label>
-                  <input type="text" id="exam_type" name="exam_type" class="form-control" placeholder="Enter exam type" value="<?php echo esc_attr($data['class_data']['exam_type'] ?? ''); ?>">
+                  <input type="text" id="exam_type" name="exam_type" class="form-control form-control-sm" placeholder="Enter exam type" value="<?php echo esc_attr($data['class_data']['exam_type'] ?? ''); ?>">
                   <div class="invalid-feedback">Please provide the exam type.</div>
                   <div class="valid-feedback">Looks good!</div>
                </div>
@@ -994,14 +994,14 @@ if (isset($data['class_data']) && $data['class_data']):
             <!-- For multi-select with floating labels, we need a custom approach -->
             <div class="mb-3">
                <label for="add_learner" class="form-label">Select Learners</label>
-               <select id="add_learner" name="add_learner[]" class="form-select" aria-label="Learner selection" multiple>
+               <select id="add_learner" name="add_learner[]" class="form-select form-select-sm" aria-label="Learner selection" multiple>
                   <?php foreach ($data['learners'] as $learner): ?>
                      <option value="<?php echo $learner['id']; ?>"><?php echo $learner['name']; ?></option>
                   <?php endforeach; ?>
                </select>
                <div class="form-text">Select multiple learners to add to this class. Hold Ctrl/Cmd to select multiple.</div>
                <div class="invalid-feedback">Please select at least one learner.</div>
-               <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-selected-learners-btn">
+               <button type="button" class="btn btn-subtle-primary btn-sm mt-2" id="add-selected-learners-btn">
                   <i class="bi bi-person-plus me-1"></i> Add Selected Learners
                </button>
             </div>
@@ -1047,13 +1047,13 @@ if (isset($data['class_data']) && $data['class_data']):
                   <!-- For multi-select with floating labels, we need a custom approach -->
                   <div class="mb-3">
                      <label for="add_learner" class="form-label">Select Learners</label>
-                     <select id="exam_learner_select" name="exam_learner_select[]" class="form-select" aria-label="Exam learner selection" multiple>
+                     <select id="exam_learner_select" name="exam_learner_select[]" class="form-select form-select-sm" aria-label="Exam learner selection" multiple>
                         <!-- Will be populated dynamically with class learners -->
                      </select>
                      <div class="form-text">Select learners who will take exams in this class. Hold Ctrl/Cmd to select multiple.</div>
                      <div class="invalid-feedback">Please select at least one learner for exams.</div>
                      <div class="valid-feedback">Looks good!</div>
-                     <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-selected-exam-learners-btn">
+                     <button type="button" class="btn btn-subtle-primary btn-sm mt-2" id="add-selected-exam-learners-btn">
                         <i class="bi bi-person-plus me-1"></i> Add Selected Exam Learners
                      </button>
                   </div>
@@ -1064,7 +1064,7 @@ if (isset($data['class_data']) && $data['class_data']):
                   <div class="mb-3">
                      <div class="form-label mb-2">Learners Taking Exams</div>
                      <div id="exam-learners-list" class="card-body card px-5">
-                        <div class="alert alert-info" id="no-exam-learners-message">
+                        <div class="alert alert-subtle-primary" id="no-exam-learners-message">
                            No exam learners added yet. Select learners from the list and click "Add Selected Exam Learners".
                         </div>
                         <table class="table table-sm fs-9 d-none" id="exam-learners-table">
@@ -1123,7 +1123,7 @@ if (isset($data['class_data']) && $data['class_data']):
                         </select>
                      </div>
                      <div class="col-md-2">
-                           <button type="button" class="btn btn-outline-secondary btn-sm" id="clear-notes-filters" title="Clear all filters">
+                           <button type="button" class="btn btn-subtle-secondary btn-sm" id="clear-notes-filters" title="Clear all filters">
                               <i class="bi bi-arrow-clockwise"></i> Reset Filters
                            </button>
                      </div>
@@ -1183,7 +1183,7 @@ if (isset($data['class_data']) && $data['class_data']):
                   <div id="notes-no-results" class="text-center py-3 text-muted d-none">
                      <i class="bi bi-search display-4 mb-2"></i>
                      <p class="mb-0">No notes found matching your search criteria.</p>
-                     <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="clear-notes-filters">
+                     <button type="button" class="btn btn-sm btn-subtle-primary mt-2" id="clear-notes-filters">
                         Clear Filters
                      </button>
                   </div>
@@ -1249,7 +1249,7 @@ if (isset($data['class_data']) && $data['class_data']):
             <!-- Remove Button -->
             <div class="col-md-2 mb-2">
                <div class="mt-4">
-                  <button type="button" class="btn btn-outline-danger btn-sm remove-qa-visit-btn">
+                  <button type="button" class="btn btn-subtle-danger btn-sm remove-qa-visit-btn">
                                 <i data-feather="trash-2" style="height:12.8px;width:12.8px;"></i>
                                 Remove
                             </button>
@@ -1258,7 +1258,7 @@ if (isset($data['class_data']) && $data['class_data']):
          </div>
 
          <!-- Add Row Button -->
-         <button type="button" class="btn btn-outline-primary btn-sm" id="add-qa-visit-btn">
+         <button type="button" class="btn btn-subtle-primary btn-sm" id="add-qa-visit-btn">
          <i class="bi bi-plus-circle me-1"></i> Add QA Visit Date
          </button>
          
@@ -1281,7 +1281,7 @@ if (isset($data['class_data']) && $data['class_data']):
             <div class="col-md-3 mb-3">
                <div class="mb-3">
                   <label for="initial_class_agent" class="form-label">Initial Class Agent <span class="text-danger">*</span></label>
-                  <select id="initial_class_agent" name="initial_class_agent" class="form-select" required>
+                  <select id="initial_class_agent" name="initial_class_agent" class="form-select form-select-sm" required>
                      <option value="">Select</option>
                      <?php foreach ($data['agents'] as $agent): ?>
                         <option value="<?php echo $agent['id']; ?>" <?php echo (isset($data['class_data']['class_agent']) && $data['class_data']['class_agent'] == $agent['id']) ? 'selected' : ''; ?>><?php echo $agent['name']; ?></option>
@@ -1294,7 +1294,7 @@ if (isset($data['class_data']) && $data['class_data']):
             <div class="col-md-3 mb-3">
                <div class="mb-3">
                   <label for="initial_agent_start_date" class="form-label">Start Date <span class="text-danger">*</span></label>
-                  <input type="date" id="initial_agent_start_date" name="initial_agent_start_date" class="form-control" placeholder="YYYY-MM-DD" value="<?php echo esc_attr($data['class_data']['initial_agent_start_date'] ?? ''); ?>" required>
+                  <input type="date" id="initial_agent_start_date" name="initial_agent_start_date" class="form-control form-control-sm" placeholder="YYYY-MM-DD" value="<?php echo esc_attr($data['class_data']['initial_agent_start_date'] ?? ''); ?>" required>
                   <div class="invalid-feedback">Please select the start date.</div>
                   <div class="valid-feedback">Looks good!</div>
                </div>
@@ -1318,7 +1318,7 @@ if (isset($data['class_data']) && $data['class_data']):
             <div class="col-md-3 mb-2">
                <div class="mb-3">
                   <label class="form-label">Replacement Agent</label>
-                  <select name="replacement_agent_ids[]" class="form-select replacement-agent-select">
+                  <select name="replacement_agent_ids[]" class="form-select form-select-sm replacement-agent-select">
                      <option value="">Select</option>
                      <?php foreach ($data['agents'] as $agent): ?>
                         <option value="<?php echo $agent['id']; ?>"><?php echo $agent['name']; ?></option>
@@ -1333,7 +1333,7 @@ if (isset($data['class_data']) && $data['class_data']):
             <div class="col-md-3 mb-2">
                <div class="mb-3">
                   <label class="form-label">Takeover Date</label>
-                  <input type="date" name="replacement_agent_dates[]" class="form-control" placeholder="YYYY-MM-DD">
+                  <input type="date" name="replacement_agent_dates[]" class="form-control form-control-sm" placeholder="YYYY-MM-DD">
                   <div class="invalid-feedback">Please select a valid takeover date.</div>
                   <div class="valid-feedback">Looks good!</div>
                </div>
@@ -1342,13 +1342,13 @@ if (isset($data['class_data']) && $data['class_data']):
             <!-- Remove Button -->
             <div class="col-md-1 mb-2">
                <div class="mt-4">
-                  <button type="button" class="btn btn-outline-danger btn-sm remove-agent-replacement-btn form-control date-remove-btn">Remove</button>
+                  <button type="button" class="btn btn-subtle-danger btn-sm remove-agent-replacement-btn form-control form-control-sm date-remove-btn">Remove</button>
                </div>
             </div>
          </div>
 
          <!-- Add Row Button -->
-         <button type="button" class="btn btn-outline-primary btn-sm" id="add-agent-replacement-btn">
+         <button type="button" class="btn btn-subtle-primary btn-sm" id="add-agent-replacement-btn">
          <i class="bi bi-plus-circle me-1"></i> Add Agent Replacement
          </button>
       </div>
@@ -1358,7 +1358,7 @@ if (isset($data['class_data']) && $data['class_data']):
          <div class="col-md-3 mb-3">
             <div class="mb-3">
                <label for="project_supervisor" class="form-label">Project Supervisor <span class="text-danger">*</span></label>
-               <select id="project_supervisor" name="project_supervisor" class="form-select" required>
+               <select id="project_supervisor" name="project_supervisor" class="form-select form-select-sm" required>
                   <option value="">Select</option>
                   <?php foreach ($data['supervisors'] as $supervisor): ?>
                      <option value="<?php echo $supervisor['id']; ?>" <?php echo (isset($data['class_data']['project_supervisor_id']) && $data['class_data']['project_supervisor_id'] == $supervisor['id']) ? 'selected' : ''; ?>><?php echo $supervisor['name']; ?></option>
@@ -1372,7 +1372,7 @@ if (isset($data['class_data']) && $data['class_data']):
          <div class="col-md-3 mb-3">
             <div class="mb-3">
                <label for="delivery_date" class="form-label">Delivery Date <span class="text-danger">*</span></label>
-               <input type="date" id="delivery_date" name="delivery_date" class="form-control" placeholder="YYYY-MM-DD" value="<?php echo esc_attr($data['class_data']['delivery_date'] ?? ''); ?>" required>
+               <input type="date" id="delivery_date" name="delivery_date" class="form-control form-control-sm" placeholder="YYYY-MM-DD" value="<?php echo esc_attr($data['class_data']['delivery_date'] ?? ''); ?>" required>
                <div class="invalid-feedback">Please select the delivery date.</div>
                <div class="valid-feedback">Looks good!</div>
             </div>
@@ -1392,7 +1392,7 @@ if (isset($data['class_data']) && $data['class_data']):
             <div class="col-md-3 mb-2">
                <div class="mb-3">
                   <label class="form-label">Backup Agent</label>
-                  <select name="backup_agent_ids[]" class="form-select backup-agent-select">
+                  <select name="backup_agent_ids[]" class="form-select form-select-sm backup-agent-select">
                      <option value="">Select</option>
                      <?php foreach ($data['agents'] as $agent): ?>
                         <option value="<?php echo $agent['id']; ?>"><?php echo $agent['name']; ?></option>
@@ -1407,7 +1407,7 @@ if (isset($data['class_data']) && $data['class_data']):
             <div class="col-md-3 mb-2">
                <div class="mb-3">
                   <label class="form-label">Backup Date</label>
-                  <input type="date" name="backup_agent_dates[]" class="form-control" placeholder="YYYY-MM-DD">
+                  <input type="date" name="backup_agent_dates[]" class="form-control form-control-sm" placeholder="YYYY-MM-DD">
                   <div class="invalid-feedback">Please select a valid date.</div>
                   <div class="valid-feedback">Looks good!</div>
                </div>
@@ -1416,13 +1416,13 @@ if (isset($data['class_data']) && $data['class_data']):
             <!-- Remove Button -->
             <div class="col-md-1 mb-2">
                <div class="mt-2">
-                  <button type="button" class="btn btn-outline-danger btn-sm remove-backup-agent-btn form-control date-remove-btn">Remove</button>
+                  <button type="button" class="btn btn-subtle-danger btn-sm remove-backup-agent-btn form-control form-control-sm date-remove-btn">Remove</button>
                </div>
             </div>
          </div>
 
          <!-- Add Row Button -->
-         <button type="button" class="btn btn-outline-primary btn-sm" id="add-backup-agent-btn">
+         <button type="button" class="btn btn-subtle-primary btn-sm" id="add-backup-agent-btn">
          <i class="bi bi-plus-circle me-1"></i> Add Backup Agent
          </button>
       </div>
@@ -1566,7 +1566,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </select>
                     </td>
                     <td>
-                        <button type="button" class="btn btn-outline-danger btn-sm remove-learner-btn" data-learner-id="${learner.id}">Remove</button>
+                        <button type="button" class="btn btn-subtle-danger btn-sm remove-learner-btn" data-learner-id="${learner.id}">Remove</button>
                     </td>
                 `;
                 classLearnersTbody.appendChild(row);
@@ -1605,7 +1605,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 row.innerHTML = `
                     <td>${learner.name || 'Unknown Learner'}</td>
                     <td>
-                        <button type="button" class="btn btn-outline-danger btn-sm remove-exam-learner-btn" data-learner-id="${learner.id}">
+                        <button type="button" class="btn btn-subtle-danger btn-sm remove-exam-learner-btn" data-learner-id="${learner.id}">
                             <i data-feather="trash-2" style="height:12.8px;width:12.8px;"></i>
                             Remove
                         </button>
@@ -1731,7 +1731,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Create replace button
                         const replaceBtn = document.createElement('button');
                         replaceBtn.type = 'button';
-                        replaceBtn.className = 'btn btn-sm btn-outline-secondary btn-replace-file';
+                        replaceBtn.className = 'btn btn-sm btn-subtle-secondary btn-replace-file';
                         replaceBtn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Replace File';
                         replaceBtn.onclick = function() {
                             // Remove the old file display and metadata
@@ -2153,7 +2153,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   <select
                      id="class_notes"
                      name="class_notes[]"
-                     class="form-select"
+                     class="form-select form-select-sm"
                      size="5"
                      multiple
                      required
@@ -2174,7 +2174,7 @@ document.addEventListener('DOMContentLoaded', function() {
                <!-- Note Content -->
                <div class="mb-3">
                   <label for="note_content" class="form-label">Note Content <span class="text-danger">*</span></label>
-                  <textarea class="form-control" id="note_content" name="content" rows="5" required></textarea>
+                  <textarea class="form-control form-control-sm" id="note_content" name="content" rows="5" required></textarea>
                   <div class="invalid-feedback">Please provide content for the note.</div>
                   <small class="form-text text-muted">
                      <span id="note-char-count">0</span> characters
@@ -2184,7 +2184,7 @@ document.addEventListener('DOMContentLoaded', function() {
                <!-- Priority -->
                <div class="mb-3">
                   <label for="note_priority" class="form-label">Priority <span class="text-danger">*</span></label>
-                  <select class="form-select" id="note_priority" name="priority" required>
+                  <select class="form-select form-select-sm" id="note_priority" name="priority" required>
                      <option value="">Select priority level</option>
                      <option value="low">Low</option>
                      <option value="medium">Medium</option>
@@ -2206,7 +2206,7 @@ document.addEventListener('DOMContentLoaded', function() {
                               <p class="text-muted small mb-0">Supported formats: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG (Max 10MB per file)</p>
                            </div>
                         </div>
-                        <button type="button" class="btn btn-outline-primary btn-sm ms-2" id="browse-files-btn">
+                        <button type="button" class="btn btn-subtle-primary btn-sm ms-2" id="browse-files-btn">
                            <i class="bi bi-folder2-open me-1"></i> Browse Files
                         </button>
                         <input type="file" id="note-file-input" class="d-none" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
@@ -2281,20 +2281,20 @@ document.addEventListener('DOMContentLoaded', function() {
                <!-- Question -->
                <div class="mb-3">
                   <label for="qa_question" class="form-label">Question <span class="text-danger">*</span></label>
-                  <textarea class="form-control" id="qa_question" name="question" rows="3" required></textarea>
+                  <textarea class="form-control form-control-sm" id="qa_question" name="question" rows="3" required></textarea>
                   <div class="invalid-feedback">Please provide a question.</div>
                </div>
                
                <!-- Question Context -->
                <div class="mb-3">
                   <label for="qa_context" class="form-label">Context/Details</label>
-                  <textarea class="form-control" id="qa_context" name="context" rows="2" placeholder="Additional context or details (optional)"></textarea>
+                  <textarea class="form-control form-control-sm" id="qa_context" name="context" rows="2" placeholder="Additional context or details (optional)"></textarea>
                </div>
                
                <!-- Attachment -->
                <div class="mb-3">
                   <label for="qa_attachment" class="form-label">Attachment (optional)</label>
-                  <input type="file" class="form-control" id="qa_attachment" name="attachment" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                  <input type="file" class="form-control form-control-sm" id="qa_attachment" name="attachment" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
                   <small class="form-text text-muted">Max file size: 5MB</small>
                </div>
                

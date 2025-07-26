@@ -16,7 +16,7 @@
          <!-- Client Name (ID) -->
          <div class="col-md-3 ">
                <label for="client_id" class="form-label">Client Name (ID) <span class="text-danger">*</span></label>
-               <select id="client_id" name="client_id" class="form-select" required>
+               <select id="client_id" name="client_id" class="form-select form-select-sm" required>
                   <option value="">Select</option>
                   <?php foreach ($data['clients'] as $client): ?>
                   <option value="<?php echo esc_attr($client['id']); ?>"><?php echo esc_html($client['name']); ?></option>
@@ -29,7 +29,7 @@
          <div class="col-md-3 ">
 
                <label for="site_id" class="form-label">Class/Site Name <span class="text-danger">*</span></label>
-               <select id="site_id" name="site_id" class="form-select" required>
+               <select id="site_id" name="site_id" class="form-select form-select-sm" required>
                   <option value="">Select Site</option>
                   <?php foreach ($data['clients'] as $client): ?>
                   <optgroup label="<?php echo esc_attr($client['name']); ?>">
@@ -51,7 +51,7 @@
                   type="text"
                   id="site_address"
                   name="site_address"
-                  class="form-control"
+                  class="form-control form-control-sm"
                   placeholder="Street, Suburb, Town, Postal Code"
                   readonly
                   />
@@ -64,9 +64,9 @@
             <h6 class="mb-2">Class Details</h6>
          </div>
          <!-- Class Type (Main Category) -->
-         <div class="col-md-4 ">
+         <div class="col-md-3">
             <label for="class_type" class="form-label">Class Type <span class="text-danger">*</span></label>
-            <select id="class_type" name="class_type" class="form-select" required>
+            <select id="class_type" name="class_type" class="form-select form-select-sm" required>
                <option value="">Select</option>
                <?php foreach ($data['class_types'] as $class_type): ?>
                <option value="<?php echo esc_attr($class_type['id']); ?>"><?php echo esc_html($class_type['name']); ?></option>
@@ -76,32 +76,32 @@
             <div class="valid-feedback">Looks good!</div>
          </div>
          <!-- Class Subject (Specific Subject/Level/Module) -->
-         <div class="col-md-4 ">
+         <div class="col-md-3">
             <label for="class_subject" class="form-label">Class Subject <span class="text-danger">*</span></label>
-            <select id="class_subject" name="class_subject" class="form-select" required disabled>
+            <select id="class_subject" name="class_subject" class="form-select form-select-sm" required disabled>
                <option value="">Select Class Type First</option>
             </select>
             <div class="invalid-feedback">Please select the class subject.</div>
             <div class="valid-feedback">Looks good!</div>
          </div>
          <!-- Class Duration (Auto-calculated) -->
-         <div class="col-md-4 ">
+         <div class="col-md-2">
             <label for="class_duration" class="form-label">Duration (Hours)</label>
-            <input type="number" id="class_duration" name="class_duration" class="form-control" placeholder="Duration" readonly>
-            <small class="text-muted">Automatically calculated based on class type and subject.</small>
+            <input type="number" id="class_duration" name="class_duration" class="form-control form-control-sm" placeholder="Duration" readonly>
+            <small class="text-muted">Based on class type and subject.</small>
          </div>
       </div>
       <div class="row">
          <!-- Class Code (Auto-generated) -->
          <div class="col-md-4 ">
             <label for="class_code" class="form-label">Class Code</label>
-            <input type="text" id="class_code" name="class_code" class="form-control" placeholder="Class Code" readonly>
+            <input type="text" id="class_code" name="class_code" class="form-control form-control-sm" placeholder="Class Code" readonly>
             <small class="text-muted">Auto generated [ClientID]-[ClassType]-[SubjectID]-[YYYY]-[MM]-[DD]-[HH]-[MM]</small>
          </div>
          <!-- Class Original Start Date -->
          <div class="col-md-4 ">
             <label for="class_start_date" class="form-label">Class Start Date <span class="text-danger">*</span></label>
-            <input type="date" id="class_start_date" name="class_start_date" class="form-control" placeholder="YYYY-MM-DD" required>
+            <input type="date" id="class_start_date" name="class_start_date" class="form-control form-control-sm" placeholder="YYYY-MM-DD" required>
             <div class="invalid-feedback">Please select the start date.</div>
             <div class="valid-feedback">Looks good!</div>
          </div>
@@ -114,14 +114,14 @@
          <div class="row ">
             <div class="col-md-4 d-none">
                <label for="schedule_start_date" class="form-label">Schedule Start Date <span class="text-danger">*</span></label>
-               <input type="date" id="schedule_start_date" name="schedule_start_date" class="form-control" placeholder="YYYY-MM-DD" required>
+               <input type="date" id="schedule_start_date" name="schedule_start_date" class="form-control form-control-sm" placeholder="YYYY-MM-DD" required>
                <div class="invalid-feedback">Please select a start date.</div>
                <div class="valid-feedback">Looks good!</div>
                <small class="text-muted">Update if it differs from the class original start date.</small>
             </div>
             <div class="col-md-4 ">
                <label for="schedule_pattern" class="form-label">Schedule Pattern <span class="text-danger">*</span></label>
-               <select id="schedule_pattern" name="schedule_pattern" class="form-select" required>
+               <select id="schedule_pattern" name="schedule_pattern" class="form-select form-select-sm" required>
                   <option value="">Select Schedule Pattern</option>
                   <option value="weekly">Weekly (Every Week)</option>
                   <option value="biweekly">Bi-Weekly (Every Two Weeks)</option>
@@ -169,8 +169,8 @@
                   </div>
                </div>
                <div class="mt-2">
-                  <button type="button" class="btn btn-sm btn-outline-primary" id="select-all-days">Select All</button>
-                  <button type="button" class="btn btn-sm btn-outline-secondary" id="clear-all-days">Clear All</button>
+                  <button type="button" class="btn btn-sm btn-subtle-primary" id="select-all-days">Select All</button>
+                  <button type="button" class="btn btn-sm btn-subtle-secondary" id="clear-all-days">Clear All</button>
                </div>
                <div class="invalid-feedback d-none">Please select at least one day.</div>
                <div class="valid-feedback d-none">Looks good!</div>
@@ -178,7 +178,7 @@
             <!-- Day of Month (for monthly) -->
             <div class="col-md-4  d-none" id="day-of-month-container">
                <label for="schedule_day_of_month" class="form-label">Day of Month <span class="text-danger">*</span></label>
-               <select id="schedule_day_of_month" name="schedule_day_of_month" class="form-select">
+               <select id="schedule_day_of_month" name="schedule_day_of_month" class="form-select form-select-sm">
                   <option value="">Select</option>
                   <?php for ($i = 1; $i <= 31; $i++): ?>
                   <option value="<?php echo $i; ?>"><?php echo $i; ?></option>
@@ -210,13 +210,13 @@
                   <div class="card-body">
                      <div class="d-flex justify-content-between align-items-center ">
                         <h6 class="card-title  day-name"></h6>
-                        <button type="button" class="btn btn-sm btn-outline-secondary copy-to-all-btn" title="Copy to all days">
+                        <button type="button" class="btn btn-sm btn-subtle-secondary copy-to-all-btn" title="Copy to all days">
                         <i class="bi bi-files"></i>
                         </button>
                      </div>
                      <div class="">
                         <label class="form-label">Start Time <span class="text-danger">*</span></label>
-                        <select class="form-select day-start-time" data-day="" required>
+                        <select class="form-select form-select-sm day-start-time" data-day="" required>
                            <option value="">Select Time</option>
                            <?php
                               // Generate time options from 6:00 AM to 8:00 PM in 30-minute increments
@@ -235,7 +235,7 @@
                      </div>
                      <div class="mb-2">
                         <label class="form-label">End Time <span class="text-danger">*</span></label>
-                        <select class="form-select day-end-time" data-day="" required>
+                        <select class="form-select form-select-sm day-end-time" data-day="" required>
                            <option value="">Select Time</option>
                            <?php
                               // Generate time options from 6:30 AM to 8:30 PM in 30-minute increments
@@ -259,7 +259,7 @@
          </div>
          <div class="col-md-4 d-none">
             <label for="schedule_total_hours" class="form-label">Total Hours</label>
-            <input type="text" id="schedule_total_hours" name="schedule_total_hours" class="form-control readonly-field" placeholder="Total Hours" readonly>
+            <input type="text" id="schedule_total_hours" name="schedule_total_hours" class="form-control form-control-sm readonly-field" placeholder="Total Hours" readonly>
             <small class="text-muted">Based on class type</small>
          </div>
       </div>
@@ -272,16 +272,16 @@
          <!-- Hidden Template Row (initially d-none) -->
          <div class="row exception-date-row align-items-center d-none" id="exception-date-row-template">
             <!-- Exception Date -->
-            <div class="col-md-4 mb-2">
+            <div class="col-md-2 mb-2">
                <label class="form-label">Date</label>
-               <input type="date" name="exception_dates[]" class="form-control" placeholder="YYYY-MM-DD">
+               <input type="date" name="exception_dates[]" class="form-control form-control-sm" placeholder="YYYY-MM-DD">
                <div class="invalid-feedback">Please select a valid date.</div>
                <div class="valid-feedback">Looks good!</div>
             </div>
             <!-- Reason -->
-            <div class="col-md-6 mb-2">
+            <div class="col-md-2 mb-2">
                <label class="form-label">Reason</label>
-               <select name="exception_reasons[]" class="form-select">
+               <select name="exception_reasons[]" class="form-select form-select-sm">
                   <option value="">Select</option>
                   <option value="Client Cancelled">Client Cancelled</option>
                   <option value="Agent Absent">Agent Absent</option>
@@ -292,14 +292,14 @@
                <div class="valid-feedback">Looks good!</div>
             </div>
             <!-- Remove Button -->
-            <div class="col-md-2 mb-2">
+            <div class="col-md-2 mb-1">
                <div class="d-flex h-100 align-items-end mt-4">
-                  <button type="button" class="btn btn-outline-danger btn-sm remove-exception-btn form-control date-remove-btn">Remove</button>
+                  <button type="button" class="btn btn-subtle-danger btn-sm remove-exception-btn form-control form-control-sm date-remove-btn">Remove</button>
                </div>
             </div>
          </div>
          <!-- Add Exception Button -->
-         <button type="button" class="btn btn-outline-primary btn-sm" id="add-exception-date-btn">
+         <button type="button" class="btn btn-subtle-primary btn-sm" id="add-exception-date-btn">
          + Add Exception Date
          </button>
       </div>
@@ -310,9 +310,7 @@
          <h6 class="mb-2">Public Holidays in Schedule</h6>
          <p class="text-muted small ">By default, classes are not scheduled on public holidays. The system will only show holidays that conflict with your class schedule (when a holiday falls on a scheduled class day). You can override specific holidays to include them in the schedule.</p>
          <!-- No holidays message -->
-         <div id="no-holidays-message" class="bd-callout bd-callout-info">
-            No public holidays that conflict with your class schedule were found. Holidays are only shown when they fall on a scheduled class day.
-         </div>
+         <div id="no-holidays-message" class="alert alert-subtle-primary" role="alert">No public holidays that conflict with your class schedule were found. Holidays are only shown when they fall on a scheduled class day.</div>
          <!-- Holidays table container -->
          <div id="holidays-table-container" class="card-body card-body card px-5 d-none" >
             <div class="table-responsive">
@@ -334,8 +332,8 @@
             </div>
             <div class="d-flex justify-content-between mt-2">
                <div>
-                  <button type="button" class="btn btn-outline-secondary btn-sm" id="skip-all-holidays-btn">Skip All Holidays</button>
-                  <button type="button" class="btn btn-outline-primary btn-sm" id="override-all-holidays-btn">Override All Holidays</button>
+                  <button type="button" class="btn btn-subtle-secondary btn-sm" id="skip-all-holidays-btn">Skip All Holidays</button>
+                  <button type="button" class="btn btn-subtle-secondary btn-sm" id="override-all-holidays-btn">Override All Holidays</button>
                </div>
             </div>
          </div>
@@ -364,7 +362,7 @@
    <?php echo section_divider(); ?>
    <!-- Class Date History Section -->
    <div class="mb-4 mt-3">
-      <h6 class="mb-1">Add Stop and Restart Dates.</h6>
+      <h6 class="mb-2">Add Stop and Restart Dates.</h6>
       <p class="text-muted small mb-1">A class can have multiple stop and restart dates.</p>
       <!-- Container for all date history rows -->
       <div id="date-history-container"></div>
@@ -387,20 +385,20 @@
          <!-- Remove Button -->
          <div class="col-md-2 mb-2">
             <label class="form-label invisible">&nbsp;</label>
-            <button type="button" class="btn btn-outline-danger btn-sm remove-date-row-btn form-control date-remove-btn">Remove</button>
+            <button type="button" class="btn btn-subtle-danger btn-sm remove-date-row-btn form-control form-control-sm date-remove-btn">Remove</button>
          </div>
       </div>
       <!-- Add Row Button -->
-      <button type="button" class="btn btn-outline-primary btn-sm" id="add-date-history-btn">
+      <button type="button" class="btn btn-subtle-primary btn-sm" id="add-date-history-btn">
       + Add Stop/Restart Dates
       </button>
    </div>
       <?php echo section_divider(); ?>
-         <div class="col-md-4 ">
             <h6>Class End Date</h6>
             <small class="text-muted mb-1">If you make any changes to the schedule, you will need to recalculate the end date.</small>
+        <div class="col-md-2">
             <label for="schedule_end_date" class="form-label">Estimated End Date <span class="text-danger">*</span></label>
-            <input type="date" id="schedule_end_date" name="schedule_end_date" class="form-control readonly-field" placeholder="YYYY-MM-DD" required>
+            <input type="date" id="schedule_end_date" name="schedule_end_date" class="form-control form-control-sm readonly-field" placeholder="YYYY-MM-DD" readonly="" required>
             <div class="invalid-feedback">Please generate the end date.</div>
             <div class="valid-feedback">Looks good!</div>
             <button type="button" class="btn btn-subtle-warning mb-2 mt-2" id="calculate_schedule_end_date-btn">
@@ -491,7 +489,7 @@
       </div>
       <!-- Schedule Statistics Toggle Button -->
       <div class="mt-3 ">
-         <button type="button" class="btn btn-outline-primary btn-sm" id="toggle-statistics-btn">
+         <button type="button" class="btn btn-subtle-primary btn-sm" id="toggle-statistics-btn">
          <i class="bi bi-bar-chart-line me-1"></i> View Schedule Statistics
          </button>
          <div class="clearfix"></div>
@@ -503,9 +501,9 @@
    <?php echo section_header('Funding & Exam Details'); ?>
    <div class="row">
       <!-- SETA Funded -->
-      <div class="col-md-3 ">
+      <div class="col-md-2">
          <label for="seta_funded" class="form-label">SETA Funded? <span class="text-danger">*</span></label>
-         <select id="seta_funded" name="seta_funded" class="form-select" required>
+         <select id="seta_funded" name="seta_funded" class="form-select form-select-sm" required>
             <option value="">Select</option>
             <?php foreach ($data['yes_no_options'] as $option): ?>
             <option value="<?php echo $option['id']; ?>"><?php echo $option['name']; ?></option>
@@ -517,7 +515,7 @@
       <!-- SETA (conditionally displayed) -->
       <div class="col-md-3 " id="seta_container" style="display: none;">
          <label for="seta_id" class="form-label">SETA <span class="text-danger">*</span></label>
-         <select id="seta_id" name="seta_id" class="form-select">
+         <select id="seta_id" name="seta_id" class="form-select form-select-sm">
             <option value="">Select</option>
             <?php foreach ($data['setas'] as $seta): ?>
             <option value="<?php echo $seta['id']; ?>"><?php echo $seta['name']; ?></option>
@@ -527,9 +525,9 @@
          <div class="valid-feedback">Looks good!</div>
       </div>
       <!-- Exam Class -->
-      <div class="col-md-3 ">
+      <div class="col-md-2">
          <label for="exam_class" class="form-label">Exam Class <span class="text-danger">*</span></label>
-         <select id="exam_class" name="exam_class" class="form-select" required>
+         <select id="exam_class" name="exam_class" class="form-select form-select-sm" required>
             <option value="">Select</option>
             <?php foreach ($data['yes_no_options'] as $option): ?>
             <option value="<?php echo $option['id']; ?>"><?php echo $option['name']; ?></option>
@@ -542,29 +540,29 @@
       <div class="col-md-3 ">
          <div id="exam_type_container" style="display: none;">
             <label for="exam_type" class="form-label">Exam Type</label>
-            <input type="text" id="exam_type" name="exam_type" class="form-control" placeholder="Enter exam type">
+            <input type="text" id="exam_type" name="exam_type" class="form-control form-control-sm" placeholder="Enter exam type">
             <div class="invalid-feedback">Please provide the exam type.</div>
             <div class="valid-feedback">Looks good!</div>
          </div>
       </div>
    </div>
    <!-- Class Learners Section -->
-   <h5 class="mt-3 mb-1">Class Learners <span class="text-danger">*</span></h5>
-   <p class="text-muted small mb-1">Select learners for this class and manage their status.</p>
+   <h6 class="mt-3 mb-1">Class Learners <span class="text-danger">*</span></h6>
+   <p class="text-muted small mb-2">Select learners for this class and manage their status.</p>
    <div class="row mb-4">
       <!-- Learner Selection -->
       <div class="col-md-4">
          <!-- For multi-select with floating labels, we need a custom approach -->
          <div class="">
             <label for="add_learner" class="form-label">Select Learners</label>
-            <select id="add_learner" name="add_learner[]" class="form-select" aria-label="Learner selection" multiple>
+            <select id="add_learner" name="add_learner[]" class="form-select form-select-sm" aria-label="Learner selection" multiple>
                <?php foreach ($data['learners'] as $learner): ?>
                <option value="<?php echo $learner['id']; ?>"><?php echo $learner['name']; ?></option>
                <?php endforeach; ?>
             </select>
             <small class="text-muted">Select multiple learners to add to this class. Hold Ctrl/Cmd to select multiple.</small>
             <div class="invalid-feedback">Please select at least one learner.</div>
-            <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-selected-learners-btn">
+            <button type="button" class="btn btn-subtle-primary btn-sm mt-2" id="add-selected-learners-btn">
             Add Selected Learners
             </button>
          </div>
@@ -574,10 +572,8 @@
          <div class="">
             <div class="form-label mb-2">Class Learners</div>
             <div id="class-learners-container" class="card-body card px-5">
-               <div class="bd-callout bd-callout-info" id="no-learners-message">
-                  No learners added to this class yet. At least one learner is required. Select learners from the list and click "Add Selected Learners".
-               </div>
-               <table class="table table-sm fs-9 d-none" id="class-learners-table">
+                <div class="alert alert-subtle-primary" id="no-learners-message" role="alert">No learners added to this class yet. Select learners from the list and click "Add Selected Learners</div>
+                <table class="table table-sm fs-9 d-none" id="class-learners-table">
                   <thead>
                      <tr>
                         <th>Learner</th>
@@ -608,13 +604,13 @@
                <!-- For multi-select with floating labels, we need a custom approach -->
                <div class="">
                   <label for="add_learner" class="form-label">Select Learners</label>
-                  <select id="exam_learner_select" name="exam_learner_select[]" class="form-select" aria-label="Exam learner selection" multiple>
+                  <select id="exam_learner_select" name="exam_learner_select[]" class="form-select form-select-sm" aria-label="Exam learner selection" multiple>
                      <!-- Will be populated dynamically with class learners -->
                   </select>
                   <small class="text-muted">Select learners who will take exams in this class. Hold Ctrl/Cmd to select multiple.</small>
                   <div class="invalid-feedback">Please select at least one learner for exams.</div>
                   <div class="valid-feedback">Looks good!</div>
-                  <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-selected-exam-learners-btn">
+                  <button type="button" class="btn btn-subtle-primary btn-sm mt-2" id="add-selected-exam-learners-btn">
                   Add Selected Exam Learners
                   </button>
                </div>
@@ -624,7 +620,7 @@
                <div class="">
                   <div class="form-label mb-2">Learners Taking Exams</div>
                   <div id="exam-learners-list" class="card-body card px-5">
-                     <div class="alert alert-info" id="no-exam-learners-message">
+                     <div class="alert alert-subtle-primary" id="no-exam-learners-message">
                         No exam learners added yet. Select learners from the list and click "Add Selected Exam Learners".
                      </div>
                      <table class="table table-sm fs-9 d-none" id="exam-learners-table">
@@ -653,13 +649,13 @@
    <?php echo section_header('Agents'); ?>
    <!-- Class Agents Section -->
    <div class="mb-4">
-      <h6 class="mb-1">Class Agents</h6>
+      <h6 class="mb-2">Class Agents</h6>
       <p class="text-muted small mb-1">Assign the primary class agent. If the agent changes during the class, the history will be tracked.</p>
       <!-- Initial Class Agent -->
       <div class="row mb-2">
-         <div class="col-md-4 ">
+         <div class="col-md-3">
             <label for="initial_class_agent" class="form-label">Initial Class Agent <span class="text-danger">*</span></label>
-            <select id="initial_class_agent" name="initial_class_agent" class="form-select" required>
+            <select id="initial_class_agent" name="initial_class_agent" class="form-select form-select-sm" required>
                <option value="">Select</option>
                <?php foreach ($data['agents'] as $agent): ?>
                <option value="<?php echo $agent['id']; ?>"><?php echo $agent['name']; ?></option>
@@ -668,18 +664,15 @@
             <div class="invalid-feedback">Please select the initial class agent.</div>
             <div class="valid-feedback">Looks good!</div>
          </div>
-         <div class="col-md-4 ">
+         <div class="col-md-3">
             <label for="initial_agent_start_date" class="form-label">Start Date <span class="text-danger">*</span></label>
-            <input type="date" id="initial_agent_start_date" name="initial_agent_start_date" class="form-control" placeholder="YYYY-MM-DD" required>
+            <input type="date" id="initial_agent_start_date" name="initial_agent_start_date" class="form-control form-control-sm" placeholder="YYYY-MM-DD" required>
             <div class="invalid-feedback">Please select the start date.</div>
             <div class="valid-feedback">Looks good!</div>
          </div>
-      </div>
-      <!-- Project Supervisor -->
-      <div class="row mb-4">
-         <div class="col-md-4 ">
+         <div class="col-md-3">
             <label for="project_supervisor" class="form-label">Project Supervisor <span class="text-danger">*</span></label>
-            <select id="project_supervisor" name="project_supervisor" class="form-select" required>
+            <select id="project_supervisor" name="project_supervisor" class="form-select form-select-sm" required>
                <option value="">Select</option>
                <?php foreach ($data['supervisors'] as $supervisor): ?>
                <option value="<?php echo $supervisor['id']; ?>"><?php echo $supervisor['name']; ?></option>
@@ -689,18 +682,19 @@
             <div class="valid-feedback">Looks good!</div>
          </div>
       </div>
+      <!-- Project Supervisor -->
       <!-- Backup Agents Section -->
       <div class="mt-4 mb-4">
-         <h6 class="mb-1">Backup Agents</h6>
+         <h6 class="mb-2">Backup Agents</h6>
          <p class="text-muted small mb-1">Add backup agents with specific dates when they will be available.</p>
          <!-- Container for all backup agent rows -->
          <div id="backup-agents-container"></div>
          <!-- Hidden Template Row (initially d-none) -->
          <div class="row backup-agent-row align-items-center d-none" id="backup-agent-row-template">
             <!-- Backup Agent -->
-            <div class="col-md-4 mb-2">
+            <div class="col-md-3 mb-2">
                <label class="form-label">Backup Agent</label>
-               <select name="backup_agent_ids[]" class="form-select backup-agent-select">
+               <select name="backup_agent_ids[]" class="form-select form-select-sm backup-agent-select">
                   <option value="">Select</option>
                   <?php foreach ($data['agents'] as $agent): ?>
                   <option value="<?php echo $agent['id']; ?>"><?php echo $agent['name']; ?></option>
@@ -710,21 +704,21 @@
                <div class="valid-feedback">Looks good!</div>
             </div>
             <!-- Backup Date -->
-            <div class="col-md-4 mb-2">
+            <div class="col-md-3 mb-2">
                <label class="form-label">Backup Date</label>
-               <input type="date" name="backup_agent_dates[]" class="form-control" placeholder="YYYY-MM-DD">
+               <input type="date" name="backup_agent_dates[]" class="form-control form-control-sm" placeholder="YYYY-MM-DD">
                <div class="invalid-feedback">Please select a valid date.</div>
                <div class="valid-feedback">Looks good!</div>
             </div>
             <!-- Remove Button -->
-            <div class="col-md-2 mt-3">
+            <div class="col-md-1 mt-3">
                <div class="d-flex h-100 align-items-end">
-                  <button type="button" class="btn btn-outline-danger btn-sm remove-backup-agent-btn form-control date-remove-btn">Remove</button>
+                  <button type="button" class="btn btn-subtle-danger btn-sm remove-backup-agent-btn form-control form-control-sm date-remove-btn">Remove</button>
                </div>
             </div>
          </div>
          <!-- Add Row Button -->
-         <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-backup-agent-btn">
+         <button type="button" class="btn btn-subtle-primary btn-sm mt-2" id="add-backup-agent-btn">
          + Add Backup Agent
          </button>
       </div>
@@ -732,9 +726,9 @@
 
       <!-- Delivery Date -->
       <div class="row mb-4">
-         <div class="col-md-4 ">
+         <div class="col-md-2">
             <label for="delivery_date" class="form-label">Delivery Date <span class="text-danger">*</span></label>
-            <input type="date" id="delivery_date" name="delivery_date" class="form-control" placeholder="YYYY-MM-DD" required>
+            <input type="date" id="delivery_date" name="delivery_date" class="form-control form-control-sm" placeholder="YYYY-MM-DD" required>
             <div class="invalid-feedback">Please select the delivery date.</div>
             <div class="valid-feedback">Looks good!</div>
          </div>

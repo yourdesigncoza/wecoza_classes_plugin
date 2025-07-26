@@ -156,7 +156,7 @@ function section_divider($classes = '') {
  * @return string HTML for the section header
  */
 function section_header($title, $description = '', $title_tag = 'h6') {
-    $html = "<{$title_tag}>{$title}</{$title_tag}>\n";
+    $html = "<{$title_tag} class=\"mb-2\">{$title}</{$title_tag}>\n";
     
     if ($description) {
         $html .= "<p class=\"text-muted small mb-3\">{$description}</p>\n";
