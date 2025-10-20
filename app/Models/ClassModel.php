@@ -45,6 +45,7 @@ class ClassModel {
     private $scheduleData = [];
     private $stopRestartDates = [];
     private $classNotesData = [];
+    private $order_nr;
     private $createdAt;
     private $updatedAt;
 
@@ -97,6 +98,7 @@ class ClassModel {
         $this->setScheduleData($this->parseJsonField($data['schedule_data'] ?? $data['scheduleData'] ?? []));
         $this->setStopRestartDates($this->parseJsonField($data['stop_restart_dates'] ?? []));
         $this->setClassNotesData($this->parseJsonField($data['class_notes_data'] ?? $data['classNotes'] ?? $data['class_notes'] ?? []));
+        $this->setOrderNr($data['order_nr'] ?? null);
         
         // Load agent replacements from database if this is an existing class
         if ($this->getId()) {
@@ -155,8 +157,8 @@ class ClassModel {
                 exam_class, exam_type, class_agent, initial_class_agent,
                 initial_agent_start_date, project_supervisor_id, delivery_date,
                 learner_ids, exam_learners, backup_agent_ids, schedule_data, stop_restart_dates,
-                class_notes_data, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                class_notes_data, order_nr, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             $params = [
                 $this->getClientId(),
@@ -182,6 +184,7 @@ class ClassModel {
                 json_encode($this->getScheduleData()),
                 $stopRestartJson,
                 json_encode($this->getClassNotesData()),
+                $this->getOrderNr(),
                 $this->getCreatedAt(),
                 $this->getUpdatedAt()
             ];
@@ -221,7 +224,7 @@ class ClassModel {
                 seta_funded = ?, seta = ?, exam_class = ?, exam_type = ?, 
                 class_agent = ?, initial_class_agent = ?, initial_agent_start_date = ?,
                 project_supervisor_id = ?, delivery_date = ?, learner_ids = ?, exam_learners = ?, backup_agent_ids = ?,
-                schedule_data = ?, stop_restart_dates = ?, class_notes_data = ?, updated_at = ?
+                schedule_data = ?, stop_restart_dates = ?, class_notes_data = ?, order_nr = ?, updated_at = ?
                 WHERE class_id = ?";
 
             $params = [
@@ -237,6 +240,7 @@ class ClassModel {
                 $this->getDeliveryDate(), json_encode($this->getLearnerIds()),
                 json_encode($this->getExamLearners()), json_encode($this->getBackupAgentIds()), json_encode($this->getScheduleData()),
                 $stopRestartJson, json_encode($this->getClassNotesData()),
+                $this->getOrderNr(),
                 $this->getUpdatedAt(), $this->getId()
             ];
 
@@ -435,11 +439,35 @@ class ClassModel {
     public function getClassNotesData() { return $this->classNotesData; }
     public function setClassNotesData($classNotesData) { $this->classNotesData = is_array($classNotesData) ? $classNotesData : []; return $this; }
 
+    public function getOrderNr() { return $this->order_nr; }
+    public function setOrderNr($order_nr) { $this->order_nr = is_string($order_nr) ? $order_nr : null; return $this; }
+
     public function getCreatedAt() { return $this->createdAt; }
     public function setCreatedAt($createdAt) { $this->createdAt = $createdAt; return $this; }
 
     public function getUpdatedAt() { return $this->updatedAt; }
     public function setUpdatedAt($updatedAt) { $this->updatedAt = $updatedAt; return $this; }
+
+    /**
+     * Check if class is in Draft status (no order number assigned)
+     */
+    public function isDraft() {
+        return empty($this->order_nr);
+    }
+
+    /**
+     * Check if class is Active (has order number assigned)
+     */
+    public function isActive() {
+        return !empty($this->order_nr);
+    }
+
+    /**
+     * Get class status based on order number
+     */
+    public function getStatus() {
+        return $this->isActive() ? 'Active' : 'Draft';
+    }
 
     /**
      * Get learner data in the new format (array of objects with id, name, status, level)

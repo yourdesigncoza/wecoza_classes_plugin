@@ -310,12 +310,18 @@ function showCustomAlert(message) {
             var $addressWrapper = $("#address-wrapper");
             var $addressInput = $("#site_address");
 
-            // If there's a matching address, populate and show
-            if (siteAddresses[selectedValue]) {
-                $addressInput.val(siteAddresses[selectedValue]);
+            if (selectedValue) {
+                // Site selected - always show address field
                 $addressWrapper.show();
+                
+                // Populate if address data exists, otherwise show empty
+                if (siteAddresses[selectedValue]) {
+                    $addressInput.val(siteAddresses[selectedValue]);
+                } else {
+                    $addressInput.val("");
+                }
             } else {
-                // Otherwise clear and hide
+                // No site selected - hide address field
                 $addressInput.val("");
                 $addressWrapper.hide();
             }

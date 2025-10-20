@@ -268,21 +268,19 @@ $controller = $controller ?? null;
                                         <?php endif; ?>
                                     </td>
                                     <td class="py-2 fs-8 white-space-nowrap">
-                                        <?php if ($controller && $controller->isClassCurrentlyStopped($class)): ?>
+                                        <?php 
+                                        // Determine class status based on order_nr field
+                                        $isDraft = empty($class['order_nr']);
+                                        if ($isDraft): 
+                                        ?>
                                         <span class="badge badge-phoenix fs-10 badge-phoenix-warning">
-                                            <span class="badge-label">Stopped</span>
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-alert-octagon ms-1" style="height:12.8px;width:12.8px;">
-                                                <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
-                                                <line x1="12" y1="8" x2="12" y2="12"></line>
-                                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                                            </svg>
+                                            <span class="badge-label">Draft</span>
+                                            <i class="bi bi-file-earmark-text ms-1"></i>
                                         </span>
                                         <?php else: ?>
                                         <span class="badge badge-phoenix fs-10 badge-phoenix-success">
                                             <span class="badge-label">Active</span>
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check ms-1" style="height:12.8px;width:12.8px;">
-                                                <polyline points="20 6 9 17 4 12"></polyline>
-                                            </svg>
+                                            <i class="bi bi-check-circle ms-1"></i>
                                         </span>
                                         <?php endif; ?>
                                     </td>

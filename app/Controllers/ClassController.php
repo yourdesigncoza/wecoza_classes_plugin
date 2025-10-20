@@ -124,7 +124,7 @@ class ClassController {
                 ]);
 
                 if ($page_id && !\is_wp_error($page_id)) {
-                    \error_log("WeCoza Classes Plugin: Created display-single-class page with ID {$page_id}");
+                    // error_log("WeCoza Classes Plugin: Created display-single-class page with ID {$page_id}");
                 }
             }
         }
@@ -229,7 +229,7 @@ class ClassController {
                 'events' => $allHolidays
             ]);
         } catch (\Exception $e) {
-            error_log('WeCoza Classes Plugin: Error loading public holidays: ' . $e->getMessage());
+            // error_log('WeCoza Classes Plugin: Error loading public holidays: ' . $e->getMessage());
         }
 
         // Localize calendar data for wecoza-calendar.js
@@ -276,7 +276,10 @@ class ClassController {
             $db = \WeCozaClasses\Services\Database\DatabaseService::getInstance();
 
             // Query site addresses from database
-            $sql = "SELECT site_id, address FROM public.sites WHERE address IS NOT NULL AND address != ''";
+            $sql = "SELECT s.site_id, l.street_address as address 
+                    FROM public.sites s 
+                    LEFT JOIN public.locations l ON s.place_id = l.location_id 
+                    WHERE l.street_address IS NOT NULL AND l.street_address != ''";
             $stmt = $db->query($sql);
 
             $addresses = [];
@@ -292,7 +295,7 @@ class ClassController {
             return $addresses;
 
         } catch (\Exception $e) {
-            error_log('WeCoza Classes Plugin: Error fetching site addresses: ' . $e->getMessage());
+            // error_log('WeCoza Classes Plugin: Error fetching site addresses: ' . $e->getMessage());
             return [];
         }
     }
@@ -423,7 +426,7 @@ class ClassController {
             return $clients;
 
         } catch (\Exception $e) {
-            error_log('WeCoza Classes Plugin: Error fetching clients: ' . $e->getMessage());
+            // error_log('WeCoza Classes Plugin: Error fetching clients: ' . $e->getMessage());
             return [];
         }
     }
@@ -434,8 +437,9 @@ class ClassController {
             $db = \WeCozaClasses\Services\Database\DatabaseService::getInstance();
 
             // Query sites from database with client information
-            $sql = "SELECT s.site_id, s.client_id, s.site_name, s.address
+            $sql = "SELECT s.site_id, s.client_id, s.site_name, l.street_address as address
                     FROM public.sites s
+                    LEFT JOIN public.locations l ON s.place_id = l.location_id
                     ORDER BY s.client_id ASC, s.site_name ASC";
             $stmt = $db->query($sql);
 
@@ -457,7 +461,7 @@ class ClassController {
             return $sites;
 
         } catch (\Exception $e) {
-            error_log('WeCoza Classes Plugin: Error fetching sites: ' . $e->getMessage());
+            // error_log('WeCoza Classes Plugin: Error fetching sites: ' . $e->getMessage());
             return [];
         }
     }
@@ -577,18 +581,18 @@ class ClassController {
             // Set JSON content type
             header('Content-Type: application/json; charset=utf-8');
             
-            error_log('=== CLASS SAVE AJAX START ===');
-            error_log('POST data keys: ' . implode(', ', array_keys($_POST)));
-            error_log('PHP file last modified: ' . date('Y-m-d H:i:s', filemtime(__FILE__)));
+            // error_log('=== CLASS SAVE AJAX START ===');
+            // error_log('POST data keys: ' . implode(', ', array_keys($_POST)));
+            // error_log('PHP file last modified: ' . date('Y-m-d H:i:s', filemtime(__FILE__)));
             
             // Create instance
             $instance = new self();
 
             // Check nonce for security
             if (!isset($_POST['nonce']) || !\wp_verify_nonce($_POST['nonce'], 'wecoza_class_nonce')) {
-                error_log('Nonce verification failed');
-                error_log('Expected nonce name: wecoza_class_nonce');
-                error_log('Received nonce: ' . (isset($_POST['nonce']) ? $_POST['nonce'] : 'not set'));
+                // error_log('Nonce verification failed');
+                // error_log('Expected nonce name: wecoza_class_nonce');
+                // error_log('Received nonce: ' . (isset($_POST['nonce']) ? $_POST['nonce'] : 'not set'));
                 
                 // Clean buffer and restore error handler before sending response
                 ob_clean();
@@ -597,17 +601,17 @@ class ClassController {
                 return;
             }
 
-            error_log('Nonce verification passed');
+            // error_log('Nonce verification passed');
 
             // Process form data (including file uploads)
             $formData = self::processFormData($_POST, $_FILES);
-            error_log('Processed form data keys: ' . implode(', ', array_keys($formData)));
+            // error_log('Processed form data keys: ' . implode(', ', array_keys($formData)));
 
         // Determine if this is create or update operation
         $isUpdate = isset($formData['id']) && !empty($formData['id']);
         $classId = $isUpdate ? intval($formData['id']) : null;
 
-        error_log($isUpdate ? "Updating existing class with ID: {$classId}" : 'Creating new class');
+        // error_log($isUpdate ? "Updating existing class with ID: {$classId}" : 'Creating new class');
 
         // Use direct model access for create or update
         try {
@@ -615,7 +619,7 @@ class ClassController {
             try {
                 $db = \WeCozaClasses\Services\Database\DatabaseService::getInstance();
             } catch (\Exception $dbError) {
-                error_log('Database connection failed during save: ' . $dbError->getMessage());
+                // error_log('Database connection failed during save: ' . $dbError->getMessage());
                 
                 // Clean buffer and restore error handler before sending response
                 ob_clean();
@@ -628,7 +632,7 @@ class ClassController {
                 // Load existing class and update it
                 $class = ClassModel::getById($classId);
                 if (!$class) {
-                    error_log('Class not found for update: ' . $classId);
+                    // error_log('Class not found for update: ' . $classId);
                     
                     // Clean buffer and restore error handler before sending response
                     ob_clean();
@@ -648,15 +652,15 @@ class ClassController {
             }
 
             if ($result) {
-                error_log('Class saved successfully with ID: ' . $class->getId());
+                // error_log('Class saved successfully with ID: ' . $class->getId());
                 
                 // Save QA visits to the new normalized structure
                 if (!empty($_POST) || !empty($_FILES)) {
                     $qaResult = self::saveQAVisits($class->getId(), $_POST, $_FILES);
                     if ($qaResult) {
-                        error_log('QA visits saved successfully for class ID: ' . $class->getId());
+                        // error_log('QA visits saved successfully for class ID: ' . $class->getId());
                     } else {
-                        error_log('Failed to save QA visits for class ID: ' . $class->getId());
+                        // error_log('Failed to save QA visits for class ID: ' . $class->getId());
                     }
                 }
                 
@@ -669,15 +673,15 @@ class ClassController {
                         $class->getId(), 
                         \get_permalink($display_page->ID)
                     );
-                    error_log('Generated redirect URL: ' . $redirect_url);
+                    // error_log('Generated redirect URL: ' . $redirect_url);
                 } else {
-                    error_log('Display single class page not found at path: app/display-single-class');
+                    // error_log('Display single class page not found at path: app/display-single-class');
                 }
                 
                 // Log any captured warnings
                 if (!empty($errorMessages)) {
                     foreach ($errorMessages as $errorMsg) {
-                        error_log($errorMsg);
+                        // error_log($errorMsg);
                     }
                 }
                 
@@ -686,12 +690,12 @@ class ClassController {
                 restore_error_handler();
                 
                 $instance->sendJsonSuccess([
-                    'message' => $isUpdate ? 'Class updated successfully.' : 'Class created successfully.',
+                    'message' => $isUpdate ? 'Class updated successfully.' : 'Draft class created successfully.',
                     'class_id' => $class->getId(),
                     'redirect_url' => $redirect_url
                 ]);
             } else {
-                error_log('Model operation failed');
+                // error_log('Model operation failed');
                 
                 // Clean buffer and restore error handler before sending response
                 ob_clean();
@@ -702,8 +706,8 @@ class ClassController {
                 );
             }
         } catch (\Exception $e) {
-            error_log('Exception during class save: ' . $e->getMessage());
-            error_log('Exception trace: ' . $e->getTraceAsString());
+            // error_log('Exception during class save: ' . $e->getMessage());
+            // error_log('Exception trace: ' . $e->getTraceAsString());
             
             // Clean buffer and restore error handler before sending response
             ob_clean();
@@ -712,9 +716,9 @@ class ClassController {
             $instance->sendJsonError('An error occurred while saving the class: ' . $e->getMessage());
         }
         } catch (\Error $e) {
-            error_log('FATAL ERROR in saveClassAjax: ' . $e->getMessage());
-            error_log('Error file: ' . $e->getFile() . ' Line: ' . $e->getLine());
-            error_log('Error trace: ' . $e->getTraceAsString());
+            // error_log('FATAL ERROR in saveClassAjax: ' . $e->getMessage());
+            // error_log('Error file: ' . $e->getFile() . ' Line: ' . $e->getLine());
+            // error_log('Error trace: ' . $e->getTraceAsString());
             
             // Clean buffer and restore error handler before sending response
             ob_clean();
@@ -727,8 +731,8 @@ class ClassController {
                 \wp_send_json_error('A server error occurred. Please check the error logs.');
             }
         } catch (\Throwable $e) {
-            error_log('THROWABLE in saveClassAjax: ' . $e->getMessage());
-            error_log('File: ' . $e->getFile() . ' Line: ' . $e->getLine());
+            // error_log('THROWABLE in saveClassAjax: ' . $e->getMessage());
+            // error_log('File: ' . $e->getFile() . ' Line: ' . $e->getLine());
             
             // Clean buffer and restore error handler before sending response
             ob_clean();
@@ -775,6 +779,11 @@ class ClassController {
         if (isset($formData['class_notes']) && !empty($formData['class_notes'])) {
             $class->setClassNotesData($formData['class_notes']);
         }
+        
+        // Handle order_nr field - initially empty for new classes (Draft status)
+        if (isset($formData['order_nr'])) {
+            $class->setOrderNr($formData['order_nr']);
+        }
 
         return $class;
     }
@@ -805,13 +814,13 @@ class ClassController {
      * @return array Processed form data
      */
     private static function processFormData($data, $files = []) {
-        error_log('processFormData: Starting to process form data');
+        // error_log('processFormData: Starting to process form data');
         $processed = [];
 
         try {
             // Basic fields - using snake_case field names that the model expects
             $processed['id'] = isset($data['class_id']) && $data['class_id'] !== 'auto-generated' ? intval($data['class_id']) : null;
-            error_log('processFormData: Processed ID field');
+            // error_log('processFormData: Processed ID field');
         $processed['client_id'] = isset($data['client_id']) && !empty($data['client_id']) ? intval($data['client_id']) : null;
         $processed['site_id'] = isset($data['site_id']) && !is_array($data['site_id']) ? $data['site_id'] : null;
         $processed['site_address'] = isset($data['site_address']) && !is_array($data['site_address']) ? self::sanitizeText($data['site_address']) : null;
@@ -827,12 +836,12 @@ class ClassController {
                 : null);
         // Handle boolean fields properly - check for 'Yes'/'No' string values
         // Convert empty strings to false for boolean fields
-        error_log('processFormData: Processing seta_funded field. Raw value: ' . var_export(isset($data['seta_funded']) ? $data['seta_funded'] : 'not set', true));
+        // error_log('processFormData: Processing seta_funded field. Raw value: ' . var_export(isset($data['seta_funded']) ? $data['seta_funded'] : 'not set', true));
         $processed['seta_funded'] = false; // default to false
         if (isset($data['seta_funded']) && !empty($data['seta_funded'])) {
             $processed['seta_funded'] = ($data['seta_funded'] === 'Yes' || $data['seta_funded'] === '1' || $data['seta_funded'] === true);
         }
-        error_log('processFormData: Processed seta_funded: ' . var_export($processed['seta_funded'], true));
+        // error_log('processFormData: Processed seta_funded: ' . var_export($processed['seta_funded'], true));
         
         $processed['seta'] = isset($data['seta_id']) && !is_array($data['seta_id']) 
             ? self::sanitizeText($data['seta_id']) 
@@ -841,12 +850,12 @@ class ClassController {
                 : null);
         
         // Convert empty strings to false for boolean fields
-        error_log('processFormData: Processing exam_class field. Raw value: ' . var_export(isset($data['exam_class']) ? $data['exam_class'] : 'not set', true));
+        // error_log('processFormData: Processing exam_class field. Raw value: ' . var_export(isset($data['exam_class']) ? $data['exam_class'] : 'not set', true));
         $processed['exam_class'] = false; // default to false
         if (isset($data['exam_class']) && !empty($data['exam_class'])) {
             $processed['exam_class'] = ($data['exam_class'] === 'Yes' || $data['exam_class'] === '1' || $data['exam_class'] === true);
         }
-        error_log('processFormData: Processed exam_class: ' . var_export($processed['exam_class'], true));
+        // error_log('processFormData: Processed exam_class: ' . var_export($processed['exam_class'], true));
         $processed['exam_type'] = isset($data['exam_type']) && !is_array($data['exam_type']) ? self::sanitizeText($data['exam_type']) : null;
         // QA visits are now handled separately in saveQAVisits method
         // Remove old QA fields from processed data since they're no longer needed
@@ -856,6 +865,9 @@ class ClassController {
         $processed['initial_agent_start_date'] = isset($data['initial_agent_start_date']) && !is_array($data['initial_agent_start_date']) ? self::sanitizeText($data['initial_agent_start_date']) : null;
         $processed['project_supervisor'] = isset($data['project_supervisor']) && !empty($data['project_supervisor']) ? intval($data['project_supervisor']) : null;
         $processed['delivery_date'] = isset($data['delivery_date']) && !is_array($data['delivery_date']) ? self::sanitizeText($data['delivery_date']) : null;
+        
+        // Order number field - initially empty for new classes (Draft status)
+        $processed['order_nr'] = isset($data['order_nr']) && !is_array($data['order_nr']) ? self::sanitizeText($data['order_nr']) : null;
 
         // Array fields
         $processed['class_notes'] = isset($data['class_notes']) && is_array($data['class_notes']) ? array_map([self::class, 'sanitizeText'], $data['class_notes']) : [];
@@ -863,7 +875,7 @@ class ClassController {
 
         // JSON fields that need special handling
         // JSON fields that need special handling
-        error_log('processFormData: Processing JSON fields');
+        // error_log('processFormData: Processing JSON fields');
         
         // Process learner IDs 
         $learnerIds = [];
@@ -874,7 +886,7 @@ class ClassController {
             }
         }
         $processed['learner_ids'] = $learnerIds;
-        error_log('processFormData: Processed learner_ids');
+        // error_log('processFormData: Processed learner_ids');
         
         // Process exam learners separately
         $examLearners = [];
@@ -885,7 +897,7 @@ class ClassController {
             }
         }
         $processed['exam_learners'] = $examLearners;
-        error_log('processFormData: Processed exam_learners');
+        // error_log('processFormData: Processed exam_learners');
         
         // Process backup agents from form arrays
         $backupAgents = [];
@@ -903,7 +915,7 @@ class ClassController {
             }
         }
         $processed['backup_agent_ids'] = $backupAgents;
-        error_log('processFormData: Processed backup_agent_ids: ' . json_encode($backupAgents));
+        // error_log('processFormData: Processed backup_agent_ids: ' . json_encode($backupAgents));
         
         // Process agent replacements from form arrays
         // 
@@ -934,10 +946,10 @@ class ClassController {
             }
         }
         $processed['agent_replacements'] = $agentReplacements;
-        error_log('processFormData: Processed agent_replacements: ' . json_encode($agentReplacements));
+        // error_log('processFormData: Processed agent_replacements: ' . json_encode($agentReplacements));
         
         $processed['schedule_data'] = self::processJsonField($data, 'schedule_data');
-        error_log('processFormData: Processed schedule_data: ' . json_encode($processed['schedule_data']));
+        // error_log('processFormData: Processed schedule_data: ' . json_encode($processed['schedule_data']));
         
         // Process stop/restart dates from form arrays
         $stopRestartDates = [];
@@ -955,14 +967,14 @@ class ClassController {
             }
         }
         $processed['stop_restart_dates'] = $stopRestartDates;
-        error_log('processFormData: Processed stop_restart_dates: ' . json_encode($stopRestartDates));
+        // error_log('processFormData: Processed stop_restart_dates: ' . json_encode($stopRestartDates));
 
-        error_log('processFormData: Successfully processed all form data');
+        // error_log('processFormData: Successfully processed all form data');
         return $processed;
         
         } catch (\Exception $e) {
-            error_log('processFormData ERROR: ' . $e->getMessage());
-            error_log('processFormData ERROR trace: ' . $e->getTraceAsString());
+            // error_log('processFormData ERROR: ' . $e->getMessage());
+            // error_log('processFormData ERROR trace: ' . $e->getTraceAsString());
             throw $e;
         }
     }
@@ -975,10 +987,10 @@ class ClassController {
      * @return array Processed JSON data
      */
     private static function processJsonField($data, $field) {
-        error_log("processJsonField: Processing field {$field}");
+        // error_log("processJsonField: Processing field {$field}");
         
         if (!isset($data[$field])) {
-            error_log("processJsonField: Field {$field} not set");
+            // error_log("processJsonField: Field {$field} not set");
             return [];
         }
 
@@ -986,19 +998,19 @@ class ClassController {
         
         // If it's already an array (from form submission), return it
         if (is_array($value)) {
-            error_log("processJsonField: Field {$field} is already an array");
+            // error_log("processJsonField: Field {$field} is already an array");
             
             // Special handling for schedule_data field
             if ($field === 'schedule_data') {
                 // The form sends schedule_data as nested arrays, we need to reconstruct it
                 $scheduleData = self::reconstructScheduleData($data);
-                error_log("processJsonField: Reconstructed schedule_data: " . json_encode($scheduleData));
+                // error_log("processJsonField: Reconstructed schedule_data: " . json_encode($scheduleData));
                 
                 // Verify end_date is present
                 if (isset($scheduleData['end_date'])) {
-                    error_log('processJsonField: end_date is present: ' . $scheduleData['end_date']);
+                    // error_log('processJsonField: end_date is present: ' . $scheduleData['end_date']);
                 } else {
-                    error_log('processJsonField: WARNING - end_date is missing from reconstructed schedule_data');
+                    // error_log('processJsonField: WARNING - end_date is missing from reconstructed schedule_data');
                 }
                 
                 return self::processScheduleData($scheduleData);
@@ -1010,7 +1022,7 @@ class ClassController {
         // Handle WordPress addslashes and HTML encoding for strings
         if (is_string($value)) {
             if (empty($value)) {
-                error_log("processJsonField: Field {$field} is empty string");
+                // error_log("processJsonField: Field {$field} is empty string");
                 return [];
             }
             
@@ -1020,8 +1032,8 @@ class ClassController {
             // Decode JSON
             $decoded = json_decode($value, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
-                error_log("JSON decode error for field {$field}: " . json_last_error_msg());
-                error_log("JSON string that failed: " . $value);
+                // error_log("JSON decode error for field {$field}: " . json_last_error_msg());
+                // error_log("JSON string that failed: " . $value);
                 return [];
             }
             
@@ -1033,7 +1045,7 @@ class ClassController {
             return $decoded ?: [];
         }
 
-        error_log("processJsonField: Field {$field} is neither array nor string");
+        // error_log("processJsonField: Field {$field} is neither array nor string");
         return [];
     }
 
@@ -1046,11 +1058,11 @@ class ClassController {
     private static function reconstructScheduleData($data) {
         $scheduleData = [];
         
-        error_log('reconstructScheduleData: Input data keys: ' . implode(', ', array_keys($data)));
+        // error_log('reconstructScheduleData: Input data keys: ' . implode(', ', array_keys($data)));
         
         // Extract base fields from schedule_data array
         if (isset($data['schedule_data']) && is_array($data['schedule_data'])) {
-            error_log('reconstructScheduleData: schedule_data exists and is array');
+            // error_log('reconstructScheduleData: schedule_data exists and is array');
             foreach ($data['schedule_data'] as $key => $value) {
                 if (!is_array($value)) {
                     $scheduleData[$key] = $value;
@@ -1084,15 +1096,15 @@ class ClassController {
         // Capture end date from multiple possible sources
         if (isset($data['schedule_end_date']) && !empty($data['schedule_end_date'])) {
             $scheduleData['end_date'] = $data['schedule_end_date'];
-            error_log('reconstructScheduleData: Captured end_date from schedule_end_date: ' . $data['schedule_end_date']);
+            // error_log('reconstructScheduleData: Captured end_date from schedule_end_date: ' . $data['schedule_end_date']);
         } elseif (isset($data['schedule_data']['end_date']) && !empty($data['schedule_data']['end_date'])) {
             $scheduleData['end_date'] = $data['schedule_data']['end_date'];
-            error_log('reconstructScheduleData: Captured end_date from schedule_data.end_date: ' . $data['schedule_data']['end_date']);
+            // error_log('reconstructScheduleData: Captured end_date from schedule_data.end_date: ' . $data['schedule_data']['end_date']);
         } elseif (isset($data['schedule_data']['endDate']) && !empty($data['schedule_data']['endDate'])) {
             $scheduleData['end_date'] = $data['schedule_data']['endDate'];
-            error_log('reconstructScheduleData: Captured end_date from schedule_data.endDate: ' . $data['schedule_data']['endDate']);
+            // error_log('reconstructScheduleData: Captured end_date from schedule_data.endDate: ' . $data['schedule_data']['endDate']);
         } else {
-            error_log('reconstructScheduleData: WARNING - No end_date found in any expected location');
+            // error_log('reconstructScheduleData: WARNING - No end_date found in any expected location');
         }
         
         // Ensure we have the selected days from the form
@@ -1162,12 +1174,12 @@ class ClassController {
     private static function processScheduleData($scheduleData) {
         // Basic validation of schedule data
         if (!is_array($scheduleData)) {
-            error_log('Schedule data is not an array');
+            // error_log('Schedule data is not an array');
             return [];
         }
 
         // Log the received schedule data for debugging
-        error_log('Processing schedule data: ' . json_encode($scheduleData));
+        // error_log('Processing schedule data: ' . json_encode($scheduleData));
 
         // Expect V2.0 format only
         return self::validateScheduleDataV2($scheduleData);
@@ -1220,7 +1232,7 @@ class ClassController {
      * @return array Validated and sanitized data
      */
     private static function validateScheduleDataV2($data) {
-        error_log('validateScheduleDataV2: Input data keys: ' . implode(', ', array_keys($data)));
+        // // error_log('validateScheduleDataV2: Input data keys: ' . implode(', ', array_keys($data)));
         
         $validated = [
             'version' => '2.0',
@@ -1326,12 +1338,12 @@ class ClassController {
             $validated['generatedSchedule'] = $data['generatedSchedule'];
         }
         
-        error_log('validateScheduleDataV2: Output validated data: ' . json_encode($validated));
+        // // error_log('validateScheduleDataV2: Output validated data: ' . json_encode($validated));
         
         // Final check for endDate
-        if (empty($validated['endDate'])) {
-            error_log('validateScheduleDataV2: WARNING - endDate is empty in validated output');
-        }
+        // if (empty($validated['endDate'])) {
+        //     // error_log('validateScheduleDataV2: WARNING - endDate is empty in validated output');
+        // }
 
         return $validated;
     }
@@ -1737,7 +1749,7 @@ class ClassController {
             return \WeCozaClasses\view('components/classes-display', $viewData);
 
         } catch (\Exception $e) {
-            error_log('WeCoza Classes Plugin: Error in displayClassesShortcode: ' . $e->getMessage());
+            // error_log('WeCoza Classes Plugin: Error in displayClassesShortcode: ' . $e->getMessage());
             return '<div class="alert alert-danger">Error loading classes: ' . esc_html($e->getMessage()) . '</div>';
         }
     }
@@ -1782,7 +1794,7 @@ class ClassController {
             return \WeCozaClasses\view('components/single-class-display', $viewData);
 
         } catch (\Exception $e) {
-            error_log('WeCoza Classes Plugin: Error in displaySingleClassShortcode: ' . $e->getMessage());
+            // error_log('WeCoza Classes Plugin: Error in displaySingleClassShortcode: ' . $e->getMessage());
             return '<div class="alert alert-danger">Error loading class: ' . esc_html($e->getMessage()) . '</div>';
         }
     }
@@ -1909,6 +1921,7 @@ class ClassController {
                 c.initial_class_agent,
                 c.project_supervisor_id,
                 c.stop_restart_dates,
+                c.order_nr,
                 c.created_at,
                 c.updated_at
             FROM public.classes c
@@ -1921,7 +1934,7 @@ class ClassController {
             $stmt->execute();
             return $stmt->fetchAll();
         } catch (\Exception $e) {
-            error_log('WeCoza Classes Plugin: Error in getAllClasses: ' . $e->getMessage());
+            // error_log('WeCoza Classes Plugin: Error in getAllClasses: ' . $e->getMessage());
             return [];
         }
     }
@@ -1939,7 +1952,7 @@ class ClassController {
 
             if (!$classModel) {
                 // No class found - return sample data for testing
-                error_log('WeCoza Classes Plugin: No class found with ID ' . $class_id . ', returning sample data');
+                // error_log('WeCoza Classes Plugin: No class found with ID ' . $class_id . ', returning sample data');
                 return [
                     'class_id' => $class_id,
                     'class_code' => 'SAMPLE-CLASS-' . $class_id,
@@ -2134,7 +2147,7 @@ class ClassController {
             
             return $result;
         } catch (\Exception $e) {
-            error_log('WeCoza Classes Plugin: Error in getSingleClass: ' . $e->getMessage());
+            // error_log('WeCoza Classes Plugin: Error in getSingleClass: ' . $e->getMessage());
             // Return sample data for testing when database fails
             return [
                 'class_id' => $class_id,
@@ -2309,12 +2322,12 @@ class ClassController {
 
             } catch (\Exception $e) {
                 $db->rollback();
-                error_log('WeCoza Classes Plugin: Error during class deletion: ' . $e->getMessage());
+                // error_log('WeCoza Classes Plugin: Error during class deletion: ' . $e->getMessage());
                 \wp_send_json_error('Failed to delete class: ' . $e->getMessage());
             }
 
         } catch (\Exception $e) {
-            error_log('WeCoza Classes Plugin: Database error during class deletion: ' . $e->getMessage());
+            // error_log('WeCoza Classes Plugin: Database error during class deletion: ' . $e->getMessage());
             \wp_send_json_error('Database error occurred while deleting class.');
         }
     }
@@ -2351,7 +2364,7 @@ class ClassController {
             \wp_send_json($events);
 
         } catch (\Exception $e) {
-            error_log('WeCoza Classes Plugin: Error getting calendar events: ' . $e->getMessage());
+            // error_log('WeCoza Classes Plugin: Error getting calendar events: ' . $e->getMessage());
             \wp_send_json_error('Error loading calendar events.');
         }
     }
@@ -2380,7 +2393,7 @@ class ClassController {
             \wp_send_json_success($subjects);
 
         } catch (\Exception $e) {
-            error_log('WeCoza Classes Plugin: Error getting class subjects: ' . $e->getMessage());
+            // error_log('WeCoza Classes Plugin: Error getting class subjects: ' . $e->getMessage());
             \wp_send_json_error('Error loading class subjects.');
         }
     }
@@ -2564,7 +2577,7 @@ class ClassController {
                                 $currentDate->add(new \DateInterval('P1D'));
                             }
                         } catch (\Exception $e) {
-                            error_log('WeCoza Classes Plugin: Error generating stop period events: ' . $e->getMessage());
+                            // error_log('WeCoza Classes Plugin: Error generating stop period events: ' . $e->getMessage());
                         }
                     }
                 }
@@ -2959,10 +2972,10 @@ class ClassController {
         // Check if file exists and delete it
         if (file_exists($full_path)) {
             if (unlink($full_path)) {
-                error_log("Deleted QA report file: {$filePath}");
+                // error_log("Deleted QA report file: {$filePath}");
                 return true;
             } else {
-                error_log("Failed to delete QA report file: {$filePath}");
+                // error_log("Failed to delete QA report file: {$filePath}");
                 return false;
             }
         }
@@ -3053,7 +3066,7 @@ class ClassController {
             ]);
             
             if (!$visitModel->save()) {
-                error_log("Failed to save QA visit for class {$classId}, visit index {$index}");
+                // error_log("Failed to save QA visit for class {$classId}, visit index {$index}");
                 // Continue with other visits even if one fails
             }
         }
@@ -3069,13 +3082,13 @@ class ClassController {
      */
     private static function getQAVisitsForClass($classId) {
         try {
-            // error_log('WeCoza Classes Plugin: Loading QA visits for class ID: ' . $classId);
+            // // error_log('WeCoza Classes Plugin: Loading QA visits for class ID: ' . $classId);
             
             // Ensure QAVisitModel is loaded
             require_once __DIR__ . '/../Models/QAVisitModel.php';
             
             $qaVisits = QAVisitModel::findByClassId($classId);
-            // error_log('WeCoza Classes Plugin: Found ' . count($qaVisits) . ' QA visits');
+            // // error_log('WeCoza Classes Plugin: Found ' . count($qaVisits) . ' QA visits');
             
             // Return complete visit objects instead of separate arrays
             $visits = [];
@@ -3094,8 +3107,8 @@ class ClassController {
                 'visits' => $visits
             ];
         } catch (\Exception $e) {
-            error_log('WeCoza Classes Plugin: Error loading QA visits: ' . $e->getMessage());
-            error_log('WeCoza Classes Plugin: Stack trace: ' . $e->getTraceAsString());
+            // error_log('WeCoza Classes Plugin: Error loading QA visits: ' . $e->getMessage());
+            // error_log('WeCoza Classes Plugin: Stack trace: ' . $e->getTraceAsString());
             return [
                 'visits' => []
             ];
@@ -3370,7 +3383,7 @@ class ClassController {
                 'remaining_reports' => count($reports)
             ]);
         } catch (\Exception $e) {
-            error_log('Error deleting QA report: ' . $e->getMessage());
+            // error_log('Error deleting QA report: ' . $e->getMessage());
             wp_send_json_error('Failed to delete report');
         }
     }
@@ -3545,7 +3558,7 @@ class ClassController {
             
         } catch (\PDOException $e) {
             // Log error and return empty array
-            error_log("PostgreSQL connection error in getCachedClassNotes: " . $e->getMessage());
+            // error_log("PostgreSQL connection error in getCachedClassNotes: " . $e->getMessage());
             return [];
         }
     }
@@ -3735,7 +3748,7 @@ class ClassController {
             
         } catch (\PDOException $e) {
             // Log error and return error response
-            error_log("PostgreSQL error in saveClassNote: " . $e->getMessage());
+            // error_log("PostgreSQL error in saveClassNote: " . $e->getMessage());
             wp_send_json_error('Database error: Failed to save note');
         }
     }
@@ -3753,7 +3766,7 @@ class ClassController {
         $note_id = sanitize_text_field($_POST['note_id'] ?? '');
         
         // Debug logging
-        error_log("Delete note request - Class ID: {$class_id}, Note ID: '{$note_id}'");
+        // error_log("Delete note request - Class ID: {$class_id}, Note ID: '{$note_id}'");
         
         if (!$class_id) {
             wp_send_json_error('Invalid class ID');
@@ -3797,15 +3810,15 @@ class ClassController {
             
             // Filter out the note to delete
             $original_count = count($notes);
-            error_log("Notes before filter: " . json_encode(array_column($notes, 'id')));
+            // error_log("Notes before filter: " . json_encode(array_column($notes, 'id')));
             
             $notes = array_filter($notes, function($note) use ($note_id) {
                 $keep = $note['id'] !== $note_id;
-                error_log("Comparing '{$note['id']}' !== '{$note_id}' = " . ($keep ? 'true' : 'false'));
+                // error_log("Comparing '{$note['id']}' !== '{$note_id}' = " . ($keep ? 'true' : 'false'));
                 return $keep;
             });
             
-            error_log("Notes after filter: " . json_encode(array_column($notes, 'id')));
+            // error_log("Notes after filter: " . json_encode(array_column($notes, 'id')));
             
             // Check if note was found and removed
             if (count($notes) === $original_count) {
@@ -3833,7 +3846,7 @@ class ClassController {
             
         } catch (\PDOException $e) {
             // Log error and return error response
-            error_log("PostgreSQL error in deleteClassNote: " . $e->getMessage());
+            // error_log("PostgreSQL error in deleteClassNote: " . $e->getMessage());
             wp_send_json_error('Database error: Failed to delete note');
         }
     }

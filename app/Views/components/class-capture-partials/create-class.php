@@ -1,5 +1,8 @@
 <!-- Classes Capture Form -->
-<h4 class="mb-4 mt-4">Create New Class</h4>
+<div class="d-flex justify-content-between align-items-center mb-3">
+   <h4 class="mb-0">Create New Class</h4>
+</div>
+<p class="text-muted small mb-5">   <span class="badge badge-phoenix fs-10 badge-phoenix-warning"><i class="bi bi-file-earmark-text me-1"></i><span class="badge-label">INIT. Status Draft</span></span> New classes are created as drafts. They will become active when an order number is assigned.</p>
 <form id="classes-form" class="needs-validation ydcoza-compact-form" novalidate method="POST" enctype="multipart/form-data">
    <!-- Hidden Auto-generated Class ID -->
    <input type="hidden" id="class_id" name="class_id" value="auto-generated">
@@ -738,7 +741,7 @@
       <!-- Submit Button - Mode-aware text -->
       <div class="row mt-4">
          <div class="col-md-3">
-            <?php echo button('Add New Class', 'submit', 'primary'); ?>
+            <?php echo button('Create Draft Class', 'submit', 'primary'); ?>
          </div>
       </div>
    </div>
