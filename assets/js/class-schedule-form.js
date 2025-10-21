@@ -1829,7 +1829,7 @@
 
         if (errors.length > 0) {
             const errorHtml = `
-                <div id="schedule-validation-errors" class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                <div id="schedule-validation-errors" class="alert alert-subtle-danger alert-dismissible fade show mt-3" role="alert">
                     <i class="bi bi-exclamation-triangle me-2"></i>
                     <strong>Please fix the following errors:</strong>
                     <ul class="mb-0 mt-2">

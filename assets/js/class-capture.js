@@ -313,7 +313,7 @@ function showCustomAlert(message) {
             if (selectedValue) {
                 // Site selected - always show address field
                 $addressWrapper.show();
-                
+
                 // Populate if address data exists, otherwise show empty
                 if (siteAddresses[selectedValue]) {
                     $addressInput.val(siteAddresses[selectedValue]);
@@ -422,7 +422,7 @@ function showCustomAlert(message) {
 
                     // Remove any validation styling
                     $('#exam_learners_container').removeClass('border-danger');
-                    $('#no-exam-learners-message').removeClass('alert-danger').addClass('alert-info');
+                    $('#no-exam-learners-message').removeClass('alert-subtle-danger').addClass('alert-subtle-info');
                 }
             });
         }
@@ -1294,7 +1294,7 @@ function showCustomAlert(message) {
         $container.empty();
 
         if (items.length === 0) {
-            $container.html('<div class="alert alert-info">No QA visits found matching your criteria.</div>');
+            $container.html('<div class="alert alert-subtle-info">No QA visits found matching your criteria.</div>');
             return;
         }
 
@@ -1878,11 +1878,11 @@ function showCustomAlert(message) {
 
                         refreshQADisplay();
                     } else {
-                        $container.html('<div class="alert alert-info">No QA visits scheduled for this class.</div>');
+                        $container.html('<div class="alert alert-subtle-info">No QA visits scheduled for this class.</div>');
                     }
                 },
                 error: function () {
-                    $container.html('<div class="alert alert-danger">Failed to load QA visits. Please try again.</div>');
+                    $container.html('<div class="alert alert-subtle-danger">Failed to load QA visits. Please try again.</div>');
                 }
             });
         }

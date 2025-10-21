@@ -1,1 +1,0 @@
-JavaScript errors fixed - no more TypeError issues in learner selection table

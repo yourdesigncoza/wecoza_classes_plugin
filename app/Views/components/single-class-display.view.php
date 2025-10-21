@@ -62,7 +62,7 @@
    <div id="single-class-content" class="<?php echo $show_loading ? 'd-none' : ''; ?>">
       <?php if (!empty($error_message)): ?>
       <!-- Error Message -->
-      <div class="alert alert-danger d-flex align-items-center">
+      <div class="alert alert-subtle-danger d-flex align-items-center">
          <i class="bi bi-exclamation-triangle-fill me-3 fs-4"></i>
          <div>
             <h6 class="alert-heading mb-1">Error Loading Class</h6>

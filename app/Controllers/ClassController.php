@@ -381,7 +381,7 @@ class ClassController {
             $class = $this->getSingleClass($class_id);
             
             if (empty($class)) {
-                return '<div class="alert alert-danger">Class not found.</div>';
+                return '<div class="alert alert-subtle-danger">Class not found.</div>';
             }
             
             // Debug logging
@@ -1838,7 +1838,7 @@ class ClassController {
 
         } catch (\Exception $e) {
             // error_log('WeCoza Classes Plugin: Error in displayClassesShortcode: ' . $e->getMessage());
-            return '<div class="alert alert-danger">Error loading classes: ' . esc_html($e->getMessage()) . '</div>';
+            return '<div class="alert alert-subtle-danger">Error loading classes: ' . esc_html($e->getMessage()) . '</div>';
         }
     }
 
@@ -1883,7 +1883,7 @@ class ClassController {
 
         } catch (\Exception $e) {
             // error_log('WeCoza Classes Plugin: Error in displaySingleClassShortcode: ' . $e->getMessage());
-            return '<div class="alert alert-danger">Error loading class: ' . esc_html($e->getMessage()) . '</div>';
+            return '<div class="alert alert-subtle-danger">Error loading class: ' . esc_html($e->getMessage()) . '</div>';
         }
     }
 
