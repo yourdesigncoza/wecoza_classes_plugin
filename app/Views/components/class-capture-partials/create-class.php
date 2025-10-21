@@ -553,25 +553,138 @@
    <h6 class="mt-3 mb-1">Class Learners <span class="text-danger">*</span></h6>
    <p class="text-muted small mb-2">Select learners for this class and manage their status.</p>
    <div class="row mb-4">
-      <!-- Learner Selection -->
-      <div class="col-md-4">
-         <!-- For multi-select with floating labels, we need a custom approach -->
-         <div class="">
-            <label for="add_learner" class="form-label">Select Learners</label>
-            <select id="add_learner" name="add_learner[]" class="form-select form-select-sm" aria-label="Learner selection" multiple>
-               <?php foreach ($data['learners'] as $learner): ?>
-               <option value="<?php echo $learner['id']; ?>"><?php echo $learner['name']; ?></option>
-               <?php endforeach; ?>
-            </select>
-            <small class="text-muted">Select multiple learners to add to this class. Hold Ctrl/Cmd to select multiple.</small>
-            <div class="invalid-feedback">Please select at least one learner.</div>
-            <button type="button" class="btn btn-subtle-primary btn-sm mt-2" id="add-selected-learners-btn">
-            Add Selected Learners
-            </button>
+      <!-- Learner Selection Table -->
+      <div class="col-12">
+         <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+               <div class="form-label mb-0">Available Learners</div>
+            </div>
+            <!-- Learner Selection Table -->
+            <div class="card shadow-none border p-4 py-2" data-component-card="data-component-card">
+               <div class="card-header p-2 border-bottom">
+                  <div class="row g-2 align-items-center">
+                     <div class="col-auto">
+                        <div class="search-box">
+                           <form class="position-relative">
+                              <input class="form-control search-input search form-control-sm" type="search" id="learner-search-input" placeholder="Search learners..." aria-label="Search">
+                              <svg class="svg-inline--fa fa-magnifying-glass search-box-icon" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="magnifying-glass" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"></path></svg>
+                           </form>
+                        </div>
+                     </div>
+                     <div class="col-auto">
+                        <small class="text-muted">Showing <span id="learner-showing-count">0</span> of <span id="learner-total-count"><?php echo count($data['learners']); ?></span> learners</small>
+                     </div>
+                  </div>
+               </div>
+               <div class="card-body p-4 py-2 pt-0">
+                  <div class="table-responsive">
+                     <table id="learner-selection-table" class="table table-hover table-sm fs-9 mb-0 overflow-hidden">
+                        <thead class="border-bottom">
+                           <tr>
+                              <th scope="col" class="border-0 ps-3" style="width: 40px;">
+                                 <div class="form-check">
+                                    <!-- <input class="form-check-input" type="checkbox" id="select-all-learners"> -->
+                                 </div>
+                              </th>
+                              <th scope="col" class="border-0 sortable-column" data-field="first_name" style="cursor: pointer;">
+                                 First Name
+                                 <i class="bi bi-arrow-down-up ms-1"></i>
+                              </th>
+                              <th scope="col" class="border-0 sortable-column" data-field="second_name" style="cursor: pointer;">
+                                 Second Name
+                                 <i class="bi bi-arrow-down-up ms-1"></i>
+                              </th>
+                              <th scope="col" class="border-0 sortable-column" data-field="initials" style="cursor: pointer;">
+                                 Initials
+                                 <i class="bi bi-arrow-down-up ms-1"></i>
+                              </th>
+                              <th scope="col" class="border-0 sortable-column" data-field="surname" style="cursor: pointer;">
+                                 Surname
+                                 <i class="bi bi-arrow-down-up ms-1"></i>
+                              </th>
+                              <th scope="col" class="border-0 sortable-column" data-field="id_number" style="cursor: pointer;">
+                                 ID/Passport
+                                 <i class="bi bi-arrow-down-up ms-1"></i>
+                              </th>
+                              <th scope="col" class="border-0 sortable-column" data-field="city_town_name" style="cursor: pointer;">
+                                 City/Town
+                                 <i class="bi bi-arrow-down-up ms-1"></i>
+                              </th>
+                              <th scope="col" class="border-0 sortable-column" data-field="province_region_name" style="cursor: pointer;">
+                                 Province/Region
+                                 <i class="bi bi-arrow-down-up ms-1"></i>
+                              </th>
+                              <th scope="col" class="border-0 sortable-column" data-field="postal_code" style="cursor: pointer;">
+                                 Postal Code
+                                 <i class="bi bi-arrow-down-up ms-1"></i>
+                              </th>
+                           </tr>
+                        </thead>
+                        <tbody id="learner-selection-tbody">
+                           <?php foreach ($data['learners'] as $index => $learner): ?>
+                           <tr class="learner-row" data-learner-id="<?php echo $learner['id']; ?>" data-index="<?php echo $index; ?>">
+                              <td class="py-2 align-middle text-center">
+                                 <div class="form-check ps-5" style="min-height: auto;">
+                                    <input class="form-check-input learner-checkbox" type="checkbox" 
+                                           value="<?php echo $learner['id']; ?>" 
+                                           data-learner-data="<?php echo htmlspecialchars(json_encode($learner), ENT_QUOTES, 'UTF-8'); ?>">
+                                 </div>
+                              </td>
+                              <td class="py-2 align-middle"><?php echo esc_html($learner['first_name']); ?></td>
+                              <td class="py-2 align-middle"><?php echo esc_html($learner['second_name'] ?? ''); ?></td>
+                              <td class="py-2 align-middle"><?php echo esc_html($learner['initials'] ?? ''); ?></td>
+                              <td class="py-2 align-middle fw-medium"><?php echo esc_html($learner['surname']); ?></td>
+                              <td class="py-2 align-middle">
+                                 <?php if ($learner['id_type'] === 'sa_id' && !empty($learner['id_number'])): ?>
+                                 <span class="badge fs-10 badge-phoenix badge-phoenix-primary">
+                                    <?php echo esc_html($learner['id_number']); ?>
+                                 </span>
+                                 <?php elseif ($learner['id_type'] === 'passport' && !empty($learner['id_number'])): ?>
+                                 <span class="badge fs-10 badge-phoenix badge-phoenix-warning">
+                                    <?php echo esc_html($learner['id_number']); ?>
+                                 </span>
+                                 <?php else: ?>
+                                 <span class="text-muted">-</span>
+                                 <?php endif; ?>
+                              </td>
+                              <td class="py-2 align-middle"><?php echo esc_html($learner['city_town_name'] ?? '-'); ?></td>
+                              <td class="py-2 align-middle"><?php echo esc_html($learner['province_region_name'] ?? '-'); ?></td>
+                              <td class="py-2 align-middle"><?php echo esc_html($learner['postal_code'] ?? '-'); ?></td>
+                           </tr>
+                           <?php endforeach; ?>
+                        </tbody>
+                     </table>
+                  </div>
+               </div>
+               <!-- Pagination -->
+               <div id="classes-pagination" class="d-flex justify-content-between mt-3">
+                  <span class="d-none d-sm-inline-block ms-5" data-list-info="data-list-info">
+                     <span id="pagination-start">1</span> to <span id="pagination-end"><?php echo min(10, count($data['learners'])); ?></span>
+                     <span class="text-body-tertiary"> Items of </span>
+                     <span id="pagination-total"><?php echo count($data['learners']); ?></span>
+                  </span>
+                  <nav aria-label="Classes pagination">
+                     <ul class="pagination pagination-sm" id="learner-pagination-ul">
+                        <li class="page-item">
+                           <a class="page-link" href="#" id="learner-pagination-prev" data-list-pagination="prev" aria-label="Previous">
+                              <span aria-hidden="true">«</span>
+                           </a>
+                        </li>
+                        <!-- Pagination numbers will be generated here -->
+                        <li class="page-item">
+                           <a class="page-link" href="#" id="learner-pagination-next" data-list-pagination="next" aria-label="Next">
+                              <span aria-hidden="true">»</span>
+                           </a>
+                        </li>
+                     </ul>
+                  </nav>
+               </div>
+            </div>
+            <button type="button" class="btn btn-subtle-primary btn-sm mt-3" id="add-selected-learners-btn"><i class="bi bi-plus-circle me-1"></i>Add Selected Learners</button>
          </div>
       </div>
       <!-- Learners Table -->
-      <div class="col-md-8">
+      <div class="col-12">
          <div class="">
             <div class="form-label mb-2">Class Learners</div>
             <div id="class-learners-container" class="card-body card px-5">

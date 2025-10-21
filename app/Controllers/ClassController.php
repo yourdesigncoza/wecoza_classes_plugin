@@ -204,6 +204,14 @@ class ClassController {
             true
         );
 
+        \wp_enqueue_script(
+            'wecoza-learner-selection-table-js',
+            WECOZA_CLASSES_JS_URL . 'learner-selection-table.js',
+            ['jquery'],
+            WECOZA_CLASSES_VERSION,
+            true
+        );
+
         // Localize script with AJAX URL and nonce
         \wp_localize_script('wecoza-class-js', 'wecozaClass', [
             'ajaxUrl' => \admin_url('admin-ajax.php'),
@@ -500,19 +508,39 @@ class ClassController {
 
     private function getLearners() {
         try {
+            // Check cache first
+            $cache_key = 'wecoza_class_learners_with_locations';
+            $cached_learners = get_transient($cache_key);
+            if ($cached_learners !== false) {
+                return $cached_learners;
+            }
+
             // Get database service
             $db = \WeCozaClasses\Services\Database\DatabaseService::getInstance();
             
-            // Query learners from database
-            $sql = "SELECT id, first_name, second_name, initials, surname, sa_id_no, passport_number
-                    FROM public.learners 
-                    WHERE first_name IS NOT NULL AND surname IS NOT NULL
-                    ORDER BY surname ASC, first_name ASC";
+            // Query learners with location lookups
+            $sql = "SELECT 
+                        l.id, 
+                        l.first_name, 
+                        l.second_name, 
+                        l.initials, 
+                        l.surname, 
+                        l.sa_id_no, 
+                        l.passport_number,
+                        l.city_town_id,
+                        l.province_region_id,
+                        l.postal_code,
+                        loc.town AS city_town_name,
+                        loc.province AS province_region_name
+                    FROM public.learners l
+                    LEFT JOIN public.locations loc ON l.city_town_id = loc.location_id
+                    WHERE l.first_name IS NOT NULL AND l.surname IS NOT NULL
+                    ORDER BY l.surname ASC, l.first_name ASC";
             $stmt = $db->query($sql);
             
             $learners = [];
             while ($row = $stmt->fetch()) {
-                // Build formatted name
+                // Build formatted name (for backward compatibility)
                 $nameParts = [];
                 if (!empty($row['first_name'])) {
                     $nameParts[] = trim($row['first_name']);
@@ -531,18 +559,34 @@ class ClassController {
                 
                 // Use ID number for identification, fallback to passport
                 $idNumber = '';
+                $idType = '';
                 if (!empty($row['sa_id_no'])) {
                     $idNumber = $row['sa_id_no'];
+                    $idType = 'sa_id';
                 } elseif (!empty($row['passport_number'])) {
                     $idNumber = $row['passport_number'];
+                    $idType = 'passport';
                 }
                 
                 $learners[] = [
                     'id' => (int)$row['id'],
                     'name' => sanitize_text_field($formattedName),
-                    'id_number' => sanitize_text_field($idNumber)
+                    'id_number' => sanitize_text_field($idNumber),
+                    'id_type' => sanitize_text_field($idType),
+                    'first_name' => sanitize_text_field($row['first_name']),
+                    'second_name' => sanitize_text_field($row['second_name'] ?? ''),
+                    'initials' => sanitize_text_field($row['initials'] ?? ''),
+                    'surname' => sanitize_text_field($row['surname']),
+                    'city_town_id' => (int)($row['city_town_id'] ?? 0),
+                    'province_region_id' => (int)($row['province_region_id'] ?? 0),
+                    'postal_code' => sanitize_text_field($row['postal_code'] ?? ''),
+                    'city_town_name' => sanitize_text_field($row['city_town_name'] ?? ''),
+                    'province_region_name' => sanitize_text_field($row['province_region_name'] ?? '')
                 ];
             }
+            
+            // Cache results for 12 hours
+            set_transient($cache_key, $learners, 12 * HOUR_IN_SECONDS);
             
             return $learners;
             

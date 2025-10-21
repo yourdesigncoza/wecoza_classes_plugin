@@ -21,7 +21,10 @@
         tableSelector: '.table-responsive table',
         tableRowSelector: 'tbody tr',
         clientColumnIndex: 1,      // 0-based index of "Client ID & Name" column
-        itemsPerPage: 20           // Number of items to display per page
+        itemsPerPage: 20,          // Number of items to display per page
+        // Context validation
+        classesTableId: '#classes-table',
+        learnerTableId: '#learner-selection-table'
     };
 
     /**
@@ -57,24 +60,40 @@
             return;
         }
 
-        // Find search elements
-        $searchInput = $(SEARCH_CONFIG.searchInputSelector);
-        $table = $(SEARCH_CONFIG.tableSelector);
+        // CONTEXT VALIDATION: Ensure we're on the classes display page
+        // Check if we have a classes table and NOT a learner selection table
+        const $classesTable = $(SEARCH_CONFIG.classesTableId);
+        const $learnerTable = $(SEARCH_CONFIG.learnerTableId);
+        
+        if ($classesTable.length === 0) {
+            console.log('WeCoza Classes: Classes table not found - not initializing on this page');
+            return;
+        }
+        
+        if ($learnerTable.length > 0) {
+            console.log('WeCoza Classes: Learner selection table found - skipping classes search initialization');
+            return;
+        }
+        
+        // Find search elements within the classes context
+        const $classesContainer = $classesTable.closest('.wecoza-classes-display');
+        $searchInput = $classesContainer.find(SEARCH_CONFIG.searchInputSelector);
+        $table = $classesContainer.find(SEARCH_CONFIG.tableSelector);
         $tableRows = $table.find(SEARCH_CONFIG.tableRowSelector);
 
         // Validate elements exist
         if ($searchInput.length === 0) {
-            // console.warn('WeCoza Classes: Search input not found');
+            console.warn('WeCoza Classes: Search input not found in classes context');
             return;
         }
 
         if ($table.length === 0) {
-            console.warn('WeCoza Classes: Table not found');
+            console.warn('WeCoza Classes: Classes table not found in context');
             return;
         }
 
         if ($tableRows.length === 0) {
-            console.warn('WeCoza Classes: No table rows found');
+            console.warn('WeCoza Classes: No table rows found in classes table');
             return;
         }
 
@@ -198,6 +217,7 @@
         if ($('#classes-search-status').length > 0) {
             return;
         }
+        
         // Create status indicator
         const $statusIndicator = $('<span>', {
             id: 'classes-search-status',
@@ -205,8 +225,8 @@
             style: 'display: none;'
         });
 
-        // Insert before the table (between card header and table)
-        $('#classes-table').before($statusIndicator);
+        // Insert before the classes table specifically
+        $(SEARCH_CONFIG.classesTableId).before($statusIndicator);
     }
 
     /**
@@ -225,8 +245,8 @@
             class: 'd-flex justify-content-between mt-3'
         });
 
-        // Insert pagination after the table
-        $('.table-responsive').after($paginationContainer);
+        // Insert pagination after the classes table specifically
+        $(SEARCH_CONFIG.classesTableId).closest('.table-responsive').after($paginationContainer);
 
         // Initialize filtered rows with all rows
         filteredRows = $tableRows.toArray().map(row => $(row));
