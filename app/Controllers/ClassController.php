@@ -343,7 +343,7 @@ class ClassController {
             'sites' => $this->getSites(),
             'agents' => $this->getAgents(),
             'supervisors' => $this->getSupervisors(),
-            'learners' => $this->getLearnersExam(),
+            'learners' => $this->getLearners(),
             'setas' => $this->getSeta(),
             'class_types' => $this->getClassType(),
             'yes_no_options' => $this->getYesNoOptions(),
@@ -391,7 +391,7 @@ class ClassController {
             'sites' => $this->getSites(),
             'agents' => $this->getAgents(),
             'supervisors' => $this->getSupervisors(),
-            'learners' => $this->getLearnersExam(),
+            'learners' => $this->getLearners(),
             'setas' => $this->getSeta(),
             'class_types' => $this->getClassType(),
             'yes_no_options' => $this->getYesNoOptions(),
@@ -498,7 +498,7 @@ class ClassController {
         ];
     }
 
-    private function getLearnersExam() {
+    private function getLearners() {
         // Static learner data for exam classes - in production this would come from database
         return [
             ['id' => 1, 'name' => 'John Doe', 'id_number' => '8001015009088'],
