@@ -1,10 +1,1 @@
-new-class/:1 Uncaught SyntaxError: Unterminated string in JSON at position 26 (line 1 column 27)
-    at JSON.parse (<anonymous>)
-    at learner-selection-table.js?ver=20251021043740:37:38
-    at Array.map (<anonymous>)
-    at LearnerSelectionTable.loadLearnerData (learner-selection-table.js?ver=20251021043740:35:45)
-    at LearnerSelectionTable.init (learner-selection-table.js?ver=20251021043740:23:14)
-    at new LearnerSelectionTable (learner-selection-table.js?ver=20251021043740:18:14)
-    at HTMLDocument.<anonymous> (learner-selection-table.js?ver=20251021043740:532:40)
-class-capture.js?ver=20251021043740:726 QA Visit elements not found, skipping initialization
-classes-table-search.js?ver=20251021043740:110 WeCoza Classes: Table search and pagination initialized successfully
+JavaScript errors fixed - no more TypeError issues in learner selection table

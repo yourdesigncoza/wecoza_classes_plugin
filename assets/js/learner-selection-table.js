@@ -196,35 +196,41 @@ class LearnerSelectionTable {
 
     renderTableRows() {
         const tbody = document.getElementById('learner-selection-tbody');
+        if (!tbody) return;
+        
         const startIndex = (this.currentPage - 1) * this.itemsPerPage;
         const endIndex = startIndex + this.itemsPerPage;
         const pageLearners = this.filteredLearners.slice(startIndex, endIndex);
 
         // Hide all rows first
         this.allLearners.forEach(learner => {
-            learner.element.style.display = 'none';
+            if (learner.element) {
+                learner.element.style.display = 'none';
+            }
         });
 
         // Show only current page learners
         pageLearners.forEach(learner => {
-            learner.element.style.display = '';
+            if (learner.element) {
+                learner.element.style.display = '';
 
-            // Update visual state based on selection
-            if (this.selectedLearners.has(learner.id)) {
-                learner.element.classList.add('table-active');
-                learner.checkbox.checked = true;
-            } else {
-                learner.element.classList.remove('table-active');
-                learner.checkbox.checked = false;
-            }
+                // Update visual state based on selection
+                if (this.selectedLearners.has(learner.id)) {
+                    learner.element.classList.add('table-active');
+                    if (learner.checkbox) learner.checkbox.checked = true;
+                } else {
+                    learner.element.classList.remove('table-active');
+                    if (learner.checkbox) learner.checkbox.checked = false;
+                }
 
-            // Mark already assigned learners
-            if (this.assignedLearners.has(learner.id)) {
-                learner.element.classList.add('table-secondary');
-                learner.checkbox.disabled = true;
-            } else {
-                learner.element.classList.remove('table-secondary');
-                learner.checkbox.disabled = false;
+                // Mark already assigned learners
+                if (this.assignedLearners.has(learner.id)) {
+                    learner.element.classList.add('table-secondary');
+                    if (learner.checkbox) learner.checkbox.disabled = true;
+                } else {
+                    learner.element.classList.remove('table-secondary');
+                    if (learner.checkbox) learner.checkbox.disabled = false;
+                }
             }
         });
     }
@@ -235,13 +241,19 @@ class LearnerSelectionTable {
         const endRecord = Math.min(this.currentPage * this.itemsPerPage, this.filteredLearners.length);
 
         // Update pagination info
-        document.getElementById('pagination-start').textContent = this.filteredLearners.length > 0 ? startRecord : 0;
-        document.getElementById('pagination-end').textContent = endRecord;
-        document.getElementById('pagination-total').textContent = this.filteredLearners.length;
+        const paginationStart = document.getElementById('pagination-start');
+        const paginationEnd = document.getElementById('pagination-end');
+        const paginationTotal = document.getElementById('pagination-total');
+        
+        if (paginationStart) paginationStart.textContent = this.filteredLearners.length > 0 ? startRecord : 0;
+        if (paginationEnd) paginationEnd.textContent = endRecord;
+        if (paginationTotal) paginationTotal.textContent = this.filteredLearners.length;
 
         // Update pagination buttons
-        const prevLi = document.getElementById('learner-pagination-prev').closest('.page-item');
-        const nextLi = document.getElementById('learner-pagination-next').closest('.page-item');
+        const prevButton = document.getElementById('learner-pagination-prev');
+        const nextButton = document.getElementById('learner-pagination-next');
+        const prevLi = prevButton ? prevButton.closest('.page-item') : null;
+        const nextLi = nextButton ? nextButton.closest('.page-item') : null;
 
         if (prevLi) {
             if (this.currentPage === 1) {
@@ -367,6 +379,12 @@ class LearnerSelectionTable {
 
     updateSelectAllCheckbox() {
         const selectAllCheckbox = document.getElementById('select-all-learners');
+        
+        // Exit early if the select all checkbox doesn't exist
+        if (!selectAllCheckbox) {
+            return;
+        }
+        
         const currentPageLearners = this.getCurrentPageLearners();
         const availableLearners = currentPageLearners.filter(learner => !this.assignedLearners.has(learner.id));
 
@@ -501,8 +519,8 @@ class LearnerSelectionTable {
         if (checkbox) {
             checkbox.disabled = false;
             checkbox.checked = false;
-            this.selectedLearners.delete(learnerId);
         }
+        this.selectedLearners.delete(learnerId);
 
         // Update learners data field
         this.updateLearnersDataField();
@@ -561,6 +579,40 @@ class LearnerSelectionTable {
         this.loadLearnerData();
         this.filterAndSort();
         this.render();
+    }
+
+    setAssignedLearners(assignedLearnerIds) {
+        // Update assigned learners set
+        this.assignedLearners = new Set(assignedLearnerIds);
+        
+        // Update visual state of checkboxes
+        this.updateAssignedLearnerVisuals();
+    }
+
+    updateAssignedLearnerVisuals() {
+        const rows = document.querySelectorAll('.learner-row');
+        
+        rows.forEach(row => {
+            const learnerId = row.getAttribute('data-learner-id');
+            const checkbox = row.querySelector('.learner-checkbox');
+            
+            if (learnerId && this.assignedLearners.has(parseInt(learnerId))) {
+                // Mark as assigned
+                row.classList.add('learner-assigned');
+                if (checkbox) {
+                    checkbox.disabled = true;
+                    checkbox.checked = true;
+                    checkbox.setAttribute('title', 'This learner is already assigned to this class');
+                }
+            } else {
+                // Not assigned
+                row.classList.remove('learner-assigned');
+                if (checkbox) {
+                    checkbox.disabled = false;
+                    checkbox.removeAttribute('title');
+                }
+            }
+        });
     }
 }
 
