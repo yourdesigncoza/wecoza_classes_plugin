@@ -499,14 +499,58 @@ class ClassController {
     }
 
     private function getLearners() {
-        // Static learner data for exam classes - in production this would come from database
-        return [
-            ['id' => 1, 'name' => 'John Doe', 'id_number' => '8001015009088'],
-            ['id' => 2, 'name' => 'Jane Smith', 'id_number' => '8505123456789'],
-            ['id' => 3, 'name' => 'Mike Johnson', 'id_number' => '9002087654321'],
-            ['id' => 4, 'name' => 'Sarah Wilson', 'id_number' => '8712034567890'],
-            ['id' => 5, 'name' => 'David Brown', 'id_number' => '9105156789012']
-        ];
+        try {
+            // Get database service
+            $db = \WeCozaClasses\Services\Database\DatabaseService::getInstance();
+            
+            // Query learners from database
+            $sql = "SELECT id, first_name, second_name, initials, surname, sa_id_no, passport_number
+                    FROM public.learners 
+                    WHERE first_name IS NOT NULL AND surname IS NOT NULL
+                    ORDER BY surname ASC, first_name ASC";
+            $stmt = $db->query($sql);
+            
+            $learners = [];
+            while ($row = $stmt->fetch()) {
+                // Build formatted name
+                $nameParts = [];
+                if (!empty($row['first_name'])) {
+                    $nameParts[] = trim($row['first_name']);
+                }
+                if (!empty($row['second_name'])) {
+                    $nameParts[] = trim($row['second_name']);
+                }
+                if (!empty($row['initials'])) {
+                    $nameParts[] = trim($row['initials']);
+                }
+                if (!empty($row['surname'])) {
+                    $nameParts[] = trim($row['surname']);
+                }
+                
+                $formattedName = implode(' ', $nameParts);
+                
+                // Use ID number for identification, fallback to passport
+                $idNumber = '';
+                if (!empty($row['sa_id_no'])) {
+                    $idNumber = $row['sa_id_no'];
+                } elseif (!empty($row['passport_number'])) {
+                    $idNumber = $row['passport_number'];
+                }
+                
+                $learners[] = [
+                    'id' => (int)$row['id'],
+                    'name' => sanitize_text_field($formattedName),
+                    'id_number' => sanitize_text_field($idNumber)
+                ];
+            }
+            
+            return $learners;
+            
+        } catch (\Exception $e) {
+            // Log error and return empty array on failure
+            error_log('Error fetching learners: ' . $e->getMessage());
+            return [];
+        }
     }
 
     private function getSeta() {
