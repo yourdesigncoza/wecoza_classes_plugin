@@ -503,7 +503,7 @@ function showCustomAlert(message) {
                         <td>${levelSelectHtml}</td>
                         <td>${statusSelectHtml}</td>
                         <td>
-                            <button type="button" class="btn btn-outline-danger btn-sm remove-exam-learner-btn" data-learner-id="${learner.id}">
+                            <button type="button" class="btn btn-subtle-danger btn-sm remove-exam-learner-btn" data-learner-id="${learner.id}">
                                 <i data-feather="trash-2" style="height:12.8px;width:12.8px;"></i>
                                 Remove
                             </button>
@@ -1712,7 +1712,7 @@ function showCustomAlert(message) {
                                 <td>${levelSelectHtml}</td>
                                 <td>${statusSelectHtml}</td>
                                 <td>
-                                    <button type="button" class="btn btn-outline-danger btn-sm remove-exam-learner-btn" data-learner-id="${learner.id}">
+                                    <button type="button" class="btn btn-subtle-danger btn-sm remove-exam-learner-btn" data-learner-id="${learner.id}">
                                         <i data-feather="trash-2" style="height:12.8px;width:12.8px;"></i>
                                         Remove
                                     </button>

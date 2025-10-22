@@ -1121,7 +1121,7 @@
                     $examLearnersContainer.show();
                 }
             } else {
-                // Hide exam type field and remove required attribute
+                // Hide exam type field and remove required attribute YDCOZA
                 $examTypeContainer.hide();
                 if ($examType.length) {
                     $examType.removeAttr('required');

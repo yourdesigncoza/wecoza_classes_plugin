@@ -110,7 +110,7 @@ class LearnerSelectionTable {
             }
         });
 
-        // Add selected learners button
+        // Add selected learners button YDCOZA
         document.getElementById('add-selected-learners-btn')?.addEventListener('click', () => {
             this.addSelectedLearners();
         });
@@ -197,7 +197,7 @@ class LearnerSelectionTable {
     renderTableRows() {
         const tbody = document.getElementById('learner-selection-tbody');
         if (!tbody) return;
-        
+
         const startIndex = (this.currentPage - 1) * this.itemsPerPage;
         const endIndex = startIndex + this.itemsPerPage;
         const pageLearners = this.filteredLearners.slice(startIndex, endIndex);
@@ -244,7 +244,7 @@ class LearnerSelectionTable {
         const paginationStart = document.getElementById('pagination-start');
         const paginationEnd = document.getElementById('pagination-end');
         const paginationTotal = document.getElementById('pagination-total');
-        
+
         if (paginationStart) paginationStart.textContent = this.filteredLearners.length > 0 ? startRecord : 0;
         if (paginationEnd) paginationEnd.textContent = endRecord;
         if (paginationTotal) paginationTotal.textContent = this.filteredLearners.length;
@@ -319,21 +319,21 @@ class LearnerSelectionTable {
     addPageButton(paginationUl, pageNum) {
         const li = document.createElement('li');
         li.className = `page-item ${pageNum === this.currentPage ? 'active' : ''}`;
-        
+
         const a = document.createElement('a');
         a.className = 'page-link';
         a.href = '#';
         a.textContent = pageNum;
         a.setAttribute('data-page-number', pageNum);
-        
+
         a.addEventListener('click', (e) => {
             e.preventDefault();
             this.currentPage = pageNum;
             this.render();
         });
-        
+
         li.appendChild(a);
-        
+
         // Insert before the "next" button (last child)
         const nextButton = paginationUl.querySelector('li:last-child');
         paginationUl.insertBefore(li, nextButton);
@@ -342,13 +342,13 @@ class LearnerSelectionTable {
     addEllipsis(paginationUl) {
         const li = document.createElement('li');
         li.className = 'page-item disabled';
-        
+
         const span = document.createElement('span');
         span.className = 'page-link';
         span.textContent = '...';
-        
+
         li.appendChild(span);
-        
+
         // Insert before the "next" button (last child)
         const nextButton = paginationUl.querySelector('li:last-child');
         paginationUl.insertBefore(li, nextButton);
@@ -379,12 +379,12 @@ class LearnerSelectionTable {
 
     updateSelectAllCheckbox() {
         const selectAllCheckbox = document.getElementById('select-all-learners');
-        
+
         // Exit early if the select all checkbox doesn't exist
         if (!selectAllCheckbox) {
             return;
         }
-        
+
         const currentPageLearners = this.getCurrentPageLearners();
         const availableLearners = currentPageLearners.filter(learner => !this.assignedLearners.has(learner.id));
 
@@ -461,10 +461,16 @@ class LearnerSelectionTable {
     }
 
     createLearnerRow(learner) {
+        const learnerName = learner.name
+            || learner.full_name
+            || [learner.first_name, learner.second_name, learner.surname].filter(Boolean).join(' ').trim()
+            || `Learner ${learner.id}`;
+
         const row = document.createElement('tr');
         row.setAttribute('data-learner-id', learner.id);
+        row.setAttribute('data-learner-name', learnerName);
         row.innerHTML = `
-            <td>${learner.name}</td>
+            <td>${learnerName}</td>
             <td>
                 ${classes_generate_learner_level_select_html(learner.id)}
             </td>
@@ -536,21 +542,61 @@ class LearnerSelectionTable {
         if (!hiddenField || !tbody) return;
 
         const learners = [];
-        const rows = tbody.querySelectorAll('tr[data-learner-id]');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
 
         rows.forEach(row => {
-            const learnerId = row.getAttribute('data-learner-id');
+            let learnerId = row.getAttribute('data-learner-id');
+            if (!learnerId) {
+                const fallbackElement = row.querySelector('[data-learner-id]');
+                learnerId = fallbackElement ? fallbackElement.getAttribute('data-learner-id') : null;
+            }
+
+            if (!learnerId) {
+                return;
+            }
+
             const levelSelect = row.querySelector('.learner-level-select');
             const statusSelect = row.querySelector('.learner-status-select');
+            const learnerName = row.getAttribute('data-learner-name')
+                || (row.querySelector('td') ? row.querySelector('td').textContent.trim() : '');
+            const levelValue = levelSelect ? levelSelect.value : '';
+            const statusValue = statusSelect ? statusSelect.value : 'CIC - Currently in Class';
 
             learners.push({
-                id: learnerId,
-                level: levelSelect.value || '',
-                status: statusSelect.value || 'CIC - Currently in Class'
+                id: String(learnerId),
+                name: learnerName,
+                level: levelValue,
+                status: statusValue || 'CIC - Currently in Class'
             });
         });
 
-        hiddenField.value = JSON.stringify(learners);
+        const jsonData = JSON.stringify(learners);
+        hiddenField.value = jsonData;
+
+        if (window.jQuery) {
+            window.jQuery(hiddenField).trigger('change');
+            window.jQuery(document).trigger('classLearnersChanged', [learners]);
+        } else {
+            try {
+                hiddenField.dispatchEvent(new Event('change', { bubbles: true }));
+            } catch (err) {
+                const fallbackChangeEvent = document.createEvent('Event');
+                fallbackChangeEvent.initEvent('change', true, true);
+                hiddenField.dispatchEvent(fallbackChangeEvent);
+            }
+
+            if (typeof window.CustomEvent === 'function') {
+                document.dispatchEvent(new CustomEvent('classLearnersChanged', { detail: learners }));
+            } else if (document.createEvent) {
+                const legacyEvent = document.createEvent('CustomEvent');
+                legacyEvent.initCustomEvent('classLearnersChanged', true, true, learners);
+                document.dispatchEvent(legacyEvent);
+            }
+        }
+
+        if (typeof window.classes_sync_exam_learner_options === 'function') {
+            window.classes_sync_exam_learner_options();
+        }
     }
 
     showNotification(message, type = 'info') {
@@ -584,18 +630,18 @@ class LearnerSelectionTable {
     setAssignedLearners(assignedLearnerIds) {
         // Update assigned learners set
         this.assignedLearners = new Set(assignedLearnerIds);
-        
+
         // Update visual state of checkboxes
         this.updateAssignedLearnerVisuals();
     }
 
     updateAssignedLearnerVisuals() {
         const rows = document.querySelectorAll('.learner-row');
-        
+
         rows.forEach(row => {
             const learnerId = row.getAttribute('data-learner-id');
             const checkbox = row.querySelector('.learner-checkbox');
-            
+
             if (learnerId && this.assignedLearners.has(parseInt(learnerId))) {
                 // Mark as assigned
                 row.classList.add('learner-assigned');

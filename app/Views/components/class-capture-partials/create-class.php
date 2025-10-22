@@ -709,7 +709,7 @@
       </div>
    </div>
    <!-- Exam Learners (conditionally displayed) -->
-   <div class="row mt-5" id="exam_learners_container" style="display: none;">
+   <div class="row mt-5" id="exam_learners_container"> <!-- YDCOZA d-none -->
       <?php echo section_divider(); ?>
       <div class="col-12">
          <h5 class="">Select Learners Taking Exams</h5>
