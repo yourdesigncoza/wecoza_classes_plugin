@@ -22,10 +22,10 @@ class DatabaseService {
         try {
             // Get PostgreSQL database credentials from WordPress options
             // These should be set during plugin activation or via admin settings
-            $pgHost = get_option('wecoza_postgres_host', 'db-wecoza-3-do-user-17263152-0.m.db.ondigitalocean.com');
-            $pgPort = get_option('wecoza_postgres_port', '25060');
-            $pgName = get_option('wecoza_postgres_dbname', 'defaultdb');
-            $pgUser = get_option('wecoza_postgres_user', 'doadmin');
+            $pgHost = get_option('wecoza_postgres_host', '');
+            $pgPort = get_option('wecoza_postgres_port', '');
+            $pgName = get_option('wecoza_postgres_dbname', '');
+            $pgUser = get_option('wecoza_postgres_user', '');
             $pgPass = get_option('wecoza_postgres_password', '');
             
             // Check if password is empty
