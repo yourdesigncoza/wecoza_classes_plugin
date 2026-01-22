@@ -116,12 +116,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Set duration
                     classDurationInput.value = subjectData.duration;
 
-                    // Generate class code only if client ID is available
-                    if (selectedClientId) {
-                        classCodeInput.value = generateClassCode(selectedClientId, selectedClassType, selectedSubject);
-                    } else {
-                        classCodeInput.value = '';
-                    }
+                    // Generate class code (function now gets client from DOM)
+                    classCodeInput.value = generateClassCode();
                 }
             } else {
                 // Reset duration and code
@@ -215,38 +211,45 @@ document.addEventListener('DOMContentLoaded', function() {
      * Helper function to regenerate class code when any required field changes
      */
     function regenerateClassCode() {
-        const selectedClientId = document.getElementById('client_id')?.value;
-        const selectedClassType = classTypeSelect?.value;
-        const selectedSubject = classSubjectSelect?.value;
-
-        if (selectedClientId && selectedClassType && selectedSubject) {
-            classCodeInput.value = generateClassCode(selectedClientId, selectedClassType, selectedSubject);
-        } else {
-            classCodeInput.value = '';
+        const classCodeInput = document.getElementById('class_code');
+        if (classCodeInput) {
+            classCodeInput.value = generateClassCode();
         }
     }
 
     /**
-     * Generate a class code based on client ID, class type and subject
+     * Generate a simple 9-character class code from client name and timestamp
      *
-     * @param {string} clientId The selected client ID
-     * @param {string} classType The selected class type
-     * @param {string} subjectId The selected subject ID
-     * @return {string} The generated class code
+     * Format: [ABC][MMDDHR] where ABC = first 3 letters of client name, MMDDHR = month-day-hour
+     * Example: AGR102214 = AGR (from "AGR Limited") + 10 (Oct) + 22 (22nd) + 14 (2pm)
+     *
+     * @return {string} The generated class code (9 characters)
      */
-    function generateClassCode(clientId, classType, subjectId) {
-        // Format: [ClientID]-[ClassType]-[SubjectID]-[YYYY]-[MM]-[DD]-[HH]-[MM]
-        // Example: 11-REALLL-RLN-2025-06-25-02-14
+    function generateClassCode() {
+        // Get client name from dropdown
+        const clientSelect = document.getElementById('client_id');
+        if (!clientSelect || !clientSelect.value) {
+            return '';
+        }
+
+        const selectedOption = clientSelect.options[clientSelect.selectedIndex];
+        const clientName = selectedOption.text;
+
+        // Extract first 3 uppercase letters from client name
+        const prefix = clientName
+            .replace(/[^a-zA-Z]/g, '') // Remove non-letter characters
+            .substring(0, 3)
+            .toUpperCase()
+            .padEnd(3, 'X'); // Pad with X if less than 3 letters
+
+        // Get current date/time components
         const now = new Date();
+        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+        const day = now.getDate().toString().padStart(2, '0');
+        const hour = now.getHours().toString().padStart(2, '0');
 
-        // Create readable datetime components
-        const year = now.getFullYear(); // Full year (2025)
-        const month = (now.getMonth() + 1).toString().padStart(2, '0'); // Month (01-12)
-        const day = now.getDate().toString().padStart(2, '0'); // Day (01-31)
-        const hour = now.getHours().toString().padStart(2, '0'); // Hour (00-23)
-        const minute = now.getMinutes().toString().padStart(2, '0'); // Minute (00-59)
-
-        return `${clientId}-${classType}-${subjectId}-${year}-${month}-${day}-${hour}-${minute}`;
+        // Format: [ABC][MMDDHR]
+        return `${prefix}${month}${day}${hour}`;
     }
 
 

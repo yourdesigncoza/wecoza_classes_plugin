@@ -28,10 +28,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Database prevents duplicate class_code values via unique constraint
   3. Class_code queries complete in under 100ms even with 1000+ existing classes
   4. Concurrent code generation requests never produce duplicate sequential numbers
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 01-01: TBD
+- [ ] 01-01-PLAN.md - Create sequence, unique index, and constraint via SQL migrations
 
 ### Phase 2: Server-Side Code Generation
 **Goal**: Core generation logic produces simple, memorable codes from client names and sequential numbers
@@ -81,11 +81,11 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Database Foundation | 0/TBD | Not started | - |
+| 1. Database Foundation | 0/1 | Planned | - |
 | 2. Server-Side Code Generation | 0/TBD | Not started | - |
 | 3. Controller Integration | 0/TBD | Not started | - |
 | 4. Frontend Integration & Testing | 0/TBD | Not started | - |

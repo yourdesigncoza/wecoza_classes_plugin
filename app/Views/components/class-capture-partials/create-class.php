@@ -99,7 +99,7 @@
          <div class="col-md-4 ">
             <label for="class_code" class="form-label">Class Code</label>
             <input type="text" id="class_code" name="class_code" class="form-control form-control-sm" placeholder="Class Code" readonly>
-            <small class="text-muted">Auto generated [ClientID]-[ClassType]-[SubjectID]-[YYYY]-[MM]-[DD]-[HH]-[MM]</small>
+            <small class="text-muted">Auto generated [Abbreviation of Client Name][month][day][hour] eg. EDU012216</small>
          </div>
          <!-- Class Original Start Date -->
          <div class="col-md-4 ">
