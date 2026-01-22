@@ -3,7 +3,7 @@
 ## Project Architecture Overview
 
 ### **Core Structure: WordPress Plugin with External Database**
-The WeCoza Classes Plugin is a sophisticated **enterprise-level WordPress plugin** that follows a **clean MVC architecture** built for WordPress but uses **PostgreSQL** (not WordPress MySQL) as the primary database. This separation allows for complex training class management with JSONB data structures while maintaining WordPress integration.
+The WeCoza Classes Plugin is a sophisticated **enterprise-level WordPress plugin** that follows a **clean MVC architecture** built for WordPress but uses **PostgreSQL** as the secondary non WP database. This separation allows for complex training class management with JSONB data structures while maintaining WordPress integration.
 
 ### **Technology Stack Integration**
 - **Backend**: PHP 7.4+ with PSR-4 autoloading, PostgreSQL via PDO
