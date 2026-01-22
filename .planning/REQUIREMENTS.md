@@ -74,30 +74,30 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DB-01 | Pending | Pending |
-| DB-02 | Pending | Pending |
-| DB-03 | Pending | Pending |
-| DB-04 | Pending | Pending |
-| GEN-01 | Pending | Pending |
-| GEN-02 | Pending | Pending |
-| GEN-03 | Pending | Pending |
-| GEN-04 | Pending | Pending |
-| GEN-05 | Pending | Pending |
-| GEN-06 | Pending | Pending |
-| GEN-07 | Pending | Pending |
-| JS-01 | Pending | Pending |
-| JS-02 | Pending | Pending |
-| JS-03 | Pending | Pending |
-| JS-04 | Pending | Pending |
-| BC-01 | Pending | Pending |
-| BC-02 | Pending | Pending |
-| BC-03 | Pending | Pending |
+| DB-01 | Phase 1 | Pending |
+| DB-02 | Phase 1 | Pending |
+| DB-03 | Phase 1 | Pending |
+| DB-04 | Phase 1 | Pending |
+| GEN-01 | Phase 2 | Pending |
+| GEN-02 | Phase 2 | Pending |
+| GEN-03 | Phase 2 | Pending |
+| GEN-04 | Phase 2 | Pending |
+| GEN-05 | Phase 2 | Pending |
+| GEN-06 | Phase 2 | Pending |
+| GEN-07 | Phase 3 | Pending |
+| JS-01 | Phase 4 | Pending |
+| JS-02 | Phase 4 | Pending |
+| JS-03 | Phase 4 | Pending |
+| JS-04 | Phase 4 | Pending |
+| BC-01 | Phase 3 | Pending |
+| BC-02 | Phase 3 | Pending |
+| BC-03 | Phase 3 | Pending |
 
 **Coverage:**
 - v1 requirements: 18 total
-- Mapped to phases: 0 (pending roadmap creation)
-- Unmapped: 18 ⚠️
+- Mapped to phases: 18/18 ✓
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-01-22*
-*Last updated: 2026-01-22 after initial definition*
+*Last updated: 2026-01-22 after roadmap creation*
