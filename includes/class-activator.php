@@ -256,12 +256,12 @@ class WeCoza_Classes_Activator {
 <li><strong>Delete:</strong> Remove classes that are no longer needed</li>
 </ul>
 
-<p><a href="/app/create-class/" class="btn btn-primary">+ Create New Class BETA</a></p>',
+<p><a href="/app/create-class/" class="btn btn-primary">+ Create New Class</a></p>',
                 'slug' => 'all-classes'
             ),
             'create-class' => array(
-                'title' => 'Create New Class BETA',
-                'content' => '<h2>Create New Class BETA</h2>
+                'title' => 'Create New Class',
+                'content' => '<h2>Create New Class</h2>
 <p>Use the form below to create a new training class.</p>
 
 [wecoza_capture_class]
