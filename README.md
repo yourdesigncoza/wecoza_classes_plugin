@@ -178,11 +178,11 @@ Before activating the plugin, configure the PostgreSQL database connection by ad
 
 ```sql
 INSERT INTO wp_options (option_name, option_value) VALUES
-('wecoza_postgres_host', 'your-database-host'),
-('wecoza_postgres_port', '5432'),
-('wecoza_postgres_dbname', 'your-database-name'),
-('wecoza_postgres_user', 'your-database-user'),
-('wecoza_postgres_password', 'your-database-password');
+('wecoza_postgres_host', ''),
+('wecoza_postgres_port', ''),
+('wecoza_postgres_dbname', ''),
+('wecoza_postgres_user', ''),
+('wecoza_postgres_password', '');
 ```
 
 Or use WordPress admin to set these options:
