@@ -66,6 +66,18 @@
          <div class="col-md-12">
             <h6 class="mb-2">Class Details</h6>
          </div>
+         <!-- Skills Package -->
+         <div class="col-md-3">
+            <label for="skills_package" class="form-label">Skills Package <span class="text-danger">*</span></label>
+            <select id="skills_package" name="skills_package" class="form-select form-select-sm" required>
+               <option value="">Select Package</option>
+               <option value="Walk Package">Walk Package</option>
+               <option value="Run Package">Run Package</option>
+               <option value="Hexa Package">Hexa Package</option>
+            </select>
+            <div class="invalid-feedback">Please select a skills package.</div>
+            <div class="valid-feedback">Looks good!</div>
+         </div>
          <!-- Class Type (Main Category) -->
          <div class="col-md-3">
             <label for="class_type" class="form-label">Class Type <span class="text-danger">*</span></label>
@@ -96,13 +108,13 @@
       </div>
       <div class="row">
          <!-- Class Code (Auto-generated) -->
-         <div class="col-md-4 ">
+         <div class="col-md-3">
             <label for="class_code" class="form-label">Class Code</label>
             <input type="text" id="class_code" name="class_code" class="form-control form-control-sm" placeholder="Class Code" readonly>
-            <small class="text-muted">Auto generated [Abbreviation of Client Name][month][day][hour] eg. EDU012216</small>
+            <small class="text-muted">[Abbreviation][month][day][hour] eg. EDU012216</small>
          </div>
          <!-- Class Original Start Date -->
-         <div class="col-md-4 ">
+         <div class="col-md-3">
             <label for="class_start_date" class="form-label">Class Start Date <span class="text-danger">*</span></label>
             <input type="date" id="class_start_date" name="class_start_date" class="form-control form-control-sm" placeholder="YYYY-MM-DD" required>
             <div class="invalid-feedback">Please select the start date.</div>

@@ -18,6 +18,7 @@ class ClassModel {
     private $clientId;
     private $siteId;
     private $classAddressLine;
+    private $skillsPackage;
     private $classType;
     private $classSubject;
     private $classCode;
@@ -73,6 +74,7 @@ class ClassModel {
         $this->setClientId($data['client_id'] ?? null);
         $this->setSiteId($data['site_id'] ?? null);
         $this->setClassAddressLine($data['class_address_line'] ?? $data['site_address'] ?? null);
+        $this->setSkillsPackage($data['skills_package'] ?? null);
         $this->setClassType($data['class_type'] ?? null);
         $this->setClassSubject($data['class_subject'] ?? null);
         $this->setClassCode($data['class_code'] ?? null);
@@ -152,18 +154,19 @@ class ClassModel {
 
             // Insert into single classes table
             $sql = "INSERT INTO classes (
-                client_id, site_id, class_address_line, class_type, class_subject,
+                client_id, site_id, class_address_line, skills_package, class_type, class_subject,
                 class_code, class_duration, original_start_date, seta_funded, seta,
                 exam_class, exam_type, class_agent, initial_class_agent,
                 initial_agent_start_date, project_supervisor_id, delivery_date,
                 learner_ids, exam_learners, backup_agent_ids, schedule_data, stop_restart_dates,
                 class_notes_data, order_nr, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             $params = [
                 $this->getClientId(),
                 $this->getSiteId(),
                 $this->getClassAddressLine(),
+                $this->getSkillsPackage(),
                 $this->getClassType(),
                 $this->getClassSubject(),
                 $this->getClassCode(),
@@ -219,9 +222,9 @@ class ClassModel {
             $stopRestartJson = $this->prepareStopRestartDates();
 
             $sql = "UPDATE classes SET
-                client_id = ?, site_id = ?, class_address_line = ?, class_type = ?,
+                client_id = ?, site_id = ?, class_address_line = ?, skills_package = ?, class_type = ?,
                 class_subject = ?, class_code = ?, class_duration = ?, original_start_date = ?,
-                seta_funded = ?, seta = ?, exam_class = ?, exam_type = ?, 
+                seta_funded = ?, seta = ?, exam_class = ?, exam_type = ?,
                 class_agent = ?, initial_class_agent = ?, initial_agent_start_date = ?,
                 project_supervisor_id = ?, delivery_date = ?, learner_ids = ?, exam_learners = ?, backup_agent_ids = ?,
                 schedule_data = ?, stop_restart_dates = ?, class_notes_data = ?, order_nr = ?, updated_at = ?
@@ -229,7 +232,7 @@ class ClassModel {
 
             $params = [
                 $this->getClientId(), $this->getSiteId(), $this->getClassAddressLine(),
-                $this->getClassType(), $this->getClassSubject(), $this->getClassCode(),
+                $this->getSkillsPackage(), $this->getClassType(), $this->getClassSubject(), $this->getClassCode(),
                 $this->getClassDuration(), $this->getOriginalStartDate(), 
                 $this->getSetaFunded() ? 'true' : 'false',  // PostgreSQL boolean literal
                 $this->getSeta(), 
@@ -314,6 +317,9 @@ class ClassModel {
 
     public function getClassAddressLine() { return $this->classAddressLine; }
     public function setClassAddressLine($classAddressLine) { $this->classAddressLine = $classAddressLine; return $this; }
+
+    public function getSkillsPackage() { return $this->skillsPackage; }
+    public function setSkillsPackage($skillsPackage) { $this->skillsPackage = $skillsPackage; return $this; }
 
     public function getClassType() { return $this->classType; }
     public function setClassType($classType) { $this->classType = $classType; return $this; }

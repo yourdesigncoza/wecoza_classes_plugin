@@ -842,6 +842,7 @@ class ClassController {
         if (isset($formData['client_id'])) $class->setClientId($formData['client_id']);
         if (isset($formData['site_id'])) $class->setSiteId($formData['site_id']);
         if (isset($formData['site_address'])) $class->setClassAddressLine($formData['site_address']);
+        if (isset($formData['skills_package'])) $class->setSkillsPackage($formData['skills_package']);
         if (isset($formData['class_type'])) $class->setClassType($formData['class_type']);
         if (isset($formData['class_subject'])) $class->setClassSubject($formData['class_subject']);
         if (isset($formData['class_code'])) $class->setClassCode($formData['class_code']);
@@ -912,6 +913,7 @@ class ClassController {
         $processed['client_id'] = isset($data['client_id']) && !empty($data['client_id']) ? intval($data['client_id']) : null;
         $processed['site_id'] = isset($data['site_id']) && !is_array($data['site_id']) ? $data['site_id'] : null;
         $processed['site_address'] = isset($data['site_address']) && !is_array($data['site_address']) ? self::sanitizeText($data['site_address']) : null;
+        $processed['skills_package'] = isset($data['skills_package']) && !is_array($data['skills_package']) ? self::sanitizeText($data['skills_package']) : null;
         $processed['class_type'] = isset($data['class_type']) && !is_array($data['class_type']) ? self::sanitizeText($data['class_type']) : null;
         $processed['class_subject'] = isset($data['class_subject']) && !is_array($data['class_subject']) ? self::sanitizeText($data['class_subject']) : null;
         $processed['class_code'] = isset($data['class_code']) && !is_array($data['class_code']) ? self::sanitizeText($data['class_code']) : null;

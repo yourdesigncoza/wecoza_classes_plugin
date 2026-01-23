@@ -917,6 +917,27 @@ if (isset($data['class_data']) && $data['class_data']):
 
       <?php echo section_divider(); ?>
 
+      <!-- ===== Section: Class Details ===== -->
+      <?php echo section_header('Class Details'); ?>
+      <div class="row">
+         <!-- Skills Package -->
+         <div class="col-md-3 mb-3">
+            <div class="mb-3">
+               <label for="skills_package" class="form-label">Skills Package <span class="text-danger">*</span></label>
+               <select id="skills_package" name="skills_package" class="form-select form-select-sm" required>
+                  <option value="">Select Package</option>
+                  <option value="Walk Package" <?php echo (isset($data['class_data']['skills_package']) && $data['class_data']['skills_package'] === 'Walk Package') ? 'selected' : ''; ?>>Walk Package</option>
+                  <option value="Run Package" <?php echo (isset($data['class_data']['skills_package']) && $data['class_data']['skills_package'] === 'Run Package') ? 'selected' : ''; ?>>Run Package</option>
+                  <option value="Hexa Package" <?php echo (isset($data['class_data']['skills_package']) && $data['class_data']['skills_package'] === 'Hexa Package') ? 'selected' : ''; ?>>Hexa Package</option>
+               </select>
+               <div class="invalid-feedback">Please select a skills package.</div>
+               <div class="valid-feedback">Looks good!</div>
+            </div>
+         </div>
+      </div>
+
+      <?php echo section_divider(); ?>
+
       <!-- ===== Section: Funding & Exam Details ===== -->
       <?php echo section_header('Funding & Exam Details'); ?>
       <div class="row">
