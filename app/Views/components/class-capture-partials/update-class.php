@@ -759,6 +759,57 @@ if (isset($data['class_data']) && $data['class_data']):
             <!-- These will be populated dynamically via JavaScript -->
          </div>
 
+      <?php echo section_divider(); ?>
+
+      <!-- Event Dates Section -->
+      <div class="mb-4">
+         <?php echo section_header('Event Dates', 'Add key event dates (does not affect training hours or schedule).'); ?>
+
+         <!-- Container for event rows -->
+         <div id="event-dates-container"></div>
+
+         <!-- Hidden Template Row -->
+         <div class="row event-date-row align-items-end mb-2 d-none" id="event-date-row-template">
+            <div class="col-md-2">
+               <label class="form-label">Event Type</label>
+               <select name="event_types[]" class="form-select form-select-sm">
+                  <option value="">Select</option>
+                  <option value="Deliveries">Deliveries</option>
+                  <option value="Collections">Collections</option>
+                  <option value="Exams">Exams</option>
+                  <option value="Mock Exams">Mock Exams</option>
+                  <option value="SBA Collection">SBA Collection</option>
+                  <option value="Learner Packs">Learner Packs</option>
+                  <option value="QA Visit">QA Visit</option>
+                  <option value="SETA Exit">SETA Exit</option>
+               </select>
+            </div>
+            <div class="col-md-3">
+               <label class="form-label">Description</label>
+               <input type="text" name="event_descriptions[]" class="form-control form-control-sm" placeholder="e.g., Deliver Initial Material" maxlength="255">
+            </div>
+            <div class="col-md-2">
+               <label class="form-label">Date</label>
+               <input type="date" name="event_dates_input[]" class="form-control form-control-sm">
+            </div>
+            <div class="col-md-3">
+               <label class="form-label">Notes (Optional)</label>
+               <input type="text" name="event_notes[]" class="form-control form-control-sm" placeholder="Optional notes" maxlength="500">
+            </div>
+            <div class="col-md-2">
+               <button type="button" class="btn btn-subtle-danger btn-sm remove-event-btn w-100">Remove</button>
+            </div>
+         </div>
+
+         <!-- Add Event Button -->
+         <button type="button" class="btn btn-subtle-primary btn-sm" id="add-event-date-btn">
+            + Add Event Date
+         </button>
+      </div>
+
+      <!-- Hidden input to pass existing event dates to JavaScript -->
+      <input type="hidden" id="existing-event-dates" value="<?php echo esc_attr(json_encode($data['class_data']['event_dates'] ?? [])); ?>">
+
          <!-- Schedule Statistics Section -->
          <!-- Schedule Statistics Toggle Button -->
          <div class="mt-3 mb-3">

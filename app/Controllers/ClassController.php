@@ -865,6 +865,7 @@ class ClassController {
         if (isset($formData['agent_replacements'])) $class->setAgentReplacements($formData['agent_replacements']);
         if (isset($formData['schedule_data'])) $class->setScheduleData($formData['schedule_data']);
         if (isset($formData['stop_restart_dates'])) $class->setStopRestartDates($formData['stop_restart_dates']);
+        if (isset($formData['event_dates'])) $class->setEventDates($formData['event_dates']);
         if (isset($formData['class_notes']) && !empty($formData['class_notes'])) {
             $class->setClassNotesData($formData['class_notes']);
         }
@@ -1058,6 +1059,27 @@ class ClassController {
         }
         $processed['stop_restart_dates'] = $stopRestartDates;
         // error_log('processFormData: Processed stop_restart_dates: ' . json_encode($stopRestartDates));
+
+        // Process event dates from form arrays
+        $eventDates = [];
+        if (isset($data['event_types']) && is_array($data['event_types'])) {
+            $types = $data['event_types'];
+            $descriptions = isset($data['event_descriptions']) ? $data['event_descriptions'] : [];
+            $dates = isset($data['event_dates_input']) ? $data['event_dates_input'] : [];
+            $notes = isset($data['event_notes']) ? $data['event_notes'] : [];
+
+            for ($i = 0; $i < count($types); $i++) {
+                if (!empty($types[$i]) && !empty($dates[$i])) {
+                    $eventDates[] = [
+                        'type' => self::sanitizeText($types[$i]),
+                        'description' => self::sanitizeText($descriptions[$i] ?? ''),
+                        'date' => self::sanitizeText($dates[$i]),
+                        'notes' => self::sanitizeText($notes[$i] ?? '')
+                    ];
+                }
+            }
+        }
+        $processed['event_dates'] = $eventDates;
 
         // error_log('processFormData: Successfully processed all form data');
         return $processed;

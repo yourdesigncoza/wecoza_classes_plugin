@@ -46,6 +46,7 @@ class ClassModel {
     private $scheduleData = [];
     private $stopRestartDates = [];
     private $classNotesData = [];
+    private $eventDates = [];
     private $order_nr;
     private $createdAt;
     private $updatedAt;
@@ -100,6 +101,7 @@ class ClassModel {
         $this->setScheduleData($this->parseJsonField($data['schedule_data'] ?? $data['scheduleData'] ?? []));
         $this->setStopRestartDates($this->parseJsonField($data['stop_restart_dates'] ?? []));
         $this->setClassNotesData($this->parseJsonField($data['class_notes_data'] ?? $data['classNotes'] ?? $data['class_notes'] ?? []));
+        $this->setEventDates($this->parseJsonField($data['event_dates'] ?? $data['eventDates'] ?? []));
         $this->setOrderNr($data['order_nr'] ?? null);
         
         // Load agent replacements from database if this is an existing class
@@ -159,8 +161,8 @@ class ClassModel {
                 exam_class, exam_type, class_agent, initial_class_agent,
                 initial_agent_start_date, project_supervisor_id, delivery_date,
                 learner_ids, exam_learners, backup_agent_ids, schedule_data, stop_restart_dates,
-                class_notes_data, order_nr, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                class_notes_data, event_dates, order_nr, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             $params = [
                 $this->getClientId(),
@@ -187,6 +189,7 @@ class ClassModel {
                 json_encode($this->getScheduleData()),
                 $stopRestartJson,
                 json_encode($this->getClassNotesData()),
+                json_encode($this->getEventDates()),
                 $this->getOrderNr(),
                 $this->getCreatedAt(),
                 $this->getUpdatedAt()
@@ -227,7 +230,7 @@ class ClassModel {
                 seta_funded = ?, seta = ?, exam_class = ?, exam_type = ?,
                 class_agent = ?, initial_class_agent = ?, initial_agent_start_date = ?,
                 project_supervisor_id = ?, delivery_date = ?, learner_ids = ?, exam_learners = ?, backup_agent_ids = ?,
-                schedule_data = ?, stop_restart_dates = ?, class_notes_data = ?, order_nr = ?, updated_at = ?
+                schedule_data = ?, stop_restart_dates = ?, class_notes_data = ?, event_dates = ?, order_nr = ?, updated_at = ?
                 WHERE class_id = ?";
 
             $params = [
@@ -243,7 +246,7 @@ class ClassModel {
                 $this->getDeliveryDate(), json_encode($this->getLearnerIds()),
                 json_encode($this->getExamLearners()), json_encode($this->getBackupAgentIds()), json_encode($this->getScheduleData()),
                 $stopRestartJson, json_encode($this->getClassNotesData()),
-                $this->getOrderNr(),
+                json_encode($this->getEventDates()), $this->getOrderNr(),
                 $this->getUpdatedAt(), $this->getId()
             ];
 
@@ -444,6 +447,9 @@ class ClassModel {
 
     public function getClassNotesData() { return $this->classNotesData; }
     public function setClassNotesData($classNotesData) { $this->classNotesData = is_array($classNotesData) ? $classNotesData : []; return $this; }
+
+    public function getEventDates() { return $this->eventDates; }
+    public function setEventDates($eventDates) { $this->eventDates = is_array($eventDates) ? $eventDates : []; return $this; }
 
     public function getOrderNr() { return $this->order_nr; }
     public function setOrderNr($order_nr) { $this->order_nr = is_string($order_nr) ? $order_nr : null; return $this; }

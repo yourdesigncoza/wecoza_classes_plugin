@@ -38,6 +38,9 @@
         // Initialize exception dates
         initExceptionDates();
 
+        // Initialize event dates
+        initEventDates();
+
         // Initialize date history (stop/restart dates)
         initDateHistory();
 
@@ -1062,6 +1065,56 @@
             // Event handlers are automatically available via delegation above
             // No need to manually attach them to new rows
         });
+    }
+
+    /**
+     * Initialize event dates (deliveries, exams, QA visits, etc.) functionality
+     */
+    function initEventDates() {
+        const $container = $('#event-dates-container');
+        const $template = $('#event-date-row-template');
+        const $addButton = $('#add-event-date-btn');
+
+        // Check if event dates elements exist
+        if ($container.length === 0 || $template.length === 0) {
+            return;
+        }
+
+        // Set up event delegation for remove buttons
+        $container.on('click', '.remove-event-btn', function () {
+            $(this).closest('.event-date-row').remove();
+        });
+
+        // Add event date row
+        $addButton.on('click', function () {
+            const $newRow = $template.clone();
+            $newRow.removeClass('d-none').removeAttr('id');
+            $container.append($newRow);
+        });
+
+        // Populate existing event dates (for update form)
+        const existingEventsInput = document.getElementById('existing-event-dates');
+        if (existingEventsInput && existingEventsInput.value) {
+            try {
+                const existingEvents = JSON.parse(existingEventsInput.value);
+                if (Array.isArray(existingEvents) && existingEvents.length > 0) {
+                    existingEvents.forEach(function(event) {
+                        const $newRow = $template.clone();
+                        $newRow.removeClass('d-none').removeAttr('id');
+
+                        // Set values
+                        $newRow.find('select[name="event_types[]"]').val(event.type || '');
+                        $newRow.find('input[name="event_descriptions[]"]').val(event.description || '');
+                        $newRow.find('input[name="event_dates_input[]"]').val(event.date || '');
+                        $newRow.find('input[name="event_notes[]"]').val(event.notes || '');
+
+                        $container.append($newRow);
+                    });
+                }
+            } catch (e) {
+                console.error('Error parsing existing event dates:', e);
+            }
+        }
     }
 
     /**
