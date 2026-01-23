@@ -1083,6 +1083,8 @@
         // Set up event delegation for remove buttons
         $container.on('click', '.remove-event-btn', function () {
             $(this).closest('.event-date-row').remove();
+            // Update statistics if visible
+            updateEventDatesStatistics();
         });
 
         // Add event date row
@@ -1090,6 +1092,11 @@
             const $newRow = $template.clone();
             $newRow.removeClass('d-none').removeAttr('id');
             $container.append($newRow);
+        });
+
+        // Update statistics when event date fields change
+        $container.on('change', 'select[name="event_types[]"], input[name="event_dates_input[]"]', function() {
+            updateEventDatesStatistics();
         });
 
         // Populate existing event dates (for update form)
@@ -1114,6 +1121,102 @@
             } catch (e) {
                 console.error('Error parsing existing event dates:', e);
             }
+        }
+    }
+
+    /**
+     * Collect event dates from form for statistics display
+     * @returns {Array} Array of event objects with type, description, date, and notes
+     */
+    function collectEventDatesForStats() {
+        const events = [];
+        $('.event-date-row:not(.d-none):not(#event-date-row-template)').each(function() {
+            const $row = $(this);
+            const type = $row.find('select[name="event_types[]"]').val();
+            const description = $row.find('input[name="event_descriptions[]"]').val();
+            const date = $row.find('input[name="event_dates_input[]"]').val();
+            const notes = $row.find('input[name="event_notes[]"]').val();
+            if (type && date) {
+                events.push({
+                    type: type,
+                    description: description || '',
+                    date: date,
+                    notes: notes || ''
+                });
+            }
+        });
+        return events;
+    }
+
+    /**
+     * Format date string from YYYY-MM-DD to DD/MM/YYYY
+     * @param {string} dateStr - Date in YYYY-MM-DD format
+     * @returns {string} Date in DD/MM/YYYY format
+     */
+    function formatDateDDMMYYYY(dateStr) {
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+        return dateStr;
+    }
+
+    /**
+     * Update the Event Dates section in Schedule Statistics
+     * Displays individual event rows with Type, Description, Date, and Notes
+     */
+    function updateEventDatesStatistics() {
+        const $statsSection = $('#schedule-statistics-section');
+        const $emptyRow = $('#event-dates-stats-empty-row');
+
+        // Only update if statistics section exists
+        if ($statsSection.length === 0) {
+            return;
+        }
+
+        // Remove any previously added dynamic event rows
+        $('.event-dates-stat-row').remove();
+
+        // Collect events (now includes description and notes)
+        const events = collectEventDatesForStats();
+
+        // Sort events chronologically by date (YYYY-MM-DD sorts as strings)
+        events.sort(function(a, b) {
+            return a.date.localeCompare(b.date);
+        });
+
+        if (events.length > 0) {
+            // Hide empty row
+            $emptyRow.hide();
+
+            // Insert individual rows with XSS protection using jQuery's .text() method
+            events.forEach(function(event, index) {
+                const $newRow = $('<tr class="event-dates-stat-row"></tr>');
+
+                if (index === 0) {
+                    // First row has rowspan for "Events" category label
+                    $newRow.append(
+                        $('<td>').addClass('align-middle').attr('rowspan', events.length).text('Events')
+                    );
+                }
+
+                // Add Type, Description, Date columns
+                $newRow.append(
+                    $('<td>').text(event.type),
+                    $('<td>').text(event.description),
+                    $('<td>').text(formatDateDDMMYYYY(event.date))
+                );
+
+                // Add Notes column (show '-' if empty)
+                $newRow.append(
+                    $('<td>').text(event.notes || '-')
+                );
+
+                $emptyRow.before($newRow);
+            });
+        } else {
+            // Show empty row
+            $emptyRow.show();
         }
     }
 
@@ -2411,6 +2514,9 @@
             $('#stat-holidays-affecting').text((stats.holidaysAffecting || 0) + ' holidays');
             $('#stat-exception-dates').text(stats.exceptionDates || '-');
             $('#stat-actual-days').text(stats.actualTrainingDays || '-');
+
+            // Update Event Dates statistics section
+            updateEventDatesStatistics();
 
         } catch (error) {
             console.error('Error calculating schedule statistics:', error);

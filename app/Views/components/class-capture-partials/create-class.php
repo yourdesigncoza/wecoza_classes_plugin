@@ -491,61 +491,77 @@
                      <tr>
                         <th class="sort pe-1 align-middle white-space-nowrap">Category</th>
                         <th class="sort pe-1 align-middle white-space-nowrap">Metric</th>
-                        <th class="sort pe-1 align-middle white-space-nowrap">Value</th>
+                        <th class="sort pe-1 align-middle white-space-nowrap" colspan="3">Value</th>
                      </tr>
                   </thead>
                   <tbody id="schedule-statistics-table">
                      <!-- Training Duration Statistics -->
                      <tr class="ydcoza-table-subheader">
-                        <th colspan="3">Training Duration</th>
+                        <th colspan="5">Training Duration</th>
                      </tr>
                      <tr>
                         <td rowspan="3" class="align-middle">Time Period</td>
                         <td>Total Calendar Days</td>
-                        <td id="stat-total-days">-</td>
+                        <td colspan="3" id="stat-total-days">-</td>
                      </tr>
                      <tr>
                         <td>Total Weeks</td>
-                        <td id="stat-total-weeks">-</td>
+                        <td colspan="3" id="stat-total-weeks">-</td>
                      </tr>
                      <tr>
                         <td>Total Months</td>
-                        <td id="stat-total-months">-</td>
+                        <td colspan="3" id="stat-total-months">-</td>
                      </tr>
                      <!-- Class Session Statistics -->
                      <tr class="ydcoza-table-subheader">
-                        <th colspan="3">Class Sessions</th>
+                        <th colspan="5">Class Sessions</th>
                      </tr>
                      <tr>
                         <td rowspan="3" class="align-middle">Sessions</td>
                         <td>Total Scheduled Classes</td>
-                        <td id="stat-total-classes">-</td>
+                        <td colspan="3" id="stat-total-classes">-</td>
                      </tr>
                      <tr>
                         <td>Total Training Hours</td>
-                        <td id="stat-total-hours">-</td>
+                        <td colspan="3" id="stat-total-hours">-</td>
                      </tr>
                      <tr>
                         <td>Average Hours per Month</td>
-                        <td id="stat-avg-hours-month">-</td>
+                        <td colspan="3" id="stat-avg-hours-month">-</td>
                      </tr>
                      <!-- Attendance Impact Statistics -->
                      <tr class="ydcoza-table-subheader">
-                        <th colspan="3">Attendance Impact</th>
+                        <th colspan="5">Attendance Impact</th>
                      </tr>
                      <tr>
                         <td rowspan="3" class="align-middle">Adjustments</td>
                         <td>Holidays Affecting Classes</td>
-                        <td id="stat-holidays-affecting">-</td>
+                        <td colspan="3" id="stat-holidays-affecting">-</td>
                      </tr>
                      <tr>
                         <td>Exception Dates</td>
-                        <td id="stat-exception-dates">-</td>
+                        <td colspan="3" id="stat-exception-dates">-</td>
                      </tr>
                      <tr>
                         <td>Actual Training Days</td>
-                        <td id="stat-actual-days">-</td>
+                        <td colspan="3" id="stat-actual-days">-</td>
                      </tr>
+                     <!-- Event Dates Statistics -->
+                     <tr class="ydcoza-table-subheader">
+                        <th colspan="5">Event Dates</th>
+                     </tr>
+                     <tr class="ydcoza-table-subheader" style="font-size: 0.85em; font-weight: 500;">
+                        <th></th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Date</th>
+                        <th>Notes</th>
+                     </tr>
+                     <tr id="event-dates-stats-empty-row">
+                        <td class="align-middle">Events</td>
+                        <td colspan="4" class="text-muted">No event dates added</td>
+                     </tr>
+                     <!-- Dynamic event date rows will be inserted here by JavaScript -->
                   </tbody>
                </table>
             </div>
