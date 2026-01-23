@@ -28,16 +28,17 @@ app/Services/Database/      # Database abstraction layer
 ### External PostgreSQL Database
 - **Host**: DigitalOcean managed PostgreSQL cluster
 - **Connection**: Via `DatabaseService` singleton in `app/Services/Database/DatabaseService.php`
-- **Primary Table**: `classes` with 20+ fields including JSONB columns
+- **Primary Table**: `classes` with 25+ fields including JSONB columns
 - **Schema File**: `schema/classes_schema.sql` for table structure
 
 ### Key JSONB Fields
 - `learner_ids`: Complex learner assignments with levels
-- `schedule_data`: Per-day scheduling information  
+- `schedule_data`: Per-day scheduling information
 - `class_notes_data`: Structured annotations and QA reports
 - `qa_reports`: Report metadata and file paths
 - `exam_learners`: Exam-specific learner data
 - `backup_agent_ids`: Agent backup assignments
+- `event_dates`: Class milestones (deliveries, exams, QA visits, etc.)
 
 ### Database Testing Commands
 ```bash
@@ -240,6 +241,12 @@ echo view('components/class-capture-form', [
 2. Register in controller's `enqueueAssets()` method
 3. Use conditional loading based on shortcode presence
 4. Add CSS to theme child CSS file only
+
+## Specification Documents
+
+Feature specifications are maintained in `docs/`:
+- `SPEC-event-dates.md` - Event Dates tracking system (deliveries, exams, QA visits)
+- `SPEC-event-dates-statistics.md` - Event Dates display in Schedule Statistics
 
 ## Important Development Notes
 
