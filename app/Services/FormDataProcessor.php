@@ -1,0 +1,727 @@
+<?php
+/**
+ * FormDataProcessor.php
+ *
+ * Service for processing and validating form data for class management.
+ * Handles data transformation, sanitization, and validation for class forms.
+ *
+ * @package WeCozaClasses
+ * @since 2.0.0
+ */
+
+namespace WeCozaClasses\Services;
+
+use WeCozaClasses\Models\ClassModel;
+
+/**
+ * Form data processor service
+ *
+ * Centralizes all form data processing logic previously spread across ClassController.
+ * Handles:
+ * - Form data sanitization and validation
+ * - JSON field processing
+ * - Schedule data reconstruction and validation
+ * - ClassModel population
+ */
+class FormDataProcessor
+{
+    /**
+     * Process form data from POST and FILES
+     *
+     * @param array $data POST data
+     * @param array $files FILES data
+     * @return array Processed form data
+     */
+    public static function processFormData(array $data, array $files = []): array
+    {
+        $processed = [];
+
+        try {
+            // Basic fields - using snake_case field names that the model expects
+            $processed['id'] = isset($data['class_id']) && $data['class_id'] !== 'auto-generated' ? intval($data['class_id']) : null;
+            $processed['client_id'] = isset($data['client_id']) && !empty($data['client_id']) ? intval($data['client_id']) : null;
+            $processed['site_id'] = isset($data['site_id']) && !is_array($data['site_id']) ? $data['site_id'] : null;
+            $processed['site_address'] = isset($data['site_address']) && !is_array($data['site_address']) ? self::sanitizeText($data['site_address']) : null;
+            $processed['skills_package'] = isset($data['skills_package']) && !is_array($data['skills_package']) ? self::sanitizeText($data['skills_package']) : null;
+            $processed['class_type'] = isset($data['class_type']) && !is_array($data['class_type']) ? self::sanitizeText($data['class_type']) : null;
+            $processed['class_subject'] = isset($data['class_subject']) && !is_array($data['class_subject']) ? self::sanitizeText($data['class_subject']) : null;
+            $processed['class_code'] = isset($data['class_code']) && !is_array($data['class_code']) ? self::sanitizeText($data['class_code']) : null;
+            $processed['class_duration'] = isset($data['class_duration']) && !empty($data['class_duration']) ? intval($data['class_duration']) : null;
+
+            // Map schedule_start_date to original_start_date for backward compatibility
+            $processed['original_start_date'] = isset($data['schedule_start_date']) && !is_array($data['schedule_start_date'])
+                ? self::sanitizeText($data['schedule_start_date'])
+                : (isset($data['original_start_date']) && !is_array($data['original_start_date'])
+                    ? self::sanitizeText($data['original_start_date'])
+                    : null);
+
+            // Handle boolean fields properly - check for 'Yes'/'No' string values
+            $processed['seta_funded'] = false; // default to false
+            if (isset($data['seta_funded']) && !empty($data['seta_funded'])) {
+                $processed['seta_funded'] = ($data['seta_funded'] === 'Yes' || $data['seta_funded'] === '1' || $data['seta_funded'] === true);
+            }
+
+            $processed['seta'] = isset($data['seta_id']) && !is_array($data['seta_id'])
+                ? self::sanitizeText($data['seta_id'])
+                : (isset($data['seta']) && !is_array($data['seta'])
+                    ? self::sanitizeText($data['seta'])
+                    : null);
+
+            // Convert empty strings to false for boolean fields
+            $processed['exam_class'] = false; // default to false
+            if (isset($data['exam_class']) && !empty($data['exam_class'])) {
+                $processed['exam_class'] = ($data['exam_class'] === 'Yes' || $data['exam_class'] === '1' || $data['exam_class'] === true);
+            }
+
+            $processed['exam_type'] = isset($data['exam_type']) && !is_array($data['exam_type']) ? self::sanitizeText($data['exam_type']) : null;
+            $processed['class_agent'] = isset($data['class_agent']) && !empty($data['class_agent']) ? intval($data['class_agent']) : null;
+            $processed['initial_class_agent'] = isset($data['initial_class_agent']) && !empty($data['initial_class_agent']) ? intval($data['initial_class_agent']) : null;
+            $processed['initial_agent_start_date'] = isset($data['initial_agent_start_date']) && !is_array($data['initial_agent_start_date']) ? self::sanitizeText($data['initial_agent_start_date']) : null;
+            $processed['project_supervisor'] = isset($data['project_supervisor']) && !empty($data['project_supervisor']) ? intval($data['project_supervisor']) : null;
+            $processed['delivery_date'] = isset($data['delivery_date']) && !is_array($data['delivery_date']) ? self::sanitizeText($data['delivery_date']) : null;
+
+            // Order number field - initially empty for new classes (Draft status)
+            $processed['order_nr'] = isset($data['order_nr']) && !is_array($data['order_nr']) ? self::sanitizeText($data['order_nr']) : null;
+
+            // Array fields
+            $processed['class_notes'] = isset($data['class_notes']) && is_array($data['class_notes']) ? array_map([self::class, 'sanitizeText'], $data['class_notes']) : [];
+
+            // Process learner IDs
+            $learnerIds = [];
+            if (isset($data['class_learners_data']) && is_string($data['class_learners_data']) && !empty($data['class_learners_data'])) {
+                $learnerData = json_decode(stripslashes($data['class_learners_data']), true);
+                if (is_array($learnerData)) {
+                    $learnerIds = $learnerData;
+                }
+            }
+            $processed['learner_ids'] = $learnerIds;
+
+            // Process exam learners separately
+            $examLearners = [];
+            if (isset($data['exam_learners']) && is_string($data['exam_learners']) && !empty($data['exam_learners'])) {
+                $examLearnerData = json_decode(stripslashes($data['exam_learners']), true);
+                if (is_array($examLearnerData)) {
+                    $examLearners = $examLearnerData;
+                }
+            }
+            $processed['exam_learners'] = $examLearners;
+
+            // Process backup agents from form arrays
+            $backupAgents = [];
+            if (isset($data['backup_agent_ids']) && is_array($data['backup_agent_ids'])) {
+                $agentIds = $data['backup_agent_ids'];
+                $agentDates = isset($data['backup_agent_dates']) ? $data['backup_agent_dates'] : [];
+
+                for ($i = 0; $i < count($agentIds); $i++) {
+                    if (!empty($agentIds[$i])) {
+                        $backupAgents[] = [
+                            'agent_id' => intval($agentIds[$i]),
+                            'date' => isset($agentDates[$i]) ? $agentDates[$i] : ''
+                        ];
+                    }
+                }
+            }
+            $processed['backup_agent_ids'] = $backupAgents;
+
+            // Process agent replacements from form arrays
+            $agentReplacements = [];
+            if (isset($data['replacement_agent_ids']) && is_array($data['replacement_agent_ids'])) {
+                $replacementAgentIds = $data['replacement_agent_ids'];
+                $replacementAgentDates = isset($data['replacement_agent_dates']) ? $data['replacement_agent_dates'] : [];
+
+                for ($i = 0; $i < count($replacementAgentIds); $i++) {
+                    if (!empty($replacementAgentIds[$i]) && isset($replacementAgentDates[$i]) && !empty($replacementAgentDates[$i])) {
+                        $agentReplacements[] = [
+                            'agent_id' => intval($replacementAgentIds[$i]),
+                            'date' => $replacementAgentDates[$i]
+                        ];
+                    }
+                }
+            }
+            $processed['agent_replacements'] = $agentReplacements;
+
+            // Process schedule data
+            $processed['schedule_data'] = self::processJsonField($data, 'schedule_data');
+
+            // Process stop/restart dates from form arrays
+            $stopRestartDates = [];
+            if (isset($data['stop_dates']) && is_array($data['stop_dates'])) {
+                $stopDates = $data['stop_dates'];
+                $restartDates = isset($data['restart_dates']) ? $data['restart_dates'] : [];
+
+                for ($i = 0; $i < count($stopDates); $i++) {
+                    if (!empty($stopDates[$i]) && isset($restartDates[$i]) && !empty($restartDates[$i])) {
+                        $stopRestartDates[] = [
+                            'stop_date' => $stopDates[$i],
+                            'restart_date' => $restartDates[$i]
+                        ];
+                    }
+                }
+            }
+            $processed['stop_restart_dates'] = $stopRestartDates;
+
+            // Process event dates from form arrays
+            $eventDates = [];
+            if (isset($data['event_types']) && is_array($data['event_types'])) {
+                $types = $data['event_types'];
+                $descriptions = isset($data['event_descriptions']) ? $data['event_descriptions'] : [];
+                $dates = isset($data['event_dates_input']) ? $data['event_dates_input'] : [];
+                $notes = isset($data['event_notes']) ? $data['event_notes'] : [];
+
+                for ($i = 0; $i < count($types); $i++) {
+                    if (!empty($types[$i]) && !empty($dates[$i])) {
+                        $eventDates[] = [
+                            'type' => self::sanitizeText($types[$i]),
+                            'description' => self::sanitizeText($descriptions[$i] ?? ''),
+                            'date' => self::sanitizeText($dates[$i]),
+                            'notes' => self::sanitizeText($notes[$i] ?? '')
+                        ];
+                    }
+                }
+            }
+            $processed['event_dates'] = $eventDates;
+
+            return $processed;
+
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Process JSON field from form data with enhanced schedule data handling
+     *
+     * @param array $data Form data
+     * @param string $field Field name
+     * @return array Processed JSON data
+     */
+    public static function processJsonField(array $data, string $field): array
+    {
+        if (!isset($data[$field])) {
+            return [];
+        }
+
+        $value = $data[$field];
+
+        // If it's already an array (from form submission), return it
+        if (is_array($value)) {
+            // Special handling for schedule_data field
+            if ($field === 'schedule_data') {
+                // The form sends schedule_data as nested arrays, we need to reconstruct it
+                $scheduleData = self::reconstructScheduleData($data);
+                return self::processScheduleData($scheduleData);
+            }
+
+            return $value;
+        }
+
+        // Handle WordPress addslashes and HTML encoding for strings
+        if (is_string($value)) {
+            if (empty($value)) {
+                return [];
+            }
+
+            $value = stripslashes($value);
+            $value = html_entity_decode($value, ENT_QUOTES, 'UTF-8');
+
+            // Decode JSON
+            $decoded = json_decode($value, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return [];
+            }
+
+            // Special handling for schedule_data field
+            if ($field === 'schedule_data' && !empty($decoded)) {
+                $decoded = self::processScheduleData($decoded);
+            }
+
+            return $decoded ?: [];
+        }
+
+        return [];
+    }
+
+    /**
+     * Reconstruct schedule data from form's nested array structure
+     *
+     * @param array $data Form data
+     * @return array Reconstructed schedule data
+     */
+    public static function reconstructScheduleData(array $data): array
+    {
+        $scheduleData = [];
+
+        // Extract base fields from schedule_data array
+        if (isset($data['schedule_data']) && is_array($data['schedule_data'])) {
+            foreach ($data['schedule_data'] as $key => $value) {
+                if (!is_array($value)) {
+                    $scheduleData[$key] = $value;
+                }
+            }
+
+            // Handle nested arrays
+            if (isset($data['schedule_data']['per_day_times'])) {
+                $scheduleData['per_day_times'] = $data['schedule_data']['per_day_times'];
+            }
+            if (isset($data['schedule_data']['selected_days'])) {
+                $scheduleData['selected_days'] = $data['schedule_data']['selected_days'];
+            }
+            if (isset($data['schedule_data']['exception_dates'])) {
+                $scheduleData['exception_dates'] = $data['schedule_data']['exception_dates'];
+            }
+            if (isset($data['schedule_data']['holiday_overrides']) && is_array($data['schedule_data']['holiday_overrides'])) {
+                // Handle holiday_overrides - convert string values to boolean
+                $overrides = [];
+                foreach ($data['schedule_data']['holiday_overrides'] as $date => $value) {
+                    $overrides[$date] = ($value === '1' || $value === 'true' || $value === true);
+                }
+                $scheduleData['holiday_overrides'] = $overrides;
+            }
+        }
+
+        // Add missing data from form
+        if (!isset($scheduleData['start_date']) && isset($data['schedule_start_date'])) {
+            $scheduleData['start_date'] = $data['schedule_start_date'];
+        }
+
+        // Capture end date from multiple possible sources
+        if (isset($data['schedule_end_date']) && !empty($data['schedule_end_date'])) {
+            $scheduleData['end_date'] = $data['schedule_end_date'];
+        } elseif (isset($data['schedule_data']['end_date']) && !empty($data['schedule_data']['end_date'])) {
+            $scheduleData['end_date'] = $data['schedule_data']['end_date'];
+        } elseif (isset($data['schedule_data']['endDate']) && !empty($data['schedule_data']['endDate'])) {
+            $scheduleData['end_date'] = $data['schedule_data']['endDate'];
+        }
+
+        // Ensure we have the selected days from the form
+        if (empty($scheduleData['selected_days']) && isset($data['schedule_days']) && is_array($data['schedule_days'])) {
+            $scheduleData['selected_days'] = array_values(array_filter($data['schedule_days']));
+        }
+
+        // Build per_day_times if not present
+        if (empty($scheduleData['per_day_times']) && isset($data['day_start_time']) && isset($data['day_end_time'])) {
+            $scheduleData['per_day_times'] = [];
+            foreach ($data['day_start_time'] as $day => $startTime) {
+                if (!empty($startTime) && isset($data['day_end_time'][$day])) {
+                    $endTime = $data['day_end_time'][$day];
+                    $duration = self::calculateDuration($startTime, $endTime);
+                    $scheduleData['per_day_times'][$day] = [
+                        'start_time' => $startTime,
+                        'end_time' => $endTime,
+                        'duration' => number_format($duration, 2)
+                    ];
+                }
+            }
+        }
+
+        // Process exception dates from form arrays
+        if (empty($scheduleData['exception_dates']) && isset($data['exception_dates']) && is_array($data['exception_dates'])) {
+            $scheduleData['exception_dates'] = [];
+            $exceptionDates = $data['exception_dates'];
+            $exceptionReasons = isset($data['exception_reasons']) ? $data['exception_reasons'] : [];
+
+            for ($i = 0; $i < count($exceptionDates); $i++) {
+                if (!empty($exceptionDates[$i])) {
+                    $scheduleData['exception_dates'][] = [
+                        'date' => $exceptionDates[$i],
+                        'reason' => isset($exceptionReasons[$i]) ? $exceptionReasons[$i] : ''
+                    ];
+                }
+            }
+        }
+
+        // Ensure metadata
+        if (!isset($scheduleData['metadata'])) {
+            $scheduleData['metadata'] = [
+                'lastUpdated' => date('c'),
+                'validatedAt' => date('c')
+            ];
+        }
+
+        // Ensure timeData
+        if (!isset($scheduleData['timeData'])) {
+            $scheduleData['timeData'] = [
+                'mode' => isset($scheduleData['time_mode']) ? $scheduleData['time_mode'] : 'per_day'
+            ];
+        }
+
+        // Remove duplicate fields
+        unset($scheduleData['time_mode']);
+
+        return $scheduleData;
+    }
+
+    /**
+     * Process schedule data with format detection, validation, and conversion
+     *
+     * @param array $scheduleData Raw schedule data from form
+     * @return array Processed schedule data in v2.0 format
+     */
+    public static function processScheduleData(array $scheduleData): array
+    {
+        // Basic validation of schedule data
+        if (!is_array($scheduleData)) {
+            return [];
+        }
+
+        // Expect V2.0 format only
+        return self::validateScheduleDataV2($scheduleData);
+    }
+
+    /**
+     * Validate and sanitize v2.0 schedule data format
+     *
+     * @param array $data v2.0 schedule data
+     * @return array Validated and sanitized data
+     */
+    public static function validateScheduleDataV2(array $data): array
+    {
+        $validated = [
+            'version' => '2.0',
+            'pattern' => 'weekly',
+            'startDate' => '',
+            'endDate' => '',
+            'timeData' => [
+                'mode' => 'single'
+            ],
+            'selectedDays' => [],
+            'dayOfMonth' => null,
+            'exceptionDates' => [],
+            'holidayOverrides' => [],
+            'metadata' => [
+                'lastUpdated' => date('c'),
+                'validatedAt' => date('c')
+            ]
+        ];
+
+        // Validate version
+        if (isset($data['version'])) {
+            $validated['version'] = \sanitize_text_field($data['version']);
+        }
+
+        // Validate pattern
+        $allowedPatterns = ['weekly', 'biweekly', 'monthly', 'custom'];
+        if (isset($data['pattern']) && in_array($data['pattern'], $allowedPatterns)) {
+            $validated['pattern'] = $data['pattern'];
+        }
+
+        // Validate dates - check both camelCase and snake_case versions
+        if (isset($data['startDate']) && self::isValidDate($data['startDate'])) {
+            $validated['startDate'] = \sanitize_text_field($data['startDate']);
+        } elseif (isset($data['start_date']) && self::isValidDate($data['start_date'])) {
+            $validated['startDate'] = \sanitize_text_field($data['start_date']);
+        }
+
+        if (isset($data['endDate']) && self::isValidDate($data['endDate'])) {
+            $validated['endDate'] = \sanitize_text_field($data['endDate']);
+        } elseif (isset($data['end_date']) && self::isValidDate($data['end_date'])) {
+            $validated['endDate'] = \sanitize_text_field($data['end_date']);
+        }
+
+        // Validate day of month for monthly pattern
+        if (isset($data['dayOfMonth']) && is_numeric($data['dayOfMonth'])) {
+            $dayOfMonth = intval($data['dayOfMonth']);
+            if ($dayOfMonth >= 1 && $dayOfMonth <= 31) {
+                $validated['dayOfMonth'] = $dayOfMonth;
+            }
+        }
+
+        // Validate time data
+        if (isset($data['timeData']) && is_array($data['timeData'])) {
+            $validated['timeData'] = self::validateTimeData($data['timeData']);
+        } else {
+            // Check if we have per_day_times directly in the data
+            if (isset($data['per_day_times']) && is_array($data['per_day_times'])) {
+                $validated['timeData'] = [
+                    'mode' => 'per-day',
+                    'perDayTimes' => $data['per_day_times']
+                ];
+            }
+        }
+
+        // If timeData was set but per_day_times exists, override with the actual data
+        if (isset($data['per_day_times']) && is_array($data['per_day_times']) && !empty($data['per_day_times'])) {
+            $validated['timeData'] = [
+                'mode' => 'per-day',
+                'perDayTimes' => $data['per_day_times']
+            ];
+        }
+
+        // Validate selected days - check both camelCase and snake_case versions
+        if (isset($data['selectedDays']) && is_array($data['selectedDays'])) {
+            $allowedDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            $validated['selectedDays'] = array_intersect($data['selectedDays'], $allowedDays);
+        } elseif (isset($data['selected_days']) && is_array($data['selected_days'])) {
+            $allowedDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            $validated['selectedDays'] = array_intersect($data['selected_days'], $allowedDays);
+        }
+
+        // Validate exception dates - check both camelCase and snake_case versions
+        if (isset($data['exceptionDates']) && is_array($data['exceptionDates'])) {
+            $validated['exceptionDates'] = self::validateExceptionDates($data['exceptionDates']);
+        } elseif (isset($data['exception_dates']) && is_array($data['exception_dates'])) {
+            $validated['exceptionDates'] = self::validateExceptionDates($data['exception_dates']);
+        }
+
+        // Validate holiday overrides - check both camelCase and snake_case versions
+        if (isset($data['holidayOverrides']) && is_array($data['holidayOverrides'])) {
+            $validated['holidayOverrides'] = self::validateHolidayOverrides($data['holidayOverrides']);
+        } elseif (isset($data['holiday_overrides']) && is_array($data['holiday_overrides'])) {
+            $validated['holidayOverrides'] = self::validateHolidayOverrides($data['holiday_overrides']);
+        }
+
+        // Preserve metadata
+        if (isset($data['metadata']) && is_array($data['metadata'])) {
+            $validated['metadata'] = array_merge($validated['metadata'], $data['metadata']);
+        }
+
+        // Preserve generated schedule if present (for backward compatibility)
+        if (isset($data['generatedSchedule']) && is_array($data['generatedSchedule'])) {
+            $validated['generatedSchedule'] = $data['generatedSchedule'];
+        }
+
+        return $validated;
+    }
+
+    /**
+     * Validate time data structure
+     *
+     * @param array $timeData Time data to validate
+     * @return array Validated time data
+     */
+    public static function validateTimeData(array $timeData): array
+    {
+        $validated = ['mode' => 'single'];
+
+        // Validate mode
+        $allowedModes = ['single', 'per-day'];
+        if (isset($timeData['mode']) && in_array($timeData['mode'], $allowedModes)) {
+            $validated['mode'] = $timeData['mode'];
+        }
+
+        // Validate single time data
+        if ($validated['mode'] === 'single' && isset($timeData['single'])) {
+            $validated['single'] = self::validateSingleTimeData($timeData['single']);
+        }
+
+        // Validate per-day time data
+        if ($validated['mode'] === 'per-day' && isset($timeData['perDay'])) {
+            $validated['perDay'] = self::validatePerDayTimeData($timeData['perDay']);
+        }
+
+        return $validated;
+    }
+
+    /**
+     * Validate single time data
+     *
+     * @param array $singleData Single time data
+     * @return array Validated single time data
+     */
+    public static function validateSingleTimeData(array $singleData): array
+    {
+        $validated = [
+            'startTime' => '',
+            'endTime' => '',
+            'duration' => 0
+        ];
+
+        if (isset($singleData['startTime']) && self::isValidTime($singleData['startTime'])) {
+            $validated['startTime'] = \sanitize_text_field($singleData['startTime']);
+        }
+
+        if (isset($singleData['endTime']) && self::isValidTime($singleData['endTime'])) {
+            $validated['endTime'] = \sanitize_text_field($singleData['endTime']);
+        }
+
+        if (isset($singleData['duration']) && is_numeric($singleData['duration'])) {
+            $validated['duration'] = floatval($singleData['duration']);
+        } elseif ($validated['startTime'] && $validated['endTime']) {
+            $validated['duration'] = self::calculateDuration($validated['startTime'], $validated['endTime']);
+        }
+
+        return $validated;
+    }
+
+    /**
+     * Validate per-day time data
+     *
+     * @param array $perDayData Per-day time data
+     * @return array Validated per-day time data
+     */
+    public static function validatePerDayTimeData(array $perDayData): array
+    {
+        $validated = [];
+        $allowedDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+        foreach ($perDayData as $day => $dayData) {
+            if (in_array($day, $allowedDays) && is_array($dayData)) {
+                $validated[$day] = self::validateSingleTimeData($dayData);
+            }
+        }
+
+        return $validated;
+    }
+
+    /**
+     * Validate exception dates array
+     *
+     * @param array $exceptionDates Exception dates to validate
+     * @return array Validated exception dates
+     */
+    public static function validateExceptionDates(array $exceptionDates): array
+    {
+        $validated = [];
+
+        foreach ($exceptionDates as $exception) {
+            if (is_array($exception) && isset($exception['date']) && self::isValidDate($exception['date'])) {
+                $validException = [
+                    'date' => \sanitize_text_field($exception['date']),
+                    'reason' => isset($exception['reason']) ? \sanitize_text_field($exception['reason']) : 'No reason specified'
+                ];
+                $validated[] = $validException;
+            }
+        }
+
+        return $validated;
+    }
+
+    /**
+     * Validate holiday overrides
+     *
+     * @param array $holidayOverrides Holiday overrides to validate
+     * @return array Validated holiday overrides
+     */
+    public static function validateHolidayOverrides(array $holidayOverrides): array
+    {
+        $validated = [];
+
+        foreach ($holidayOverrides as $date => $override) {
+            if (self::isValidDate($date)) {
+                $validated[\sanitize_text_field($date)] = (bool)$override;
+            }
+        }
+
+        return $validated;
+    }
+
+    /**
+     * Populate a ClassModel with processed form data
+     *
+     * @param ClassModel $class The class model to populate
+     * @param array $formData Processed form data
+     * @return ClassModel The populated class model
+     */
+    public static function populateClassModel(ClassModel $class, array $formData): ClassModel
+    {
+        // Set all the properties from form data
+        if (isset($formData['client_id'])) $class->setClientId($formData['client_id']);
+        if (isset($formData['site_id'])) $class->setSiteId($formData['site_id']);
+        if (isset($formData['site_address'])) $class->setClassAddressLine($formData['site_address']);
+        if (isset($formData['skills_package'])) $class->setSkillsPackage($formData['skills_package']);
+        if (isset($formData['class_type'])) $class->setClassType($formData['class_type']);
+        if (isset($formData['class_subject'])) $class->setClassSubject($formData['class_subject']);
+        if (isset($formData['class_code'])) $class->setClassCode($formData['class_code']);
+        if (isset($formData['class_duration'])) $class->setClassDuration($formData['class_duration']);
+        if (isset($formData['original_start_date'])) $class->setOriginalStartDate($formData['original_start_date']);
+        if (isset($formData['seta_funded'])) $class->setSetaFunded($formData['seta_funded']);
+        if (isset($formData['seta'])) $class->setSeta($formData['seta']);
+        if (isset($formData['exam_class'])) $class->setExamClass($formData['exam_class']);
+        if (isset($formData['exam_type'])) $class->setExamType($formData['exam_type']);
+        if (isset($formData['qa_visit_dates'])) $class->setQaVisitDates($formData['qa_visit_dates']);
+        if (isset($formData['qa_reports'])) $class->setQaReports($formData['qa_reports']);
+        if (isset($formData['class_agent'])) $class->setClassAgent($formData['class_agent']);
+        if (isset($formData['initial_class_agent'])) $class->setInitialClassAgent($formData['initial_class_agent']);
+        if (isset($formData['initial_agent_start_date'])) $class->setInitialAgentStartDate($formData['initial_agent_start_date']);
+        if (isset($formData['project_supervisor'])) $class->setProjectSupervisorId($formData['project_supervisor']);
+        if (isset($formData['delivery_date'])) $class->setDeliveryDate($formData['delivery_date']);
+        if (isset($formData['learner_ids'])) $class->setLearnerIds($formData['learner_ids']);
+        if (isset($formData['exam_learners'])) $class->setExamLearners($formData['exam_learners']);
+        if (isset($formData['backup_agent_ids'])) $class->setBackupAgentIds($formData['backup_agent_ids']);
+        if (isset($formData['agent_replacements'])) $class->setAgentReplacements($formData['agent_replacements']);
+        if (isset($formData['schedule_data'])) $class->setScheduleData($formData['schedule_data']);
+        if (isset($formData['stop_restart_dates'])) $class->setStopRestartDates($formData['stop_restart_dates']);
+        if (isset($formData['event_dates'])) $class->setEventDates($formData['event_dates']);
+        if (isset($formData['class_notes']) && !empty($formData['class_notes'])) {
+            $class->setClassNotesData($formData['class_notes']);
+        }
+
+        // Handle order_nr field - initially empty for new classes (Draft status)
+        if (isset($formData['order_nr'])) {
+            $class->setOrderNr($formData['order_nr']);
+        }
+
+        return $class;
+    }
+
+    /**
+     * Sanitize text input
+     *
+     * @param mixed $text Input text
+     * @return string Sanitized text
+     */
+    public static function sanitizeText(mixed $text): string
+    {
+        if ($text === null) {
+            return '';
+        }
+
+        // Check if WordPress function exists (it might not in some AJAX contexts)
+        if (function_exists('sanitize_text_field')) {
+            return \sanitize_text_field((string)$text);
+        }
+
+        // Fallback sanitization
+        return htmlspecialchars(strip_tags((string)$text), ENT_QUOTES, 'UTF-8');
+    }
+
+    /**
+     * Check if a date string is valid
+     *
+     * @param mixed $date Date string to validate
+     * @return bool True if valid date
+     */
+    public static function isValidDate(mixed $date): bool
+    {
+        if (!is_string($date)) {
+            return false;
+        }
+
+        $timestamp = strtotime($date);
+        return $timestamp !== false && date('Y-m-d', $timestamp) === $date;
+    }
+
+    /**
+     * Check if a time string is valid (HH:MM format)
+     *
+     * @param mixed $time Time string to validate
+     * @return bool True if valid time
+     */
+    public static function isValidTime(mixed $time): bool
+    {
+        if (!is_string($time)) {
+            return false;
+        }
+
+        return preg_match('/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/', $time) === 1;
+    }
+
+    /**
+     * Calculate duration in hours from start and end time
+     *
+     * @param string $startTime Start time (HH:MM)
+     * @param string $endTime End time (HH:MM)
+     * @return float Duration in hours
+     */
+    public static function calculateDuration(string $startTime, string $endTime): float
+    {
+        $start = strtotime($startTime);
+        $end = strtotime($endTime);
+
+        if ($start === false || $end === false || $end <= $start) {
+            return 0;
+        }
+
+        return ($end - $start) / 3600; // Convert seconds to hours
+    }
+}

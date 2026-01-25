@@ -277,20 +277,15 @@
     }
 
     /**
-     * Helper function to get day name from day index
+     * Date utility aliases - delegate to WeCozaUtils for DRY code
      */
-    function getDayName(dayIndex) {
-        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        return days[dayIndex];
-    }
+    var getDayName = window.WeCozaUtils ? window.WeCozaUtils.getDayName : function(dayIndex) {
+        return ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayIndex];
+    };
 
-    /**
-     * Helper function to get day index from day name
-     */
-    function getDayIndex(dayName) {
-        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        return days.indexOf(dayName);
-    }
+    var getDayIndex = window.WeCozaUtils ? window.WeCozaUtils.getDayIndex : function(dayName) {
+        return ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].indexOf(dayName);
+    };
 
     /**
      * Update per-day time controls based on selected days

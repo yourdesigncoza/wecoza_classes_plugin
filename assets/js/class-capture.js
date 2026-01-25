@@ -6,67 +6,35 @@
  */
 
 /**
- * Helper function to get day index from day name
- * @param {string} dayName - The name of the day (e.g., 'Monday')
- * @returns {number} - The index of the day (0-6, where 0 is Sunday)
+ * Date/Time utility aliases - delegate to WeCozaUtils for DRY code
+ * These maintain backward compatibility for any code calling these global functions
  */
-function getDayIndex(dayName) {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    return days.indexOf(dayName);
-}
+var getDayIndex = window.WeCozaUtils ? window.WeCozaUtils.getDayIndex : function(dayName) {
+    return ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].indexOf(dayName);
+};
 
-/**
- * Helper function to get day of week from date
- * @param {Date} date - The date object
- * @returns {string} - The name of the day
- */
-function getDayOfWeek(date) {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    return days[date.getDay()];
-}
+var getDayOfWeek = window.WeCozaUtils ? window.WeCozaUtils.getDayOfWeek : function(date) {
+    return ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()];
+};
 
-/**
- * Helper function to format date as YYYY-MM-DD
- * @param {Date} date - The date object
- * @returns {string} - The formatted date string
- */
-function formatDate(date) {
-    const d = new Date(date);
-    let month = '' + (d.getMonth() + 1);
-    let day = '' + d.getDate();
-    const year = d.getFullYear();
-
+var formatDate = window.WeCozaUtils ? window.WeCozaUtils.formatDate : function(date) {
+    var d = new Date(date);
+    var month = '' + (d.getMonth() + 1);
+    var day = '' + d.getDate();
+    var year = d.getFullYear();
     if (month.length < 2) month = '0' + month;
     if (day.length < 2) day = '0' + day;
-
     return [year, month, day].join('-');
-}
+};
 
-/**
- * Helper function to format time in 12-hour format
- * @param {Date|number} dateOrHour - Either a Date object or an hour (0-23)
- * @param {number} [minute] - The minute (0-59), only used if dateOrHour is a number
- * @returns {string} - The formatted time string (e.g., "6:30 AM")
- */
-function formatTime(dateOrHour, minute) {
-    let hours, minutes;
-
-    if (dateOrHour instanceof Date) {
-        // If a Date object is passed
-        hours = dateOrHour.getHours();
-        minutes = dateOrHour.getMinutes();
-    } else {
-        // If hour and minute are passed separately
-        hours = dateOrHour;
-        minutes = minute;
-    }
-
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    const hour12 = hours % 12 || 12; // Convert 0 to 12 for 12 AM
-    const minuteStr = minutes < 10 ? '0' + minutes : minutes;
-
+var formatTime = window.WeCozaUtils ? window.WeCozaUtils.formatTime : function(dateOrHour, minute) {
+    var hours = dateOrHour instanceof Date ? dateOrHour.getHours() : dateOrHour;
+    var minutes = dateOrHour instanceof Date ? dateOrHour.getMinutes() : minute;
+    var ampm = hours >= 12 ? 'PM' : 'AM';
+    var hour12 = hours % 12 || 12;
+    var minuteStr = minutes < 10 ? '0' + minutes : minutes;
     return hour12 + ':' + minuteStr + ' ' + ampm;
-}
+};
 
 /**
  * Show a custom alert dialog instead of using the browser's native alert
@@ -777,8 +745,10 @@ function showCustomAlert(message) {
             // If a file is selected, show a preview
             if (this.files && this.files[0]) {
                 const file = this.files[0];
+                // Use global utility with secure fallback (local escapeHtml - fail closed)
+                const esc = window.WeCozaUtils ? window.WeCozaUtils.escapeHtml : escapeHtml;
                 const $preview = $('<div class="qa-new-file-preview small mt-1 text-success"></div>');
-                $preview.html('<i class="bi bi-file-earmark-plus"></i> New file: ' + file.name + ' (' + formatFileSize(file.size) + ')');
+                $preview.html('<i class="bi bi-file-earmark-plus"></i> New file: ' + esc(file.name) + ' (' + formatFileSize(file.size) + ')');
                 $fileInput.after($preview);
             }
 
@@ -1540,7 +1510,7 @@ function showCustomAlert(message) {
         const alertHtml = `
             <div class="alert alert-subtle-success alert-dismissible fade show" role="alert">
                 <i class="bi bi-check-circle-fill me-2"></i>
-                <strong>Success!</strong> ${message}
+                <strong>Success!</strong> ${escapeHtml(message)}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         `;
@@ -1559,7 +1529,7 @@ function showCustomAlert(message) {
         const alertHtml = `
             <div class="alert alert-subtle-danger alert-dismissible fade show" role="alert">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                <strong>Error!</strong> ${message}
+                <strong>Error!</strong> ${escapeHtml(message)}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         `;

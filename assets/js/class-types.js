@@ -202,7 +202,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Show more detailed error in the dropdown for debugging
                 if (typeof wecozaClass !== 'undefined' && wecozaClass.debug) {
-                    classSubjectSelect.innerHTML = `<option value="">Error: ${error.message}</option>`;
+                    // Secure fallback - fail closed, not open
+                    const fallbackEsc = function(s) {
+                        if (s === null || s === undefined) return '';
+                        var div = document.createElement('div');
+                        div.textContent = String(s);
+                        return div.innerHTML;
+                    };
+                    const esc = window.WeCozaUtils ? window.WeCozaUtils.escapeHtml : fallbackEsc;
+                    classSubjectSelect.innerHTML = `<option value="">Error: ${esc(error.message)}</option>`;
                 }
             });
     }

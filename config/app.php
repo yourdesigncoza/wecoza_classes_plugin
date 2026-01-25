@@ -56,6 +56,7 @@ return array(
      */
     'controllers' => array(
         'WeCozaClasses\\Controllers\\ClassController',
+        'WeCozaClasses\\Controllers\\ClassAjaxController',
         'WeCozaClasses\\Controllers\\ClassTypesController',
         'WeCozaClasses\\Controllers\\PublicHolidaysController',
         'WeCozaClasses\\Controllers\\QAController',
@@ -94,26 +95,35 @@ return array(
 
     /**
      * AJAX endpoints configuration
+     *
+     * Note: AJAX handlers are now auto-registered in their respective controllers:
+     * - ClassAjaxController: save_class, delete_class, get_calendar_events, get_class_subjects,
+     *                        get_class_notes, save_class_note, delete_class_note, upload_attachment
+     * - QAController: delete_qa_report, get_class_qa_data, submit_qa_question,
+     *                 get_qa_analytics, get_qa_summary, get_qa_visits, create_qa_visit, export_qa_reports
+     * - PublicHolidaysController: get_public_holidays
+     *
+     * This configuration is kept for reference and backward compatibility.
      */
     'ajax_endpoints' => array(
         'save_class' => array(
-            'controller' => 'WeCozaClasses\\Controllers\\ClassController',
-            'method' => 'saveClass',
+            'controller' => 'WeCozaClasses\\Controllers\\ClassAjaxController',
+            'method' => 'saveClassAjax',
             'public' => false,
         ),
         'update_class' => array(
-            'controller' => 'WeCozaClasses\\Controllers\\ClassController',
-            'method' => 'updateClass',
+            'controller' => 'WeCozaClasses\\Controllers\\ClassAjaxController',
+            'method' => 'saveClassAjax',
             'public' => false,
         ),
         'delete_class' => array(
-            'controller' => 'WeCozaClasses\\Controllers\\ClassController',
-            'method' => 'deleteClass',
+            'controller' => 'WeCozaClasses\\Controllers\\ClassAjaxController',
+            'method' => 'deleteClassAjax',
             'public' => false,
         ),
         'get_class_subjects' => array(
-            'controller' => 'WeCozaClasses\\Controllers\\ClassTypesController',
-            'method' => 'getClassSubjects',
+            'controller' => 'WeCozaClasses\\Controllers\\ClassAjaxController',
+            'method' => 'getClassSubjectsAjax',
             'public' => true,
         ),
         'get_public_holidays' => array(
@@ -122,42 +132,42 @@ return array(
             'public' => true,
         ),
         'get_calendar_events' => array(
-            'controller' => 'WeCozaClasses\\Controllers\\ClassController',
-            'method' => 'getCalendarEvents',
+            'controller' => 'WeCozaClasses\\Controllers\\ClassAjaxController',
+            'method' => 'getCalendarEventsAjax',
             'public' => true,
         ),
         'get_class_notes' => array(
-            'controller' => 'WeCozaClasses\\Controllers\\ClassController',
+            'controller' => 'WeCozaClasses\\Controllers\\ClassAjaxController',
             'method' => 'getClassNotes',
             'public' => false,
         ),
         'save_class_note' => array(
-            'controller' => 'WeCozaClasses\\Controllers\\ClassController',
+            'controller' => 'WeCozaClasses\\Controllers\\ClassAjaxController',
             'method' => 'saveClassNote',
             'public' => false,
         ),
         'delete_qa_report' => array(
-            'controller' => 'WeCozaClasses\\Controllers\\ClassController',
+            'controller' => 'WeCozaClasses\\Controllers\\QAController',
             'method' => 'deleteQAReport',
             'public' => false,
         ),
         'get_class_qa_data' => array(
-            'controller' => 'WeCozaClasses\\Controllers\\ClassController',
+            'controller' => 'WeCozaClasses\\Controllers\\QAController',
             'method' => 'getClassQAData',
             'public' => false,
         ),
         'delete_class_note' => array(
-            'controller' => 'WeCozaClasses\\Controllers\\ClassController',
+            'controller' => 'WeCozaClasses\\Controllers\\ClassAjaxController',
             'method' => 'deleteClassNote',
             'public' => false,
         ),
         'submit_qa_question' => array(
-            'controller' => 'WeCozaClasses\\Controllers\\ClassController',
+            'controller' => 'WeCozaClasses\\Controllers\\QAController',
             'method' => 'submitQAQuestion',
             'public' => false,
         ),
         'upload_attachment' => array(
-            'controller' => 'WeCozaClasses\\Controllers\\ClassController',
+            'controller' => 'WeCozaClasses\\Controllers\\ClassAjaxController',
             'method' => 'uploadAttachment',
             'public' => false,
         ),

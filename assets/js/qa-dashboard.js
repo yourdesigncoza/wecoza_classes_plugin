@@ -280,7 +280,8 @@
 
         displayRecentActivity: function(visits) {
             const container = $('#recent-activity-list');
-            
+            const esc = window.WeCozaUtils ? window.WeCozaUtils.escapeHtml : this._fallbackEscape;
+
             if (!visits || visits.length === 0) {
                 container.html('<p>No recent visits found.</p>');
                 return;
@@ -293,10 +294,10 @@
             visits.forEach(visit => {
                 const notes = visit.notes ? visit.notes.substring(0, 50) + '...' : 'No notes';
                 html += `<tr>
-                    <td>${visit.visit_date}</td>
-                    <td>${visit.class_code}</td>
-                    <td>${visit.class_subject}</td>
-                    <td>${notes}</td>
+                    <td>${esc(visit.visit_date)}</td>
+                    <td>${esc(visit.class_code)}</td>
+                    <td>${esc(visit.class_subject)}</td>
+                    <td>${esc(notes)}</td>
                 </tr>`;
             });
 
@@ -325,7 +326,8 @@
 
         displayAlerts: function(alerts) {
             const container = $('#alerts-container');
-            
+            const esc = window.WeCozaUtils ? window.WeCozaUtils.escapeHtml : this._fallbackEscape;
+
             if (!alerts || alerts.length === 0) {
                 container.html('<p>No alerts at this time.</p>');
                 return;
@@ -333,8 +335,11 @@
 
             let html = '';
             alerts.forEach(alert => {
-                html += `<div class="notice notice-${alert.type}">
-                    <p>${alert.message}</p>
+                // Whitelist allowed alert types for class attribute
+                const allowedTypes = ['info', 'warning', 'error', 'success'];
+                const safeType = allowedTypes.includes(alert.type) ? alert.type : 'info';
+                html += `<div class="notice notice-${safeType}">
+                    <p>${esc(alert.message)}</p>
                 </div>`;
             });
 
@@ -405,13 +410,14 @@
         },
 
         showError: function(message) {
+            const esc = window.WeCozaUtils ? window.WeCozaUtils.escapeHtml : this._fallbackEscape;
             const errorHtml = `<div class="error-message">
                 <span class="dashicons dashicons-warning"></span>
-                ${message}
+                ${esc(message)}
             </div>`;
-            
+
             $('.qa-analytics-dashboard').prepend(errorHtml);
-            
+
             setTimeout(() => {
                 $('.error-message').fadeOut();
             }, 5000);
@@ -421,12 +427,20 @@
             if (this.refreshInterval) {
                 clearInterval(this.refreshInterval);
             }
-            
+
             Object.keys(this.charts).forEach(key => {
                 if (this.charts[key]) {
                     this.charts[key].destroy();
                 }
             });
+        },
+
+        // Secure fallback escape - fails closed, not open
+        _fallbackEscape: function(str) {
+            if (str === null || str === undefined) return '';
+            var div = document.createElement('div');
+            div.textContent = String(str);
+            return div.innerHTML;
         }
     };
 
@@ -476,7 +490,8 @@
 
         updateRecentVisits: function(visits) {
             const container = $('#widget-visits-list');
-            
+            const esc = window.WeCozaUtils ? window.WeCozaUtils.escapeHtml : this._fallbackEscape;
+
             if (!visits || visits.length === 0) {
                 container.html('<p>No recent visits found.</p>');
                 return;
@@ -486,10 +501,10 @@
             visits.forEach(visit => {
                 const notes = visit.notes ? visit.notes.substring(0, 80) + '...' : 'No notes';
                 html += `<li class="visit-item">
-                    <div class="visit-date">${visit.visit_date}</div>
+                    <div class="visit-date">${esc(visit.visit_date)}</div>
                     <div class="visit-details">
-                        <strong>${visit.class_code}</strong> - ${visit.class_subject}
-                        <div class="visit-notes">${notes}</div>
+                        <strong>${esc(visit.class_code)}</strong> - ${esc(visit.class_subject)}
+                        <div class="visit-notes">${esc(notes)}</div>
                     </div>
                 </li>`;
             });
@@ -500,17 +515,22 @@
 
         updateAlerts: function(alerts) {
             const container = $('#widget-alerts-list');
-            
+            const esc = window.WeCozaUtils ? window.WeCozaUtils.escapeHtml : this._fallbackEscape;
+
             if (!alerts || alerts.length === 0) {
                 container.html('<p>No alerts at this time.</p>');
                 return;
             }
 
+            // Whitelist allowed alert types for class attribute
+            const allowedTypes = ['info', 'warning', 'error', 'success'];
+
             let html = '<ul class="widget-alerts-list">';
             alerts.forEach(alert => {
-                html += `<li class="alert-item alert-${alert.type}">
+                const safeType = allowedTypes.includes(alert.type) ? alert.type : 'info';
+                html += `<li class="alert-item alert-${safeType}">
                     <span class="alert-icon dashicons dashicons-${this.getAlertIcon(alert.type)}"></span>
-                    <span class="alert-message">${alert.message}</span>
+                    <span class="alert-message">${esc(alert.message)}</span>
                 </li>`;
             });
             html += '</ul>';
@@ -613,6 +633,14 @@
             if (this.miniChart) {
                 this.miniChart.destroy();
             }
+        },
+
+        // Secure fallback escape - fails closed, not open
+        _fallbackEscape: function(str) {
+            if (str === null || str === undefined) return '';
+            var div = document.createElement('div');
+            div.textContent = String(str);
+            return div.innerHTML;
         }
     };
 

@@ -65,24 +65,60 @@ function config($config_name) {
  */
 function view($view, $data = array(), $return = true) {
     // Extract data to variables
-    extract($data);
-    
+    // EXTR_SKIP prevents overwriting existing variables (security: prevents LFI via $view_file)
+    extract($data, EXTR_SKIP);
+
     // Build view path
     $view_file = WECOZA_CLASSES_VIEWS_PATH . '/' . $view . '.view.php';
-    
+
     if (!file_exists($view_file)) {
         if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log("WeCoza Classes Plugin: View file not found: {$view_file}");
         }
         return $return ? '' : null;
     }
-    
+
     if ($return) {
         ob_start();
         include $view_file;
         return ob_get_clean();
     } else {
         include $view_file;
+    }
+}
+
+/**
+ * Render a view component (partial)
+ *
+ * Components are smaller, reusable pieces of views without the .view.php suffix.
+ * Use this for breaking down large views into manageable parts.
+ *
+ * @param string $component Component path relative to Views/components/ (without .php extension)
+ * @param array $data Data to pass to the component
+ * @param bool $return Whether to return the output or echo it
+ * @return string|void
+ */
+function component(string $component, array $data = [], bool $return = false) {
+    // Extract data to variables in isolated scope
+    // EXTR_SKIP prevents overwriting existing variables (security: prevents LFI via $component_file)
+    extract($data, EXTR_SKIP);
+
+    // Build component path
+    $component_file = WECOZA_CLASSES_VIEWS_PATH . '/components/' . $component . '.php';
+
+    if (!file_exists($component_file)) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log("WeCoza Classes Plugin: Component file not found: {$component_file}");
+        }
+        return $return ? '' : null;
+    }
+
+    if ($return) {
+        ob_start();
+        include $component_file;
+        return ob_get_clean();
+    } else {
+        include $component_file;
     }
 }
 

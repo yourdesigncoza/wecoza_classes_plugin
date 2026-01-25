@@ -461,28 +461,34 @@ class LearnerSelectionTable {
     }
 
     createLearnerRow(learner) {
+        const esc = window.WeCozaUtils ? window.WeCozaUtils.escapeHtml : this._fallbackEscape;
+        const escAttr = window.WeCozaUtils ? window.WeCozaUtils.escapeAttr : this._fallbackEscapeAttr;
+
         const learnerName = learner.name
             || learner.full_name
             || [learner.first_name, learner.second_name, learner.surname].filter(Boolean).join(' ').trim()
             || `Learner ${learner.id}`;
 
+        // Sanitize learner.id to ensure it's a valid integer
+        const safeLearnerId = parseInt(learner.id, 10) || 0;
+
         const row = document.createElement('tr');
-        row.setAttribute('data-learner-id', learner.id);
+        row.setAttribute('data-learner-id', safeLearnerId);
         row.setAttribute('data-learner-name', learnerName);
         row.innerHTML = `
-            <td>${learnerName}</td>
+            <td>${esc(learnerName)}</td>
             <td>
-                ${classes_generate_learner_level_select_html(learner.id)}
+                ${classes_generate_learner_level_select_html(safeLearnerId)}
             </td>
             <td>
-                <select class="form-select form-select-sm learner-status-select" data-learner-id="${learner.id}">
+                <select class="form-select form-select-sm learner-status-select" data-learner-id="${escAttr(safeLearnerId)}">
                     <option value="CIC - Currently in Class">CIC - Currently in Class</option>
                     <option value="RBE - Removed by Employer">RBE - Removed by Employer</option>
                     <option value="DRO - Drop Out">DRO - Drop Out</option>
                 </select>
             </td>
             <td>
-                <button type="button" class="btn btn-subtle-danger btn-sm remove-learner-btn" data-learner-id="${learner.id}">Remove</button>
+                <button type="button" class="btn btn-subtle-danger btn-sm remove-learner-btn" data-learner-id="${escAttr(safeLearnerId)}">Remove</button>
             </td>
         `;
 
@@ -600,12 +606,18 @@ class LearnerSelectionTable {
     }
 
     showNotification(message, type = 'info') {
+        const esc = window.WeCozaUtils ? window.WeCozaUtils.escapeHtml : this._fallbackEscape;
+
+        // Whitelist allowed alert types
+        const allowedTypes = ['info', 'warning', 'success', 'danger', 'primary', 'secondary'];
+        const safeType = allowedTypes.includes(type) ? type : 'info';
+
         // Create notification element
         const notification = document.createElement('div');
-        notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        notification.className = `alert alert-${safeType} alert-dismissible fade show position-fixed`;
         notification.style.cssText = 'top: 80px; right: 20px; z-index: 9999; min-width: 300px;';
         notification.innerHTML = `
-            ${message}
+            ${esc(message)}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         `;
 
@@ -659,6 +671,24 @@ class LearnerSelectionTable {
                 }
             }
         });
+    }
+
+    // Secure fallback escapes - fail closed, not open
+    _fallbackEscape(str) {
+        if (str === null || str === undefined) return '';
+        var div = document.createElement('div');
+        div.textContent = String(str);
+        return div.innerHTML;
+    }
+
+    _fallbackEscapeAttr(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
     }
 }
 

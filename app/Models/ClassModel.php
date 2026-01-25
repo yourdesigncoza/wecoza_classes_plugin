@@ -12,50 +12,50 @@ use WeCozaClasses\Services\Database\DatabaseService;
 
 class ClassModel {
     /**
-     * Class properties - mapped to optimized schema
+     * Class properties - mapped to optimized schema with PHP 8 type declarations
      */
-    private $id;
-    private $clientId;
-    private $siteId;
-    private $classAddressLine;
-    private $skillsPackage;
-    private $classType;
-    private $classSubject;
-    private $classCode;
-    private $classDuration;
-    private $originalStartDate;
-    private $setaFunded;
-    private $seta;
-    private $examClass;
-    private $examType;
-    private $classAgent;
-    private $initialClassAgent;
-    private $initialAgentStartDate;
-    private $projectSupervisorId;
-    private $deliveryDate;
-    private $learnerIds = [];
-    private $examLearners = [];
-    
+    private ?int $id = null;
+    private ?int $clientId = null;
+    private string|int|null $siteId = null;
+    private ?string $classAddressLine = null;
+    private ?string $skillsPackage = null;
+    private ?string $classType = null;
+    private ?string $classSubject = null;
+    private ?string $classCode = null;
+    private ?int $classDuration = null;
+    private ?string $originalStartDate = null;
+    private ?bool $setaFunded = null;
+    private ?string $seta = null;
+    private ?bool $examClass = null;
+    private ?string $examType = null;
+    private ?int $classAgent = null;
+    private ?int $initialClassAgent = null;
+    private ?string $initialAgentStartDate = null;
+    private ?int $projectSupervisorId = null;
+    private ?string $deliveryDate = null;
+    private array $learnerIds = [];
+    private array $examLearners = [];
+
     // AGENT SYSTEM - TWO DISTINCT COMPONENTS:
     // 1. BACKUP AGENTS: Pre-assigned standby agents (stored in classes.backup_agent_ids JSON field)
-    private $backupAgentIds = [];
-    
+    private array $backupAgentIds = [];
+
     // 2. AGENT REPLACEMENTS: Actual agent changes during delivery (stored in agent_replacements table)
-    private $agentReplacements = [];
-    
-    private $scheduleData = [];
-    private $stopRestartDates = [];
-    private $classNotesData = [];
-    private $eventDates = [];
-    private $order_nr;
-    private $createdAt;
-    private $updatedAt;
+    private array $agentReplacements = [];
+
+    private array $scheduleData = [];
+    private array $stopRestartDates = [];
+    private array $classNotesData = [];
+    private array $eventDates = [];
+    private ?string $order_nr = null;
+    private ?string $createdAt = null;
+    private ?string $updatedAt = null;
 
     // Additional properties for enriched data (not stored in database)
-    public $client_name;
-    public $agent_name;
-    public $supervisor_name;
-    public $site_name;
+    public ?string $client_name = null;
+    public ?string $agent_name = null;
+    public ?string $supervisor_name = null;
+    public ?string $site_name = null;
 
     /**
      * Constructor
@@ -302,182 +302,175 @@ class ClassModel {
         return json_encode($combined);
     }
 
-    // Getters and Setters for all properties
-    public function getId() { return $this->id; }
-    public function setId($id) { $this->id = $id; return $this; }
+    // Getters and Setters with PHP 8 return types
+    public function getId(): ?int { return $this->id; }
+    public function setId(mixed $id): self { $this->id = $id ? (int)$id : null; return $this; }
 
-    public function getClientId() { return $this->clientId; }
-    public function setClientId($clientId) {
-        $this->clientId = is_numeric($clientId) ? intval($clientId) : null;
+    public function getClientId(): ?int { return $this->clientId; }
+    public function setClientId(mixed $clientId): self {
+        $this->clientId = is_numeric($clientId) ? (int)$clientId : null;
         return $this;
     }
 
-    public function getSiteId() { return $this->siteId; }
-    public function setSiteId($siteId) {
-        $this->siteId = is_string($siteId) || is_numeric($siteId) ? $siteId : null;
+    public function getSiteId(): string|int|null { return $this->siteId; }
+    public function setSiteId(mixed $siteId): self {
+        $this->siteId = (is_string($siteId) || is_numeric($siteId)) ? $siteId : null;
         return $this;
     }
 
-    public function getClassAddressLine() { return $this->classAddressLine; }
-    public function setClassAddressLine($classAddressLine) { $this->classAddressLine = $classAddressLine; return $this; }
+    public function getClassAddressLine(): ?string { return $this->classAddressLine; }
+    public function setClassAddressLine(?string $classAddressLine): self { $this->classAddressLine = $classAddressLine; return $this; }
 
-    public function getSkillsPackage() { return $this->skillsPackage; }
-    public function setSkillsPackage($skillsPackage) { $this->skillsPackage = $skillsPackage; return $this; }
+    public function getSkillsPackage(): ?string { return $this->skillsPackage; }
+    public function setSkillsPackage(?string $skillsPackage): self { $this->skillsPackage = $skillsPackage; return $this; }
 
-    public function getClassType() { return $this->classType; }
-    public function setClassType($classType) { $this->classType = $classType; return $this; }
+    public function getClassType(): ?string { return $this->classType; }
+    public function setClassType(?string $classType): self { $this->classType = $classType; return $this; }
 
-    public function getClassSubject() { return $this->classSubject; }
-    public function setClassSubject($classSubject) { $this->classSubject = $classSubject; return $this; }
+    public function getClassSubject(): ?string { return $this->classSubject; }
+    public function setClassSubject(?string $classSubject): self { $this->classSubject = $classSubject; return $this; }
 
-    public function getClassCode() { return $this->classCode; }
-    public function setClassCode($classCode) { $this->classCode = $classCode; return $this; }
+    public function getClassCode(): ?string { return $this->classCode; }
+    public function setClassCode(?string $classCode): self { $this->classCode = $classCode; return $this; }
 
-    public function getClassDuration() { return $this->classDuration; }
-    public function setClassDuration($classDuration) { $this->classDuration = $classDuration; return $this; }
+    public function getClassDuration(): ?int { return $this->classDuration; }
+    public function setClassDuration(mixed $classDuration): self { $this->classDuration = $classDuration ? (int)$classDuration : null; return $this; }
 
-    public function getOriginalStartDate() { return $this->originalStartDate; }
-    public function setOriginalStartDate($originalStartDate) { $this->originalStartDate = $originalStartDate; return $this; }
+    public function getOriginalStartDate(): ?string { return $this->originalStartDate; }
+    public function setOriginalStartDate(?string $originalStartDate): self { $this->originalStartDate = $originalStartDate; return $this; }
 
-    public function getSetaFunded() { 
-        // Ensure we always return a boolean for database compatibility
-        return $this->setaFunded === null ? false : (bool)$this->setaFunded; 
+    public function getSetaFunded(): bool {
+        return $this->setaFunded ?? false;
     }
-    public function setSetaFunded($setaFunded) {
-        // Convert Yes/No to boolean for database
-        if ($setaFunded === 'Yes') {
-            $this->setaFunded = true;
-        } elseif ($setaFunded === 'No') {
-            $this->setaFunded = false;
-        } else {
-            $this->setaFunded = is_bool($setaFunded) ? $setaFunded : null;
-        }
+    public function setSetaFunded(mixed $setaFunded): self {
+        $this->setaFunded = match (true) {
+            $setaFunded === 'Yes' => true,
+            $setaFunded === 'No' => false,
+            is_bool($setaFunded) => $setaFunded,
+            default => null,
+        };
         return $this;
     }
 
-    public function getSeta() { return $this->seta; }
-    public function setSeta($seta) {
+    public function getSeta(): ?string { return $this->seta; }
+    public function setSeta(mixed $seta): self {
         $this->seta = is_string($seta) ? $seta : null;
         return $this;
     }
 
-    public function getExamClass() { 
-        // Ensure we always return a boolean for database compatibility
-        return $this->examClass === null ? false : (bool)$this->examClass; 
+    public function getExamClass(): bool {
+        return $this->examClass ?? false;
     }
-    public function setExamClass($examClass) {
-        // Convert Yes/No to boolean for database
-        if ($examClass === 'Yes') {
-            $this->examClass = true;
-        } elseif ($examClass === 'No') {
-            $this->examClass = false;
-        } else {
-            $this->examClass = is_bool($examClass) ? $examClass : null;
-        }
+    public function setExamClass(mixed $examClass): self {
+        $this->examClass = match (true) {
+            $examClass === 'Yes' => true,
+            $examClass === 'No' => false,
+            is_bool($examClass) => $examClass,
+            default => null,
+        };
         return $this;
     }
 
-    public function getExamType() { return $this->examType; }
-    public function setExamType($examType) { $this->examType = $examType; return $this; }
+    public function getExamType(): ?string { return $this->examType; }
+    public function setExamType(?string $examType): self { $this->examType = $examType; return $this; }
 
-
-    public function getClassAgent() { return $this->classAgent; }
-    public function setClassAgent($classAgent) {
-        $this->classAgent = is_numeric($classAgent) ? intval($classAgent) : null;
+    public function getClassAgent(): ?int { return $this->classAgent; }
+    public function setClassAgent(mixed $classAgent): self {
+        $this->classAgent = is_numeric($classAgent) ? (int)$classAgent : null;
         return $this;
     }
 
-    public function getInitialClassAgent() { return $this->initialClassAgent; }
-    public function setInitialClassAgent($initialClassAgent) {
-        $this->initialClassAgent = is_numeric($initialClassAgent) ? intval($initialClassAgent) : null;
+    public function getInitialClassAgent(): ?int { return $this->initialClassAgent; }
+    public function setInitialClassAgent(mixed $initialClassAgent): self {
+        $this->initialClassAgent = is_numeric($initialClassAgent) ? (int)$initialClassAgent : null;
         return $this;
     }
 
-    public function getInitialAgentStartDate() { return $this->initialAgentStartDate; }
-    public function setInitialAgentStartDate($initialAgentStartDate) {
+    public function getInitialAgentStartDate(): ?string { return $this->initialAgentStartDate; }
+    public function setInitialAgentStartDate(mixed $initialAgentStartDate): self {
         $this->initialAgentStartDate = is_string($initialAgentStartDate) ? $initialAgentStartDate : null;
         return $this;
     }
 
-    public function getProjectSupervisorId() { return $this->projectSupervisorId; }
-    public function setProjectSupervisorId($projectSupervisorId) {
-        $this->projectSupervisorId = is_numeric($projectSupervisorId) ? intval($projectSupervisorId) : null;
+    public function getProjectSupervisorId(): ?int { return $this->projectSupervisorId; }
+    public function setProjectSupervisorId(mixed $projectSupervisorId): self {
+        $this->projectSupervisorId = is_numeric($projectSupervisorId) ? (int)$projectSupervisorId : null;
         return $this;
     }
 
-    public function getDeliveryDate() { return $this->deliveryDate; }
-    public function setDeliveryDate($deliveryDate) { $this->deliveryDate = $deliveryDate; return $this; }
+    public function getDeliveryDate(): ?string { return $this->deliveryDate; }
+    public function setDeliveryDate(?string $deliveryDate): self { $this->deliveryDate = $deliveryDate; return $this; }
 
-    public function getLearnerIds() { return $this->learnerIds; }
-    public function setLearnerIds($learnerIds) { $this->learnerIds = is_array($learnerIds) ? $learnerIds : []; return $this; }
+    public function getLearnerIds(): array { return $this->learnerIds; }
+    public function setLearnerIds(mixed $learnerIds): self { $this->learnerIds = is_array($learnerIds) ? $learnerIds : []; return $this; }
 
-    public function getExamLearners() { return $this->examLearners; }
-    public function setExamLearners($examLearners) { $this->examLearners = is_array($examLearners) ? $examLearners : []; return $this; }
+    public function getExamLearners(): array { return $this->examLearners; }
+    public function setExamLearners(mixed $examLearners): self { $this->examLearners = is_array($examLearners) ? $examLearners : []; return $this; }
 
-    public function getBackupAgentIds() { return $this->backupAgentIds; }
-    public function setBackupAgentIds($backupAgentIds) { $this->backupAgentIds = is_array($backupAgentIds) ? $backupAgentIds : []; return $this; }
+    public function getBackupAgentIds(): array { return $this->backupAgentIds; }
+    public function setBackupAgentIds(mixed $backupAgentIds): self { $this->backupAgentIds = is_array($backupAgentIds) ? $backupAgentIds : []; return $this; }
 
-    public function getAgentReplacements() { return $this->agentReplacements; }
-    public function setAgentReplacements($agentReplacements) { $this->agentReplacements = is_array($agentReplacements) ? $agentReplacements : []; return $this; }
+    public function getAgentReplacements(): array { return $this->agentReplacements; }
+    public function setAgentReplacements(mixed $agentReplacements): self { $this->agentReplacements = is_array($agentReplacements) ? $agentReplacements : []; return $this; }
 
-    public function getScheduleData() { return $this->scheduleData; }
-    public function setScheduleData($scheduleData) { $this->scheduleData = is_array($scheduleData) ? $scheduleData : []; return $this; }
+    public function getScheduleData(): array { return $this->scheduleData; }
+    public function setScheduleData(mixed $scheduleData): self { $this->scheduleData = is_array($scheduleData) ? $scheduleData : []; return $this; }
 
-    public function getStopRestartDates() { return $this->stopRestartDates; }
-    public function setStopRestartDates($stopRestartDates) { $this->stopRestartDates = is_array($stopRestartDates) ? $stopRestartDates : []; return $this; }
+    public function getStopRestartDates(): array { return $this->stopRestartDates; }
+    public function setStopRestartDates(mixed $stopRestartDates): self { $this->stopRestartDates = is_array($stopRestartDates) ? $stopRestartDates : []; return $this; }
 
     // Helper methods for stop/restart dates (for backward compatibility)
-    public function getStopDates() {
+    public function getStopDates(): array {
         return array_column($this->stopRestartDates, 'stop_date');
     }
 
-    public function setStopDates($stopDates) {
+    public function setStopDates(mixed $stopDates): self {
         // This will be handled by prepareStopRestartDates()
         return $this;
     }
 
-    public function getRestartDates() {
+    public function getRestartDates(): array {
         return array_column($this->stopRestartDates, 'restart_date');
     }
 
-    public function setRestartDates($restartDates) {
+    public function setRestartDates(mixed $restartDates): self {
         // This will be handled by prepareStopRestartDates()
         return $this;
     }
 
-    public function getClassNotesData() { return $this->classNotesData; }
-    public function setClassNotesData($classNotesData) { $this->classNotesData = is_array($classNotesData) ? $classNotesData : []; return $this; }
+    public function getClassNotesData(): array { return $this->classNotesData; }
+    public function setClassNotesData(mixed $classNotesData): self { $this->classNotesData = is_array($classNotesData) ? $classNotesData : []; return $this; }
 
-    public function getEventDates() { return $this->eventDates; }
-    public function setEventDates($eventDates) { $this->eventDates = is_array($eventDates) ? $eventDates : []; return $this; }
+    public function getEventDates(): array { return $this->eventDates; }
+    public function setEventDates(mixed $eventDates): self { $this->eventDates = is_array($eventDates) ? $eventDates : []; return $this; }
 
-    public function getOrderNr() { return $this->order_nr; }
-    public function setOrderNr($order_nr) { $this->order_nr = is_string($order_nr) ? $order_nr : null; return $this; }
+    public function getOrderNr(): ?string { return $this->order_nr; }
+    public function setOrderNr(mixed $order_nr): self { $this->order_nr = is_string($order_nr) ? $order_nr : null; return $this; }
 
-    public function getCreatedAt() { return $this->createdAt; }
-    public function setCreatedAt($createdAt) { $this->createdAt = $createdAt; return $this; }
+    public function getCreatedAt(): ?string { return $this->createdAt; }
+    public function setCreatedAt(?string $createdAt): self { $this->createdAt = $createdAt; return $this; }
 
-    public function getUpdatedAt() { return $this->updatedAt; }
-    public function setUpdatedAt($updatedAt) { $this->updatedAt = $updatedAt; return $this; }
+    public function getUpdatedAt(): ?string { return $this->updatedAt; }
+    public function setUpdatedAt(?string $updatedAt): self { $this->updatedAt = $updatedAt; return $this; }
 
     /**
      * Check if class is in Draft status (no order number assigned)
      */
-    public function isDraft() {
+    public function isDraft(): bool {
         return empty($this->order_nr);
     }
 
     /**
      * Check if class is Active (has order number assigned)
      */
-    public function isActive() {
+    public function isActive(): bool {
         return !empty($this->order_nr);
     }
 
     /**
      * Get class status based on order number
      */
-    public function getStatus() {
+    public function getStatus(): string {
         return $this->isActive() ? 'Active' : 'Draft';
     }
 

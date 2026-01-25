@@ -7,20 +7,148 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a **WeCoza Classes Plugin** - a comprehensive class management system for training programs with a clean MVC architecture and external PostgreSQL database integration.
 
 ### Core Architecture
-- **MVC Structure**: Controllers, Models, Views with PSR-4 autoloading
+- **MVC Structure**: Controllers, Models, Services, Repositories, Views with PSR-4 autoloading
 - **External Database**: PostgreSQL (not WordPress MySQL) with 45+ tables
 - **Namespace**: `WeCozaClasses\` for all plugin classes
-- **Bootstrap**: `app/bootstrap.php` handles autoloading and initialization
+- **Bootstrap**: `app/bootstrap.php` handles autoloading, view helpers, and component rendering
 
 ### Key Files Structure
 ```
 wecoza-classes-plugin.php     # Main plugin file with constants and activation hooks
-app/bootstrap.php             # MVC application bootstrap with autoloader
+app/bootstrap.php             # MVC application bootstrap with autoloader + view/component helpers
 config/app.php               # Comprehensive configuration (controllers, AJAX, shortcodes)
-app/Controllers/             # Business logic (4 main controllers)
-app/Models/                 # Data layer with PostgreSQL integration
-app/Views/                  # Component-based presentation layer
-app/Services/Database/      # Database abstraction layer
+app/Controllers/             # HTTP handlers and shortcode registration (6 controllers)
+app/Services/                # Business logic and data processing
+app/Repositories/            # Data access layer with caching
+app/Models/                  # Data entities with PostgreSQL integration
+app/Views/                   # Component-based presentation layer
+app/Views/components/        # Reusable view components
+assets/js/                   # JavaScript files
+assets/js/utils/             # Reusable JavaScript utilities
+```
+
+## Decomposed Controller Architecture
+
+### Controllers (`app/Controllers/`)
+| Controller | Lines | Responsibility |
+|------------|-------|----------------|
+| ClassController | ~608 | Shortcodes, page management, asset loading |
+| ClassAjaxController | ~698 | All AJAX handlers (save, delete, calendar, notes) |
+| QAController | ~794 | QA analytics, visits, reports |
+| ClassTypesController | ~143 | Class types and subject management |
+| PublicHolidaysController | ~196 | Holiday detection and override system |
+
+### Services (`app/Services/`)
+| Service | Lines | Responsibility |
+|---------|-------|----------------|
+| FormDataProcessor | ~727 | Form validation, data processing, sanitization |
+| ScheduleService | ~699 | Calendar generation, schedule patterns, date calculations |
+| DatabaseService | ~281 | PDO connection management to PostgreSQL |
+
+### Repositories (`app/Repositories/`)
+| Repository | Lines | Responsibility |
+|------------|-------|----------------|
+| ClassRepository | ~685 | Data retrieval, caching, data enrichment |
+
+## View Component System
+
+### Component Helper Function
+Views are rendered using the `view()` and `component()` functions from `bootstrap.php`:
+
+```php
+// Render a full view
+echo \WeCozaClasses\view('components/single-class-display', $viewData);
+
+// Render a component (partial)
+\WeCozaClasses\component('single-class/summary-cards', $component_data);
+```
+
+### Component Data Pattern
+Components receive data via array extraction with `EXTR_SKIP` for security:
+
+```php
+$component_data = [
+    'class' => $class,
+    'schedule_data' => $schedule_data,
+    'learners' => $learners,
+    // ... other data
+];
+\WeCozaClasses\component('single-class/details-general', $component_data);
+```
+
+### View Components (`app/Views/components/single-class/`)
+| Component | Size | Purpose |
+|-----------|------|---------|
+| header.php | ~2.5KB | Loading indicator, error states |
+| summary-cards.php | ~3.7KB | Top summary cards (client, type, subject) |
+| details-general.php | ~10KB | Left column - Basic class information |
+| details-logistics.php | ~14KB | Right column - Dates, agents, stop periods |
+| details-staff.php | ~6KB | Learners preview, exam candidates |
+| notes.php | ~12KB | Class notes with filtering |
+| qa-reports.php | ~3KB | QA reports table |
+| calendar.php | ~7KB | Calendar/list view tabs |
+| modal-learners.php | ~7KB | Learners modal dialog |
+
+## JavaScript Utilities
+
+### Utility Files (`assets/js/utils/`)
+| File | Purpose |
+|------|---------|
+| escape.js | XSS prevention with `escapeHtml()` function |
+| date-utils.js | Consolidated date/time formatting utilities |
+| table-manager.js | Reusable search/filter/pagination for tables |
+| ajax-utils.js | Standardized AJAX request handling with WordPress nonce |
+
+### Using TableManager
+```javascript
+// Initialize reusable table management
+const manager = new WeCozaTableManager({
+    tableId: '#my-table',
+    searchInputId: '#my-search',
+    searchColumns: [0, 1, 2],  // Column indices to search
+    itemsPerPage: 20,
+    onRender: (visibleRows, totalRows) => {
+        console.log(`Showing ${visibleRows} of ${totalRows}`);
+    }
+});
+
+// Available methods
+manager.search('term');      // Trigger search
+manager.goToPage(2);         // Navigate to page
+manager.reset();             // Reset search and pagination
+manager.refresh();           // Refresh after DOM changes
+manager.getStats();          // Get current statistics
+```
+
+### Using AjaxUtils
+```javascript
+// Simple POST request
+WeCozaAjax.post('save_class', formData)
+    .then(data => console.log('Success:', data))
+    .catch(error => console.error('Error:', error));
+
+// With loading indicator
+WeCozaAjax.post('get_calendar_events', { start: date, end: date }, {
+    loadingTarget: '#calendar-container',
+    loadingText: 'Loading events...'
+});
+
+// Form submission
+WeCozaAjax.submitForm('save_class', '#class-form')
+    .then(data => WeCozaAjax.showSuccess('Class saved!'))
+    .catch(error => WeCozaAjax.showError(error.message));
+```
+
+### Using EscapeUtils
+```javascript
+// Always escape user-provided content before injecting into HTML
+import { escapeHtml } from './utils/escape.js';
+
+// Instead of:
+container.innerHTML = `<td>${userData}</td>`;  // XSS vulnerable!
+
+// Use:
+container.innerHTML = `<td>${escapeHtml(userData)}</td>`;  // Safe
 ```
 
 ## Database Integration
@@ -49,30 +177,35 @@ wp eval "echo (new WeCozaClasses\Services\Database\DatabaseService())->testConne
 psql -h db-wecoza-3-do-user-17263152-0.m.db.ondigitalocean.com -p 25060 -U doadmin -d defaultdb -f schema/classes_schema.sql
 ```
 
-## Controllers & Endpoints
+## AJAX Endpoints
 
-### Main Controllers (`config/app.php`)
-1. **ClassController** - Core class management, AJAX handlers, shortcode registration
-2. **ClassTypesController** - Class types and subject management
-3. **PublicHolidaysController** - Holiday detection and override system
-4. **QAController** - Quality assurance analytics and dashboard
+### Endpoint Registration (Auto-registration pattern)
+AJAX endpoints are configured in `config/app.php` and auto-registered:
 
-### AJAX Endpoints (15+ endpoints)
+```php
+'ajax_endpoints' => [
+    'save_class' => ['ClassAjaxController', 'saveClassAjax', true, false],
+    'get_class_subjects' => ['ClassTypesController', 'getClassSubjectsAjax', true, true],
+    // [action => [controller, method, logged_in_users, logged_out_users]]
+]
+```
+
+### Available Endpoints
 ```javascript
 // Class Operations
-wp.ajax.post('save_class', data)
-wp.ajax.post('update_class', data) 
-wp.ajax.post('delete_class', {class_id: id})
+WeCozaAjax.post('save_class', formData)
+WeCozaAjax.post('update_class', formData)
+WeCozaAjax.post('delete_class', { class_id: id })
 
 // Data Retrieval
-wp.ajax.post('get_class_subjects', {class_type: type})
-wp.ajax.post('get_calendar_events', {start: date, end: date})
-wp.ajax.post('get_class_notes', {class_id: id})
+WeCozaAjax.post('get_class_subjects', { class_type: type })
+WeCozaAjax.post('get_calendar_events', { start: date, end: date })
+WeCozaAjax.post('get_class_notes', { class_id: id })
 
 // QA System
-wp.ajax.post('get_qa_analytics', {period: 'monthly'})
-wp.ajax.post('create_qa_visit', visitData)
-wp.ajax.post('export_qa_reports', {format: 'pdf'})
+WeCozaAjax.post('get_qa_analytics', { period: 'monthly' })
+WeCozaAjax.post('create_qa_visit', visitData)
+WeCozaAjax.post('export_qa_reports', { format: 'pdf' })
 ```
 
 ### Shortcodes (5 available)
@@ -97,12 +230,16 @@ if (has_shortcode($content, 'wecoza_capture_class')) {
 }
 ```
 
-### Key JavaScript Files (`assets/js/`)
-- `class-capture.js` - Form handling and validation
-- `class-schedule-form.js` - Per-day scheduling interface  
-- `classes-table-search.js` - Search and pagination
-- `wecoza-calendar.js` - FullCalendar integration
-- `qa-dashboard.js` - Chart.js analytics visualizations
+### JavaScript Files (`assets/js/`)
+| File | Dependencies | Purpose |
+|------|-------------|---------|
+| class-capture.js | jquery, escape-utils, date-utils | Form handling and validation |
+| class-schedule-form.js | jquery, learner-level-utils, date-utils | Per-day scheduling interface |
+| classes-table-search.js | jquery | Legacy search (use TableManager for new code) |
+| learner-selection-table.js | jquery, escape-utils | Learner assignment UI |
+| single-class-display.js | jquery, calendar, escape-utils, date-utils | Single class view logic |
+| wecoza-calendar.js | jquery | FullCalendar integration |
+| qa-dashboard.js | jquery | Chart.js analytics visualizations |
 
 ### CSS Integration
 **ALL CSS styles must be added to**: `/opt/lampp/htdocs/wecoza/wp-content/themes/wecoza_3_child_theme/includes/css/ydcoza-styles.css`
@@ -111,32 +248,49 @@ Never create separate CSS files in plugin directories.
 
 ## Development Workflows
 
-### Plugin Activation Workflow
-```bash
-# Plugin creates required WordPress pages automatically
-# Check page creation in includes/class-activator.php
+### Adding New AJAX Endpoint
+1. Add endpoint configuration to `config/app.php` ajax_endpoints array
+2. Implement handler method in appropriate controller (ClassAjaxController for class operations)
+3. Endpoints are auto-registered via the configuration
+4. Test via browser developer tools or WeCozaAjax utility
 
-# Test activation
-wp plugin activate wecoza-classes-plugin
-wp plugin list --status=active | grep wecoza
-```
+### Adding New View Component
+1. Create component file in `app/Views/components/` (e.g., `single-class/new-section.php`)
+2. Use `$variable` syntax - data is extracted from the passed array
+3. Include in parent view: `\WeCozaClasses\component('single-class/new-section', $component_data);`
+4. Always escape output: `esc_html()`, `esc_attr()`, `esc_url()`
 
-### Asset Development
-```bash
-# No build system - direct file editing
-# JavaScript files load via WordPress wp_enqueue_scripts
-# CSS modifications go to theme child CSS file only
+### Adding New Shortcode
+1. Add shortcode to `config/app.php` shortcodes array
+2. Implement method in controller
+3. Create corresponding view file in `app/Views/components/`
+4. Test rendering with `do_shortcode()` function
 
-# Test asset loading
-wp eval "do_action('wp_enqueue_scripts');"
-```
+### Database Schema Changes
+1. Create migration file in `includes/migrations/`
+2. Update `schema/classes_schema.sql`
+3. Test locally before production deployment
+4. Document JSONB field changes for complex data structures
 
-### Database Schema Updates
-```bash
-# Manual migration files in includes/migrations/
-# Run via WordPress admin or wp-cli
+## Security Patterns
 
-wp eval "require_once 'includes/migrations/add_exam_learners_field.sql';"
+### PHP Security
+- **SQL Injection**: All queries use PDO prepared statements
+- **XSS Prevention**: 95%+ coverage with `esc_html()`, `esc_attr()`, `esc_url()`
+- **Nonce Verification**: AJAX handlers verify nonces
+- **Capability Checks**: `current_user_can()` used consistently
+- **Variable Extraction**: `EXTR_SKIP` flag prevents variable collision
+
+### JavaScript Security
+- **XSS Prevention**: Use `escapeHtml()` from `utils/escape.js` for all user content
+- **Nonce Handling**: Handled automatically by `WeCozaAjax` utility
+
+```javascript
+// NEVER do this:
+container.innerHTML = `<td>${userInput}</td>`;
+
+// ALWAYS do this:
+container.innerHTML = `<td>${escapeHtml(userInput)}</td>`;
 ```
 
 ## Testing Approach
@@ -145,7 +299,7 @@ wp eval "require_once 'includes/migrations/add_exam_learners_field.sql';"
 - **Admin Interface**: WordPress admin pages for functionality validation
 - **Browser Testing**: JavaScript functionality through browser console
 - **Interactive Demos**: Search/pagination testing via frontend shortcodes
-- **No Automated Testing**: Relies on WordPress admin interface validation
+- **PHP Syntax Check**: `php -l` on all modified files
 
 ### Testing Commands
 ```bash
@@ -157,96 +311,17 @@ curl -X POST -d "action=get_class_subjects&class_type=skills" http://localhost/w
 
 # Test database connection
 wp eval "echo (new WeCozaClasses\Services\Database\DatabaseService())->getConnection() ? 'Connected' : 'Failed';"
+
+# PHP syntax check
+php -l app/Controllers/ClassController.php
 ```
-
-## Key Features Implementation
-
-### Calendar Integration
-- **FullCalendar**: Frontend calendar with class scheduling
-- **Public Holidays**: API integration with override system
-- **Per-day Scheduling**: JSONB field `schedule_data` stores daily time slots
-
-### QA Analytics System  
-- **Chart.js Integration**: Multi-chart dashboard with filtering
-- **Visit Management**: QA visit scheduling and tracking
-- **Report Generation**: PDF/Excel export functionality
-- **Dashboard Widget**: Summary statistics for admin homepage
-
-### Class Management Features
-- **Learner Auto-population**: Database-driven learner assignment
-- **Level Management**: 50+ level types with validation
-- **Agent Assignment**: Primary and backup agent management  
-- **SETA Integration**: Funding and compliance tracking
-- **File Uploads**: Secure document management with validation
-
-## WordPress Integration Patterns
-
-### Capability-Based Security
-```php
-// Check user permissions before operations  
-if (!current_user_can('edit_posts')) {
-    wp_die('Insufficient permissions');
-}
-
-// Role-based feature access
-$capabilities = get_user_class_capabilities();
-if ($capabilities['can_delete_classes']) {
-    // Show delete button
-}
-```
-
-### WordPress Hook Usage
-```php
-// Plugin initialization
-add_action('init', 'initialize_plugin_controllers');
-add_action('wp_enqueue_scripts', 'load_conditional_assets'); 
-add_action('wp_ajax_*', 'handle_ajax_requests');
-
-// Shortcode registration
-add_shortcode('wecoza_capture_class', 'render_class_capture_form');
-```
-
-### View Rendering System
-```php
-// Component-based views with data extraction
-echo view('components/class-capture-form', [
-    'class_types' => $classTypes,
-    'subjects' => $subjects,
-    'user_capabilities' => get_user_class_capabilities()
-]);
-```
-
-## Common Development Tasks
-
-### Adding New AJAX Endpoint
-1. Add endpoint to `config/app.php` ajax_endpoints array
-2. Implement method in appropriate controller  
-3. Register WordPress AJAX hooks in controller constructor
-4. Test via browser developer tools or curl
-
-### Adding New Shortcode
-1. Add shortcode to `config/app.php` shortcodes array
-2. Implement method in controller
-3. Create corresponding view file in `app/Views/`
-4. Test rendering with `do_shortcode()` function
-
-### Database Schema Changes
-1. Create migration file in `includes/migrations/`
-2. Update `schema/classes_schema.sql` 
-3. Test locally before production deployment
-4. Document JSONB field changes for complex data structures
-
-### Asset Management
-1. Add JavaScript files to `assets/js/`  
-2. Register in controller's `enqueueAssets()` method
-3. Use conditional loading based on shortcode presence
-4. Add CSS to theme child CSS file only
 
 ## Specification Documents
 
 Feature specifications are maintained in `docs/`:
 - `SPEC-event-dates.md` - Event Dates tracking system (deliveries, exams, QA visits)
 - `SPEC-event-dates-statistics.md` - Event Dates display in Schedule Statistics
+- `WORDPRESS-SIMPLIFY-REPORT.md` - Refactoring progress and architecture overview
 
 ## Important Development Notes
 
@@ -257,3 +332,6 @@ Feature specifications are maintained in `docs/`:
 - **Conditional Assets**: Scripts/styles load only when shortcodes are present
 - **Role-Based Access**: WordPress capabilities system controls feature access
 - **Manual Testing**: Validation through WordPress admin interface and browser testing
+- **XSS Prevention**: Always use `escapeHtml()` in JavaScript for user content
+- **AJAX Utilities**: Use `WeCozaAjax` for standardized request handling
+- **Table Management**: Use `WeCozaTableManager` for new search/pagination features
