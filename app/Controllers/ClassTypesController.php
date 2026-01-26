@@ -128,10 +128,16 @@ class ClassTypesController {
             return $flatSubjects;
         }
 
-        // Progression types get single placeholder
+        // Progression types get single placeholder with predefined total hours
         if (in_array($classTypeId, $progressionTypes)) {
+            $progressionDurations = [
+                'GETC' => 564,
+                'BA2'  => 520,
+                'BA3'  => 472,
+                'BA4'  => 584,
+            ];
             return [
-                ['id' => 'LP', 'name' => 'Learner Progression', 'duration' => 0]
+                ['id' => 'LP', 'name' => 'Learner Progression', 'duration' => $progressionDurations[$classTypeId] ?? 0]
             ];
         }
 

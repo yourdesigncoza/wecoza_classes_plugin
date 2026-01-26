@@ -106,6 +106,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 classSubjectSelect.disabled = false;
                 // Generate class code
                 classCodeInput.value = generateClassCode();
+                // Fetch and set duration for progression type
+                fetchProgressionDuration(selectedClassType);
             } else {
                 // Reset subject dropdown
                 classSubjectSelect.innerHTML = '<option value="">Select Subject</option>';
@@ -238,6 +240,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     /**
+     * Fetch and set duration for progression class types (GETC, BA2, BA3, BA4)
+     *
+     * @param {string} classType The selected progression class type
+     */
+    function fetchProgressionDuration(classType) {
+        const ajaxUrl = (typeof wecozaClass !== 'undefined' && wecozaClass.ajaxUrl)
+            ? wecozaClass.ajaxUrl
+            : '/wp-admin/admin-ajax.php';
+
+        fetch(`${ajaxUrl}?action=get_class_subjects&class_type=${classType}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.data && data.data[0] && data.data[0].duration) {
+                    classDurationInput.value = data.data[0].duration;
+                }
+            })
+            .catch(error => console.error('Error fetching progression duration:', error));
+    }
+
+    /**
      * Helper function to regenerate class code when any required field changes
      */
     function regenerateClassCode() {
@@ -297,6 +319,8 @@ document.addEventListener('DOMContentLoaded', function() {
             classSubjectSelect.required = false;
             classSubjectSelect.innerHTML = '<option value="LP" selected>Learner Progression</option>';
             classSubjectSelect.value = 'LP';
+            // Fetch and set duration for pre-selected progression type
+            fetchProgressionDuration(preSelectedType);
         } else if (preSelectedType && preSelectedSubject) {
             // Fetch subjects for the pre-selected type
             fetchClassSubjects(preSelectedType);
