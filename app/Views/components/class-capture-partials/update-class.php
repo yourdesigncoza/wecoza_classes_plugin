@@ -784,7 +784,7 @@ if (isset($data['class_data']) && $data['class_data']):
                   <option value="SETA Exit">SETA Exit</option>
                </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                <label class="form-label">Description</label>
                <input type="text" name="event_descriptions[]" class="form-control form-control-sm" placeholder="e.g., Deliver Initial Material" maxlength="255">
             </div>
@@ -792,7 +792,15 @@ if (isset($data['class_data']) && $data['class_data']):
                <label class="form-label">Date</label>
                <input type="date" name="event_dates_input[]" class="form-control form-control-sm">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
+               <label class="form-label">Status</label>
+               <select name="event_statuses[]" class="form-select form-select-sm">
+                  <option value="Pending" selected>Pending</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Cancelled">Cancelled</option>
+               </select>
+            </div>
+            <div class="col-md-2">
                <label class="form-label">Notes (Optional)</label>
                <input type="text" name="event_notes[]" class="form-control form-control-sm" placeholder="Optional notes" maxlength="500">
             </div>
@@ -980,27 +988,6 @@ if (isset($data['class_data']) && $data['class_data']):
          <button type="button" class="btn btn-subtle-primary btn-sm" id="add-date-history-btn">
          <i class="bi bi-plus-circle me-1"></i> Add Stop/Restart Dates
          </button>
-      </div>
-
-      <?php echo section_divider(); ?>
-
-      <!-- ===== Section: Class Details ===== -->
-      <?php echo section_header('Class Details'); ?>
-      <div class="row">
-         <!-- Skills Package -->
-         <div class="col-md-3 mb-3">
-            <div class="mb-3">
-               <label for="skills_package" class="form-label">Skills Package <span class="text-danger">*</span></label>
-               <select id="skills_package" name="skills_package" class="form-select form-select-sm" required>
-                  <option value="">Select Package</option>
-                  <option value="Walk Package" <?php echo (isset($data['class_data']['skills_package']) && $data['class_data']['skills_package'] === 'Walk Package') ? 'selected' : ''; ?>>Walk Package</option>
-                  <option value="Run Package" <?php echo (isset($data['class_data']['skills_package']) && $data['class_data']['skills_package'] === 'Run Package') ? 'selected' : ''; ?>>Run Package</option>
-                  <option value="Hexa Package" <?php echo (isset($data['class_data']['skills_package']) && $data['class_data']['skills_package'] === 'Hexa Package') ? 'selected' : ''; ?>>Hexa Package</option>
-               </select>
-               <div class="invalid-feedback">Please select a skills package.</div>
-               <div class="valid-feedback">Looks good!</div>
-            </div>
-         </div>
       </div>
 
       <?php echo section_divider(); ?>
@@ -1571,15 +1558,6 @@ if (isset($data['class_data']) && $data['class_data']):
                   <?php endforeach; ?>
                </select>
                <div class="invalid-feedback">Please select a project supervisor.</div>
-               <div class="valid-feedback">Looks good!</div>
-            </div>
-         </div>
-
-         <div class="col-md-3 mb-3">
-            <div class="mb-3">
-               <label for="delivery_date" class="form-label">Delivery Date <span class="text-danger">*</span></label>
-               <input type="date" id="delivery_date" name="delivery_date" class="form-control form-control-sm" placeholder="YYYY-MM-DD" value="<?php echo esc_attr($data['class_data']['delivery_date'] ?? ''); ?>" required>
-               <div class="invalid-feedback">Please select the delivery date.</div>
                <div class="valid-feedback">Looks good!</div>
             </div>
          </div>

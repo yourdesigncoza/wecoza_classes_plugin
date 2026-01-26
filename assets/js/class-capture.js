@@ -671,6 +671,23 @@ function showCustomAlert(message) {
     }
 
     /**
+     * Check if at least one Deliveries event exists in Event Dates
+     * @returns {boolean} True if at least one delivery event exists
+     */
+    function checkForDeliveryEvent() {
+        let hasDelivery = false;
+        $('.event-date-row:not(.d-none):not(#event-date-row-template)').each(function() {
+            const eventType = $(this).find('select[name="event_types[]"]').val();
+            const eventDate = $(this).find('input[name="event_dates_input[]"]').val();
+            if (eventType === 'Deliveries' && eventDate) {
+                hasDelivery = true;
+                return false; // Break out of each loop
+            }
+        });
+        return hasDelivery;
+    }
+
+    /**
      * Helper function to format file sizes
      */
     function formatFileSize(bytes) {
@@ -1400,6 +1417,25 @@ function showCustomAlert(message) {
                 if (!qaValidation.isValid) {
                     showErrorMessage('QA Visit validation failed: ' + qaValidation.errorMessage);
                     $submitButton.html(originalButtonText).prop('disabled', false);
+                    return false;
+                }
+            }
+
+            // Check if at least one Deliveries event exists (warning only, not blocking)
+            const hasDeliveryEvent = checkForDeliveryEvent();
+            if (!hasDeliveryEvent) {
+                const proceedWithoutDelivery = confirm(
+                    'Warning: No delivery date has been added.\n\n' +
+                    'It is recommended to add at least one "Deliveries" event in the Event Dates section.\n\n' +
+                    'Do you want to continue saving without a delivery date?'
+                );
+                if (!proceedWithoutDelivery) {
+                    $submitButton.html(originalButtonText).prop('disabled', false);
+                    // Scroll to Event Dates section
+                    const eventSection = document.getElementById('event-dates-container');
+                    if (eventSection) {
+                        eventSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
                     return false;
                 }
             }

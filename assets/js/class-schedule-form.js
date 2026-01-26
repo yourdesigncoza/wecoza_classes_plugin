@@ -1090,12 +1090,14 @@
         });
 
         // Update statistics when event date fields change
-        $container.on('change', 'select[name="event_types[]"], input[name="event_dates_input[]"]', function() {
+        $container.on('change', 'select[name="event_types[]"], input[name="event_dates_input[]"], select[name="event_statuses[]"]', function() {
             updateEventDatesStatistics();
         });
 
         // Populate existing event dates (for update form)
         const existingEventsInput = document.getElementById('existing-event-dates');
+        let hasDeliveryEvent = false;
+
         if (existingEventsInput && existingEventsInput.value) {
             try {
                 const existingEvents = JSON.parse(existingEventsInput.value);
@@ -1108,14 +1110,29 @@
                         $newRow.find('select[name="event_types[]"]').val(event.type || '');
                         $newRow.find('input[name="event_descriptions[]"]').val(event.description || '');
                         $newRow.find('input[name="event_dates_input[]"]').val(event.date || '');
+                        $newRow.find('select[name="event_statuses[]"]').val(event.status || 'Pending');
                         $newRow.find('input[name="event_notes[]"]').val(event.notes || '');
 
                         $container.append($newRow);
+
+                        // Track if we have a Deliveries event
+                        if (event.type === 'Deliveries') {
+                            hasDeliveryEvent = true;
+                        }
                     });
                 }
             } catch (e) {
                 console.error('Error parsing existing event dates:', e);
             }
+        }
+
+        // Pre-populate an empty Deliveries row if none exists (for both create and edit)
+        if (!hasDeliveryEvent) {
+            const $deliveryRow = $template.clone();
+            $deliveryRow.removeClass('d-none').removeAttr('id');
+            $deliveryRow.find('select[name="event_types[]"]').val('Deliveries');
+            $deliveryRow.find('select[name="event_statuses[]"]').val('Pending');
+            $container.append($deliveryRow);
         }
     }
 
@@ -1130,12 +1147,14 @@
             const type = $row.find('select[name="event_types[]"]').val();
             const description = $row.find('input[name="event_descriptions[]"]').val();
             const date = $row.find('input[name="event_dates_input[]"]').val();
+            const status = $row.find('select[name="event_statuses[]"]').val();
             const notes = $row.find('input[name="event_notes[]"]').val();
             if (type && date) {
                 events.push({
                     type: type,
                     description: description || '',
                     date: date,
+                    status: status || 'Pending',
                     notes: notes || ''
                 });
             }

@@ -18,7 +18,6 @@ class ClassModel {
     private ?int $clientId = null;
     private string|int|null $siteId = null;
     private ?string $classAddressLine = null;
-    private ?string $skillsPackage = null;
     private ?string $classType = null;
     private ?string $classSubject = null;
     private ?string $classCode = null;
@@ -32,7 +31,6 @@ class ClassModel {
     private ?int $initialClassAgent = null;
     private ?string $initialAgentStartDate = null;
     private ?int $projectSupervisorId = null;
-    private ?string $deliveryDate = null;
     private array $learnerIds = [];
     private array $examLearners = [];
 
@@ -75,7 +73,6 @@ class ClassModel {
         $this->setClientId($data['client_id'] ?? null);
         $this->setSiteId($data['site_id'] ?? null);
         $this->setClassAddressLine($data['class_address_line'] ?? $data['site_address'] ?? null);
-        $this->setSkillsPackage($data['skills_package'] ?? null);
         $this->setClassType($data['class_type'] ?? null);
         $this->setClassSubject($data['class_subject'] ?? null);
         $this->setClassCode($data['class_code'] ?? null);
@@ -89,7 +86,6 @@ class ClassModel {
         $this->setInitialClassAgent($data['initial_class_agent'] ?? null);
         $this->setInitialAgentStartDate($data['initial_agent_start_date'] ?? null);
         $this->setProjectSupervisorId($data['project_supervisor_id'] ?? $data['project_supervisor'] ?? null);
-        $this->setDeliveryDate($data['delivery_date'] ?? null);
         $this->setCreatedAt($data['created_at'] ?? null);
         $this->setUpdatedAt($data['updated_at'] ?? null);
 
@@ -156,19 +152,18 @@ class ClassModel {
 
             // Insert into single classes table
             $sql = "INSERT INTO classes (
-                client_id, site_id, class_address_line, skills_package, class_type, class_subject,
+                client_id, site_id, class_address_line, class_type, class_subject,
                 class_code, class_duration, original_start_date, seta_funded, seta,
                 exam_class, exam_type, class_agent, initial_class_agent,
-                initial_agent_start_date, project_supervisor_id, delivery_date,
+                initial_agent_start_date, project_supervisor_id,
                 learner_ids, exam_learners, backup_agent_ids, schedule_data, stop_restart_dates,
                 class_notes_data, event_dates, order_nr, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             $params = [
                 $this->getClientId(),
                 $this->getSiteId(),
                 $this->getClassAddressLine(),
-                $this->getSkillsPackage(),
                 $this->getClassType(),
                 $this->getClassSubject(),
                 $this->getClassCode(),
@@ -182,7 +177,6 @@ class ClassModel {
                 $this->getInitialClassAgent(),
                 $this->getInitialAgentStartDate(),
                 $this->getProjectSupervisorId(),
-                $this->getDeliveryDate(),
                 json_encode($this->getLearnerIds()),
                 json_encode($this->getExamLearners()),
                 json_encode($this->getBackupAgentIds()),
@@ -225,25 +219,25 @@ class ClassModel {
             $stopRestartJson = $this->prepareStopRestartDates();
 
             $sql = "UPDATE classes SET
-                client_id = ?, site_id = ?, class_address_line = ?, skills_package = ?, class_type = ?,
+                client_id = ?, site_id = ?, class_address_line = ?, class_type = ?,
                 class_subject = ?, class_code = ?, class_duration = ?, original_start_date = ?,
                 seta_funded = ?, seta = ?, exam_class = ?, exam_type = ?,
                 class_agent = ?, initial_class_agent = ?, initial_agent_start_date = ?,
-                project_supervisor_id = ?, delivery_date = ?, learner_ids = ?, exam_learners = ?, backup_agent_ids = ?,
+                project_supervisor_id = ?, learner_ids = ?, exam_learners = ?, backup_agent_ids = ?,
                 schedule_data = ?, stop_restart_dates = ?, class_notes_data = ?, event_dates = ?, order_nr = ?, updated_at = ?
                 WHERE class_id = ?";
 
             $params = [
                 $this->getClientId(), $this->getSiteId(), $this->getClassAddressLine(),
-                $this->getSkillsPackage(), $this->getClassType(), $this->getClassSubject(), $this->getClassCode(),
-                $this->getClassDuration(), $this->getOriginalStartDate(), 
+                $this->getClassType(), $this->getClassSubject(), $this->getClassCode(),
+                $this->getClassDuration(), $this->getOriginalStartDate(),
                 $this->getSetaFunded() ? 'true' : 'false',  // PostgreSQL boolean literal
-                $this->getSeta(), 
+                $this->getSeta(),
                 $this->getExamClass() ? 'true' : 'false',   // PostgreSQL boolean literal
                 $this->getExamType(),
                 $this->getClassAgent(), $this->getInitialClassAgent(),
                 $this->getInitialAgentStartDate(), $this->getProjectSupervisorId(),
-                $this->getDeliveryDate(), json_encode($this->getLearnerIds()),
+                json_encode($this->getLearnerIds()),
                 json_encode($this->getExamLearners()), json_encode($this->getBackupAgentIds()), json_encode($this->getScheduleData()),
                 $stopRestartJson, json_encode($this->getClassNotesData()),
                 json_encode($this->getEventDates()), $this->getOrderNr(),
@@ -321,9 +315,6 @@ class ClassModel {
     public function getClassAddressLine(): ?string { return $this->classAddressLine; }
     public function setClassAddressLine(?string $classAddressLine): self { $this->classAddressLine = $classAddressLine; return $this; }
 
-    public function getSkillsPackage(): ?string { return $this->skillsPackage; }
-    public function setSkillsPackage(?string $skillsPackage): self { $this->skillsPackage = $skillsPackage; return $this; }
-
     public function getClassType(): ?string { return $this->classType; }
     public function setClassType(?string $classType): self { $this->classType = $classType; return $this; }
 
@@ -398,9 +389,6 @@ class ClassModel {
         return $this;
     }
 
-    public function getDeliveryDate(): ?string { return $this->deliveryDate; }
-    public function setDeliveryDate(?string $deliveryDate): self { $this->deliveryDate = $deliveryDate; return $this; }
-
     public function getLearnerIds(): array { return $this->learnerIds; }
     public function setLearnerIds(mixed $learnerIds): self { $this->learnerIds = is_array($learnerIds) ? $learnerIds : []; return $this; }
 
@@ -441,7 +429,13 @@ class ClassModel {
     public function getClassNotesData(): array { return $this->classNotesData; }
     public function setClassNotesData(mixed $classNotesData): self { $this->classNotesData = is_array($classNotesData) ? $classNotesData : []; return $this; }
 
-    public function getEventDates(): array { return $this->eventDates; }
+    public function getEventDates(): array {
+        // Add status fallback for old data without status field
+        return array_map(function($event) {
+            $event['status'] = $event['status'] ?? 'Pending';
+            return $event;
+        }, $this->eventDates);
+    }
     public function setEventDates(mixed $eventDates): self { $this->eventDates = is_array($eventDates) ? $eventDates : []; return $this; }
 
     public function getOrderNr(): ?string { return $this->order_nr; }

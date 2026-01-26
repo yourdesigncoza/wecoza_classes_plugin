@@ -296,7 +296,7 @@ class ClassRepository {
         // Validate order_by to prevent SQL injection
         $allowed_columns = [
             'class_id', 'client_id', 'class_type', 'class_subject',
-            'original_start_date', 'delivery_date', 'created_at', 'updated_at'
+            'original_start_date', 'created_at', 'updated_at'
         ];
 
         if (!in_array($order_by, $allowed_columns)) {
@@ -319,7 +319,6 @@ class ClassRepository {
                 c.class_code,
                 c.class_duration,
                 c.original_start_date,
-                c.delivery_date,
                 c.seta_funded,
                 c.seta,
                 c.exam_class,
@@ -370,7 +369,6 @@ class ClassRepository {
                 'class_type' => $classModel->getClassType(),
                 'class_subject' => $classModel->getClassSubject(),
                 'class_code' => $classModel->getClassCode(),
-                'skills_package' => $classModel->getSkillsPackage(),
                 'class_duration' => $classModel->getClassDuration(),
                 'original_start_date' => $classModel->getOriginalStartDate(),
                 'seta_funded' => $classModel->getSetaFunded() ? 'Yes' : 'No',
@@ -382,7 +380,6 @@ class ClassRepository {
                 'initial_class_agent' => $classModel->getInitialClassAgent(),
                 'initial_agent_start_date' => $classModel->getInitialAgentStartDate(),
                 'project_supervisor_id' => $classModel->getProjectSupervisorId(),
-                'delivery_date' => $classModel->getDeliveryDate(),
                 'learner_ids' => $classModel->getLearnerIds(),
                 'exam_learners' => $classModel->getExamLearners(),
                 'backup_agent_ids' => $classModel->getBackupAgentIds(),
@@ -643,7 +640,6 @@ class ClassRepository {
             'class_duration' => 240,
             'class_address_line' => '123 Sample Street, Sample City, 1234',
             'original_start_date' => date('Y-m-d'),
-            'delivery_date' => date('Y-m-d', strtotime('+30 days')),
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s'),
             'schedule_data' => [

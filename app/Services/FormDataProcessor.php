@@ -42,7 +42,6 @@ class FormDataProcessor
             $processed['client_id'] = isset($data['client_id']) && !empty($data['client_id']) ? intval($data['client_id']) : null;
             $processed['site_id'] = isset($data['site_id']) && !is_array($data['site_id']) ? $data['site_id'] : null;
             $processed['site_address'] = isset($data['site_address']) && !is_array($data['site_address']) ? self::sanitizeText($data['site_address']) : null;
-            $processed['skills_package'] = isset($data['skills_package']) && !is_array($data['skills_package']) ? self::sanitizeText($data['skills_package']) : null;
             $processed['class_type'] = isset($data['class_type']) && !is_array($data['class_type']) ? self::sanitizeText($data['class_type']) : null;
             $processed['class_subject'] = isset($data['class_subject']) && !is_array($data['class_subject']) ? self::sanitizeText($data['class_subject']) : null;
             $processed['class_code'] = isset($data['class_code']) && !is_array($data['class_code']) ? self::sanitizeText($data['class_code']) : null;
@@ -78,7 +77,6 @@ class FormDataProcessor
             $processed['initial_class_agent'] = isset($data['initial_class_agent']) && !empty($data['initial_class_agent']) ? intval($data['initial_class_agent']) : null;
             $processed['initial_agent_start_date'] = isset($data['initial_agent_start_date']) && !is_array($data['initial_agent_start_date']) ? self::sanitizeText($data['initial_agent_start_date']) : null;
             $processed['project_supervisor'] = isset($data['project_supervisor']) && !empty($data['project_supervisor']) ? intval($data['project_supervisor']) : null;
-            $processed['delivery_date'] = isset($data['delivery_date']) && !is_array($data['delivery_date']) ? self::sanitizeText($data['delivery_date']) : null;
 
             // Order number field - initially empty for new classes (Draft status)
             $processed['order_nr'] = isset($data['order_nr']) && !is_array($data['order_nr']) ? self::sanitizeText($data['order_nr']) : null;
@@ -162,18 +160,24 @@ class FormDataProcessor
 
             // Process event dates from form arrays
             $eventDates = [];
+            $allowedStatuses = ['Pending', 'Completed', 'Cancelled'];
             if (isset($data['event_types']) && is_array($data['event_types'])) {
                 $types = $data['event_types'];
                 $descriptions = isset($data['event_descriptions']) ? $data['event_descriptions'] : [];
                 $dates = isset($data['event_dates_input']) ? $data['event_dates_input'] : [];
+                $statuses = isset($data['event_statuses']) ? $data['event_statuses'] : [];
                 $notes = isset($data['event_notes']) ? $data['event_notes'] : [];
 
                 for ($i = 0; $i < count($types); $i++) {
-                    if (!empty($types[$i]) && !empty($dates[$i])) {
+                    $currentType = $types[$i] ?? '';
+                    $currentDate = $dates[$i] ?? '';
+                    if (!empty($currentType) && !empty($currentDate)) {
+                        $status = self::sanitizeText($statuses[$i] ?? 'Pending');
                         $eventDates[] = [
-                            'type' => self::sanitizeText($types[$i]),
+                            'type' => self::sanitizeText($currentType),
                             'description' => self::sanitizeText($descriptions[$i] ?? ''),
-                            'date' => self::sanitizeText($dates[$i]),
+                            'date' => self::sanitizeText($currentDate),
+                            'status' => in_array($status, $allowedStatuses) ? $status : 'Pending',
                             'notes' => self::sanitizeText($notes[$i] ?? '')
                         ];
                     }
@@ -321,10 +325,11 @@ class FormDataProcessor
             $exceptionReasons = isset($data['exception_reasons']) ? $data['exception_reasons'] : [];
 
             for ($i = 0; $i < count($exceptionDates); $i++) {
-                if (!empty($exceptionDates[$i])) {
+                $currentExceptionDate = $exceptionDates[$i] ?? '';
+                if (!empty($currentExceptionDate)) {
                     $scheduleData['exception_dates'][] = [
-                        'date' => $exceptionDates[$i],
-                        'reason' => isset($exceptionReasons[$i]) ? $exceptionReasons[$i] : ''
+                        'date' => $currentExceptionDate,
+                        'reason' => $exceptionReasons[$i] ?? ''
                     ];
                 }
             }
@@ -618,7 +623,6 @@ class FormDataProcessor
         if (isset($formData['client_id'])) $class->setClientId($formData['client_id']);
         if (isset($formData['site_id'])) $class->setSiteId($formData['site_id']);
         if (isset($formData['site_address'])) $class->setClassAddressLine($formData['site_address']);
-        if (isset($formData['skills_package'])) $class->setSkillsPackage($formData['skills_package']);
         if (isset($formData['class_type'])) $class->setClassType($formData['class_type']);
         if (isset($formData['class_subject'])) $class->setClassSubject($formData['class_subject']);
         if (isset($formData['class_code'])) $class->setClassCode($formData['class_code']);
@@ -634,7 +638,6 @@ class FormDataProcessor
         if (isset($formData['initial_class_agent'])) $class->setInitialClassAgent($formData['initial_class_agent']);
         if (isset($formData['initial_agent_start_date'])) $class->setInitialAgentStartDate($formData['initial_agent_start_date']);
         if (isset($formData['project_supervisor'])) $class->setProjectSupervisorId($formData['project_supervisor']);
-        if (isset($formData['delivery_date'])) $class->setDeliveryDate($formData['delivery_date']);
         if (isset($formData['learner_ids'])) $class->setLearnerIds($formData['learner_ids']);
         if (isset($formData['exam_learners'])) $class->setExamLearners($formData['exam_learners']);
         if (isset($formData['backup_agent_ids'])) $class->setBackupAgentIds($formData['backup_agent_ids']);

@@ -66,18 +66,6 @@
          <div class="col-md-12">
             <h6 class="mb-2">Class Details</h6>
          </div>
-         <!-- Skills Package -->
-         <div class="col-md-3">
-            <label for="skills_package" class="form-label">Skills Package <span class="text-danger">*</span></label>
-            <select id="skills_package" name="skills_package" class="form-select form-select-sm" required>
-               <option value="">Select Package</option>
-               <option value="Walk Package">Walk Package</option>
-               <option value="Run Package">Run Package</option>
-               <option value="Hexa Package">Hexa Package</option>
-            </select>
-            <div class="invalid-feedback">Please select a skills package.</div>
-            <div class="valid-feedback">Looks good!</div>
-         </div>
          <!-- Class Type (Main Category) -->
          <div class="col-md-3">
             <label for="class_type" class="form-label">Class Type <span class="text-danger">*</span></label>
@@ -446,7 +434,7 @@
                   <option value="SETA Exit">SETA Exit</option>
                </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                <label class="form-label">Description</label>
                <input type="text" name="event_descriptions[]" class="form-control form-control-sm" placeholder="e.g., Deliver Initial Material" maxlength="255">
             </div>
@@ -454,7 +442,15 @@
                <label class="form-label">Date</label>
                <input type="date" name="event_dates_input[]" class="form-control form-control-sm">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
+               <label class="form-label">Status</label>
+               <select name="event_statuses[]" class="form-select form-select-sm">
+                  <option value="Pending" selected>Pending</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Cancelled">Cancelled</option>
+               </select>
+            </div>
+            <div class="col-md-2">
                <label class="form-label">Notes (Optional)</label>
                <input type="text" name="event_notes[]" class="form-control form-control-sm" placeholder="Optional notes" maxlength="500">
             </div>
@@ -914,17 +910,6 @@
          <button type="button" class="btn btn-subtle-primary btn-sm mt-2" id="add-backup-agent-btn">
          + Add Backup Agent
          </button>
-      </div>
-      <?php echo section_divider(); ?>
-
-      <!-- Delivery Date -->
-      <div class="row mb-4">
-         <div class="col-md-2">
-            <label for="delivery_date" class="form-label">Delivery Date <span class="text-danger">*</span></label>
-            <input type="date" id="delivery_date" name="delivery_date" class="form-control form-control-sm" placeholder="YYYY-MM-DD" required>
-            <div class="invalid-feedback">Please select the delivery date.</div>
-            <div class="valid-feedback">Looks good!</div>
-         </div>
       </div>
       <?php echo section_divider(); ?>
 

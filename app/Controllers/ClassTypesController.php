@@ -17,13 +17,15 @@ class ClassTypesController {
     public static function getClassTypes() {
         return [
             ['id' => 'AET', 'name' => 'AET Communication & Numeracy'],
-            ['id' => 'GETC', 'name' => 'GETC AET'],
             ['id' => 'REALLL', 'name' => 'REALLL'],
+            ['id' => 'SOFT', 'name' => 'Soft Skill Courses'],
+            ['id' => 'GETC', 'name' => 'GETC AET'],
             ['id' => 'BA2', 'name' => 'Business Admin NQF 2'],
             ['id' => 'BA3', 'name' => 'Business Admin NQF 3'],
             ['id' => 'BA4', 'name' => 'Business Admin NQF 4'],
-            ['id' => 'SKILL', 'name' => 'Skill Packages'],
-            ['id' => 'SOFT', 'name' => 'Soft Skill Courses'],
+            ['id' => 'WALK', 'name' => 'Walk Package'],
+            ['id' => 'HEXA', 'name' => 'Hexa Packages'],
+            ['id' => 'RUN', 'name' => 'Run Packages'],
         ];
     }
 
@@ -106,9 +108,31 @@ class ClassTypesController {
             ],
         ];
 
-        // If no class type specified, return all subjects
+        // Package types return ALL subjects flattened (allows full course selection)
+        $packageTypes = ['WALK', 'HEXA', 'RUN'];
+
+        // Progression types use placeholder (no subject selection needed)
+        $progressionTypes = ['GETC', 'BA2', 'BA3', 'BA4'];
+
+        // If no class type specified, return all subjects grouped by type
         if (empty($classTypeId)) {
             return $allSubjects;
+        }
+
+        // Package types get all subjects flattened into single array
+        if (in_array($classTypeId, $packageTypes)) {
+            $flatSubjects = [];
+            foreach ($allSubjects as $typeSubjects) {
+                $flatSubjects = array_merge($flatSubjects, $typeSubjects);
+            }
+            return $flatSubjects;
+        }
+
+        // Progression types get single placeholder
+        if (in_array($classTypeId, $progressionTypes)) {
+            return [
+                ['id' => 'LP', 'name' => 'Learner Progression', 'duration' => 0]
+            ];
         }
 
         // Return subjects for the specified class type

@@ -241,7 +241,7 @@ class ScheduleService {
         $classCode = $class['class_code'] ?? 'Unknown';
         $classSubject = $class['class_subject'] ?? 'Unknown Subject';
         $startDate = $class['original_start_date'] ?? null;
-        $deliveryDate = $class['delivery_date'] ?? null;
+        $deliveryDate = $this->getEarliestDeliveryDate($class);
 
         // Parse schedule data if available
         $scheduleData = null;
@@ -695,5 +695,33 @@ class ScheduleService {
         }
 
         return ($end - $start) / 3600;
+    }
+
+    /**
+     * Get the earliest delivery date from event_dates
+     * Falls back to start_date if no deliveries exist
+     *
+     * @param array $class Class data
+     * @return string|null Earliest delivery date or fallback
+     */
+    public function getEarliestDeliveryDate(array $class): ?string {
+        $eventDates = $class['event_dates'] ?? [];
+        if (is_string($eventDates)) {
+            $eventDates = json_decode($eventDates, true) ?? [];
+        }
+
+        $deliveryDates = [];
+        foreach ($eventDates as $event) {
+            if (($event['type'] ?? '') === 'Deliveries' && !empty($event['date'])) {
+                $deliveryDates[] = $event['date'];
+            }
+        }
+
+        if (!empty($deliveryDates)) {
+            return min($deliveryDates);
+        }
+
+        // Fallback to start_date if no deliveries exist
+        return $class['original_start_date'] ?? null;
     }
 }

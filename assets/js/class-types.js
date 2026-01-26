@@ -65,6 +65,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const classDurationInput = document.getElementById('class_duration');
     const classCodeInput = document.getElementById('class_code');
 
+    // Get subject wrapper for show/hide
+    const classSubjectWrapper = classSubjectSelect ? classSubjectSelect.closest('.col-md-3') : null;
+
+    // Progression types don't need subject selection
+    const progressionTypes = ['GETC', 'BA2', 'BA3', 'BA4'];
+
     // Class subjects data (will be populated via AJAX)
     let classSubjectsData = {};
 
@@ -81,18 +87,34 @@ document.addEventListener('DOMContentLoaded', function() {
     if (classTypeSelect) {
         classTypeSelect.addEventListener('change', function() {
             const selectedClassType = this.value;
+            const isProgressionType = progressionTypes.includes(selectedClassType);
 
-            // Reset subject dropdown
-            classSubjectSelect.innerHTML = '<option value="">Select Subject</option>';
-            classSubjectSelect.disabled = !selectedClassType;
+            // Hide subject field for progression types (GETC, BA2, BA3, BA4)
+            if (classSubjectWrapper) {
+                classSubjectWrapper.style.display = isProgressionType ? 'none' : '';
+                classSubjectSelect.required = !isProgressionType;
+            }
 
             // Reset duration and code
             classDurationInput.value = '';
             classCodeInput.value = '';
 
-            if (selectedClassType) {
-                // Fetch subjects for the selected class type
-                fetchClassSubjects(selectedClassType);
+            if (isProgressionType) {
+                // Set placeholder value for progression types
+                classSubjectSelect.innerHTML = '<option value="LP" selected>Learner Progression</option>';
+                classSubjectSelect.value = 'LP';
+                classSubjectSelect.disabled = false;
+                // Generate class code
+                classCodeInput.value = generateClassCode();
+            } else {
+                // Reset subject dropdown
+                classSubjectSelect.innerHTML = '<option value="">Select Subject</option>';
+                classSubjectSelect.disabled = !selectedClassType;
+
+                if (selectedClassType) {
+                    // Fetch subjects for the selected class type
+                    fetchClassSubjects(selectedClassType);
+                }
             }
         });
     }
@@ -267,11 +289,18 @@ document.addEventListener('DOMContentLoaded', function() {
         // Check if we have pre-selected values (for update mode)
         const preSelectedType = classTypeSelect.value;
         const preSelectedSubject = classSubjectSelect.value;
+        const isProgressionType = progressionTypes.includes(preSelectedType);
 
-        if (preSelectedType && preSelectedSubject) {
+        // Hide subject field on load if progression type
+        if (isProgressionType && classSubjectWrapper) {
+            classSubjectWrapper.style.display = 'none';
+            classSubjectSelect.required = false;
+            classSubjectSelect.innerHTML = '<option value="LP" selected>Learner Progression</option>';
+            classSubjectSelect.value = 'LP';
+        } else if (preSelectedType && preSelectedSubject) {
             // Fetch subjects for the pre-selected type
             fetchClassSubjects(preSelectedType);
-            
+
             // After a short delay, set the pre-selected subject
             setTimeout(() => {
                 classSubjectSelect.value = preSelectedSubject;

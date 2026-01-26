@@ -73,17 +73,30 @@ $end_date = $end_date ?? null;
                   <div class="d-flex bg-warning-subtle rounded-circle flex-center me-3" style="width:24px; height:24px">
                      <i class="bi bi-truck text-warning" style="font-size: 12px;"></i>
                   </div>
-                  <p class="fw-bold mb-0">Delivery Date : </p>
+                  <p class="fw-bold mb-0">Deliveries : </p>
                </div>
             </td>
             <td class="py-2">
-               <p class="fw-semibold mb-0">
-                  <?php if (!empty($class['delivery_date'])): ?>
-                  <?php echo esc_html(date('M j, Y', strtotime($class['delivery_date']))); ?>
-                  <?php else: ?>
+               <?php
+               $deliveries = array_filter($class['event_dates'] ?? [], function($event) {
+                   return ($event['type'] ?? '') === 'Deliveries';
+               });
+               if (!empty($deliveries)): ?>
+                  <?php foreach ($deliveries as $delivery): ?>
+                  <div class="mb-1">
+                     <span class="fw-semibold"><?php echo esc_html(date('M j, Y', strtotime($delivery['date']))); ?></span>
+                     <?php if (!empty($delivery['description'])): ?>
+                        <span class="text-muted small"> - <?php echo esc_html($delivery['description']); ?></span>
+                     <?php endif; ?>
+                     <span class="badge <?php
+                        $status = $delivery['status'] ?? 'Pending';
+                        echo $status === 'Completed' ? 'bg-success' : ($status === 'Cancelled' ? 'bg-danger' : 'bg-warning text-dark');
+                     ?> ms-2"><?php echo esc_html($status); ?></span>
+                  </div>
+                  <?php endforeach; ?>
+               <?php else: ?>
                   <span class="text-muted">N/A</span>
-                  <?php endif; ?>
-               </p>
+               <?php endif; ?>
             </td>
          </tr>
          <tr>
