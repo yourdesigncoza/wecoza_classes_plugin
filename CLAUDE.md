@@ -21,8 +21,10 @@ app/Controllers/             # HTTP handlers and shortcode registration (6 contr
 app/Services/                # Business logic and data processing
 app/Repositories/            # Data access layer with caching
 app/Models/                  # Data entities with PostgreSQL integration
+app/Helpers/                 # View helpers (select dropdowns, formatting)
 app/Views/                   # Component-based presentation layer
 app/Views/components/        # Reusable view components
+includes/migrations/         # Database migration/seeder scripts
 assets/js/                   # JavaScript files
 assets/js/utils/             # Reusable JavaScript utilities
 ```
@@ -35,7 +37,7 @@ assets/js/utils/             # Reusable JavaScript utilities
 | ClassController | ~608 | Shortcodes, page management, asset loading |
 | ClassAjaxController | ~698 | All AJAX handlers (save, delete, calendar, notes) |
 | QAController | ~794 | QA analytics, visits, reports |
-| ClassTypesController | ~143 | Class types and subject management |
+| ClassTypesController | ~244 | Class types and subject management (DB-driven) |
 | PublicHolidaysController | ~196 | Holiday detection and override system |
 
 ### Services (`app/Services/`)
@@ -157,7 +159,8 @@ container.innerHTML = `<td>${escapeHtml(userData)}</td>`;  // Safe
 - **Host**: DigitalOcean managed PostgreSQL cluster
 - **Connection**: Via `DatabaseService` singleton in `app/Services/Database/DatabaseService.php`
 - **Primary Table**: `classes` with 25+ fields including JSONB columns
-- **Schema File**: `schema/classes_schema.sql` for table structure
+- **Schema File**: `schema/wecoza_db_schema_bu_jan_27.sql` for table structure
+- **Migrations**: `includes/migrations/` for schema changes and seeders (run on plugin activation via `class-activator.php`)
 
 ### Key JSONB Fields
 - `learner_ids`: Complex learner assignments with levels
@@ -342,6 +345,12 @@ Feature specifications are maintained in `docs/`:
 - `SPEC-event-dates-statistics.md` - Event Dates display in Schedule Statistics
 - `WORDPRESS-SIMPLIFY-REPORT.md` - Refactoring progress and architecture overview
 
+## Daily Reports
+
+- **Location**: `daily-updates/WEC-DAILY-WORK-REPORT-YYYY-MM-DD.md`
+- **Template**: `daily-updates/end-of-day-report.md`
+- **Content**: Executive summary, commit table, detailed changes, QA notes, blockers
+
 ## Important Development Notes
 
 - **External Database**: All data operations use PostgreSQL, not WordPress MySQL
@@ -354,3 +363,6 @@ Feature specifications are maintained in `docs/`:
 - **XSS Prevention**: Always use `escapeHtml()` in JavaScript for user content
 - **AJAX Utilities**: Use `WeCozaAjax` for standardized request handling
 - **Table Management**: Use `WeCozaTableManager` for new search/pagination features
+- **Plugin Activation**: Migrations run automatically via `includes/class-activator.php`
+- **Transient Caching**: ClassTypesController caches DB lookups with 2-hour TTL via WordPress transients
+- **Schema Backups**: `schema/wecoza_db_schema_bu_<mon>_<dd>.sql` — date-stamped, old ones get deleted
