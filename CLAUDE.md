@@ -168,6 +168,25 @@ container.innerHTML = `<td>${escapeHtml(userData)}</td>`;  // Safe
 - `backup_agent_ids`: Agent backup assignments
 - `event_dates`: Class milestones (deliveries, exams, QA visits, etc.)
 
+### Class Types & Subjects (Lookup Tables)
+Two normalized tables store class type definitions and their subjects:
+
+- **`class_types`**: `class_type_id`, `class_type_code` (AET/GETC/SOFT/etc.), `class_type_name`, `subject_selection_mode` ('own'/'all_subjects'/'progression'), `progression_total_hours`, `display_order`, `is_active`
+- **`class_type_subjects`**: `class_type_subject_id`, `class_type_id` FK, `subject_code`, `subject_name`, `subject_duration`, `display_order`, `is_active`
+
+**Business rules in DB via `subject_selection_mode`:**
+- `own` → return only this type's subjects (AET, REALLL, SOFT)
+- `all_subjects` → return ALL subjects flattened (package types: WALK, HEXA, RUN)
+- `progression` → return single "Learner Progression" placeholder using `progression_total_hours` (GETC, BA2-4)
+
+**Cross-plugin access via WordPress filters:**
+```php
+$types    = apply_filters('wecoza_classes_get_class_types', []);
+$subjects = apply_filters('wecoza_classes_get_subjects', [], 'AET');
+```
+
+**Migration**: `includes/migrations/seed-class-types-subjects.php` (version 1.1.0)
+
 ### Database Testing Commands
 ```bash
 # Test PostgreSQL connection

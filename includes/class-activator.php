@@ -102,6 +102,7 @@ class WeCoza_Classes_Activator {
         // Define migrations
         $migrations = array(
             '1.0.0' => 'migration_1_0_0',
+            '1.1.0' => 'migration_1_1_0',
         );
 
         foreach ($migrations as $version => $migration_method) {
@@ -132,6 +133,25 @@ class WeCoza_Classes_Activator {
             error_log('WeCoza Classes Plugin: Migration 1.0.0 completed successfully');
         } else {
             error_log('WeCoza Classes Plugin: Migration 1.0.0 failed');
+        }
+    }
+
+    /**
+     * Migration 1.1.0 – Create class_types & class_type_subjects tables and seed data
+     *
+     * @since 1.1.0
+     */
+    private static function migration_1_1_0() {
+        error_log('WeCoza Classes Plugin: Running migration 1.1.0 – class types/subjects');
+
+        require_once WECOZA_CLASSES_INCLUDES_DIR . 'migrations/seed-class-types-subjects.php';
+
+        $result = wecoza_classes_seed_class_types_subjects();
+
+        if ($result) {
+            error_log('WeCoza Classes Plugin: Migration 1.1.0 completed successfully');
+        } else {
+            error_log('WeCoza Classes Plugin: Migration 1.1.0 failed');
         }
     }
 

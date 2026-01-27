@@ -2,172 +2,243 @@
 /**
  * ClassTypesController.php
  *
- * Controller for handling class types and durations
- * Extracted from WeCoza theme for standalone plugin
+ * Controller for handling class types and durations.
+ * Reads from PostgreSQL class_types / class_type_subjects tables.
  */
 
 namespace WeCozaClasses\Controllers;
 
+use WeCozaClasses\Services\Database\DatabaseService;
+
 class ClassTypesController {
+
+    private const CACHE_TTL = 2 * HOUR_IN_SECONDS;
+
     /**
-     * Get all class types (main categories)
+     * Get all active class types.
      *
-     * @return array List of class types
+     * @return array [['id' => 'AET', 'name' => '...', 'mode' => 'own', 'progression_hours' => null], ...]
      */
-    public static function getClassTypes() {
-        return [
-            ['id' => 'AET', 'name' => 'AET Communication & Numeracy'],
-            ['id' => 'REALLL', 'name' => 'REALLL'],
-            ['id' => 'SOFT', 'name' => 'Soft Skill Courses'],
-            ['id' => 'GETC', 'name' => 'GETC AET'],
-            ['id' => 'BA2', 'name' => 'Business Admin NQF 2'],
-            ['id' => 'BA3', 'name' => 'Business Admin NQF 3'],
-            ['id' => 'BA4', 'name' => 'Business Admin NQF 4'],
-            ['id' => 'WALK', 'name' => 'Walk Package'],
-            ['id' => 'HEXA', 'name' => 'Hexa Packages'],
-            ['id' => 'RUN', 'name' => 'Run Packages'],
-        ];
+    public static function getClassTypes(): array {
+        $key = 'wecoza_class_types';
+        $cached = get_transient($key);
+        if ($cached !== false) {
+            return apply_filters('wecoza_classes_get_class_types', $cached);
+        }
+
+        try {
+            $db = DatabaseService::getInstance();
+            $stmt = $db->query(
+                "SELECT class_type_code, class_type_name, subject_selection_mode, progression_total_hours
+                 FROM public.class_types
+                 WHERE is_active = TRUE
+                 ORDER BY display_order"
+            );
+
+            $types = [];
+            while ($row = $stmt->fetch()) {
+                $types[] = [
+                    'id'               => $row['class_type_code'],
+                    'name'             => $row['class_type_name'],
+                    'mode'             => $row['subject_selection_mode'],
+                    'progression_hours'=> $row['progression_total_hours'] ? (int) $row['progression_total_hours'] : null,
+                ];
+            }
+
+            set_transient($key, $types, self::CACHE_TTL);
+            return apply_filters('wecoza_classes_get_class_types', $types);
+
+        } catch (\Exception $e) {
+            error_log('WeCoza ClassTypes: getClassTypes error: ' . $e->getMessage());
+            return [];
+        }
     }
 
     /**
-     * Get all class subjects based on class type
+     * Get subjects for a class type.
      *
-     * @param string $classTypeId Class type ID
-     * @return array List of subjects for the given class type
+     * - Empty $classTypeId → all subjects grouped by type code
+     * - mode 'own'          → subjects for that type
+     * - mode 'all_subjects' → every subject flattened
+     * - mode 'progression'  → single placeholder with total hours
+     *
+     * @param  string $classTypeId
+     * @return array
      */
-    public static function getClassSubjects($classTypeId = '') {
-        $allSubjects = [
-            'AET' => [
-                ['id' => 'COMM', 'name' => 'Communication (separate)', 'duration' => 120],
-                ['id' => 'NUM', 'name' => 'Numeracy (separate)', 'duration' => 120],
-                ['id' => 'COMM_NUM', 'name' => 'Communication & Numeracy (both)', 'duration' => 240],
-            ],
-            'GETC' => [
-                ['id' => 'CL4', 'name' => 'Communication level 4', 'duration' => 120],
-                ['id' => 'NL4', 'name' => 'Numeracy level 4', 'duration' => 120],
-                ['id' => 'LO4', 'name' => 'Life Orientation level 4', 'duration' => 90],
-                ['id' => 'HSS4', 'name' => 'Human & Social Sciences level 4', 'duration' => 80],
-                ['id' => 'EMS4', 'name' => 'Economic & Management Sciences level 4', 'duration' => 94],
-                ['id' => 'NS4', 'name' => 'Natural Sciences level 4', 'duration' => 60],
-                ['id' => 'SMME4', 'name' => 'Small Micro Medium Enterprises level 4', 'duration' => 60],
-            ],
-            'REALLL' => [
-                ['id' => 'RLC', 'name' => 'Communication', 'duration' => 160],
-                ['id' => 'RLN', 'name' => 'Numeracy', 'duration' => 160],
-                ['id' => 'RLF', 'name' => 'Finance', 'duration' => 40],
-            ],
-            'BA2' => [
-                ['id' => 'BA2LP9', 'name' => 'LP9', 'duration' => 80],
-                ['id' => 'BA2LP10', 'name' => 'LP10', 'duration' => 64],
-                ['id' => 'BA2LP1', 'name' => 'LP1', 'duration' => 72],
-                ['id' => 'BA2LP2', 'name' => 'LP2', 'duration' => 56],
-                ['id' => 'BA2LP3', 'name' => 'LP3', 'duration' => 40],
-                ['id' => 'BA2LP4', 'name' => 'LP4', 'duration' => 20],
-                ['id' => 'BA2LP5', 'name' => 'LP5', 'duration' => 56],
-                ['id' => 'BA2LP6', 'name' => 'LP6', 'duration' => 60],
-                ['id' => 'BA2LP7', 'name' => 'LP7', 'duration' => 40],
-                ['id' => 'BA2LP8', 'name' => 'LP8', 'duration' => 32],
-            ],
-            'BA3' => [
-                ['id' => 'BA3LP2', 'name' => 'LP2', 'duration' => 52],
-                ['id' => 'BA3LP4', 'name' => 'LP4', 'duration' => 40],
-                ['id' => 'BA3LP5', 'name' => 'LP5', 'duration' => 36],
-                ['id' => 'BA3LP6', 'name' => 'LP6', 'duration' => 44],
-                ['id' => 'BA3LP1', 'name' => 'LP1', 'duration' => 60],
-                ['id' => 'BA3LP7', 'name' => 'LP7', 'duration' => 40],
-                ['id' => 'BA3LP8', 'name' => 'LP8', 'duration' => 44],
-                ['id' => 'BA3LP9', 'name' => 'LP9', 'duration' => 28],
-                ['id' => 'BA3LP10', 'name' => 'LP10', 'duration' => 48],
-                ['id' => 'BA3LP11', 'name' => 'LP11', 'duration' => 36],
-                ['id' => 'BA3LP3', 'name' => 'LP3', 'duration' => 44],
-            ],
-            'BA4' => [
-                ['id' => 'BA4LP2', 'name' => 'LP2', 'duration' => 104],
-                ['id' => 'BA4LP3', 'name' => 'LP3', 'duration' => 80],
-                ['id' => 'BA4LP4', 'name' => 'LP4', 'duration' => 64],
-                ['id' => 'BA4LP1', 'name' => 'LP1', 'duration' => 88],
-                ['id' => 'BA4LP6', 'name' => 'LP6', 'duration' => 84],
-                ['id' => 'BA4LP5', 'name' => 'LP5', 'duration' => 76],
-                ['id' => 'BA4LP7', 'name' => 'LP7', 'duration' => 88],
-            ],
-            'SKILL' => [
-                ['id' => 'WALK', 'name' => 'Walk Package', 'duration' => 120],
-                ['id' => 'HEXA', 'name' => 'Hexa Package', 'duration' => 120],
-                ['id' => 'RUN', 'name' => 'Run Package', 'duration' => 120],
-            ],
-            'SOFT' => [
-                ['id' => 'IPC', 'name' => 'Introduction to Computers', 'duration' => 20],
-                ['id' => 'EQ', 'name' => 'Email Etiquette', 'duration' => 6],
-                ['id' => 'TM', 'name' => 'Time Management', 'duration' => 12],
-                ['id' => 'SS', 'name' => 'Supervisory Skills', 'duration' => 40],
-                ['id' => 'EEPDL', 'name' => 'EEP Digital Literacy', 'duration' => 40],
-                ['id' => 'EEPPF', 'name' => 'EEP Personal Finance', 'duration' => 40],
-                ['id' => 'EEPWI', 'name' => 'EEP Workplace Intelligence', 'duration' => 40],
-                ['id' => 'EEPEI', 'name' => 'EEP Emotional Intelligence', 'duration' => 40],
-                ['id' => 'EEPBI', 'name' => 'EEP Business Intelligence', 'duration' => 40],
-            ],
-        ];
-
-        // Package types return ALL subjects flattened (allows full course selection)
-        $packageTypes = ['WALK', 'HEXA', 'RUN'];
-
-        // Progression types use placeholder (no subject selection needed)
-        $progressionTypes = ['GETC', 'BA2', 'BA3', 'BA4'];
-
-        // If no class type specified, return all subjects grouped by type
-        if (empty($classTypeId)) {
-            return $allSubjects;
+    public static function getClassSubjects(string $classTypeId = ''): array {
+        if ($classTypeId === '') {
+            return self::getAllSubjectsGrouped();
         }
 
-        // Package types get all subjects flattened into single array
-        if (in_array($classTypeId, $packageTypes)) {
-            $flatSubjects = [];
-            foreach ($allSubjects as $typeSubjects) {
-                $flatSubjects = array_merge($flatSubjects, $typeSubjects);
+        $classTypeId = sanitize_text_field($classTypeId);
+        if (strlen($classTypeId) > 20) {
+            return [];
+        }
+
+        $key = 'wecoza_class_subjects_' . $classTypeId;
+        $cached = get_transient($key);
+        if ($cached !== false) {
+            return apply_filters('wecoza_classes_get_subjects', $cached, $classTypeId);
+        }
+
+        try {
+            $db = DatabaseService::getInstance();
+
+            $typeStmt = $db->query(
+                "SELECT class_type_id, subject_selection_mode, progression_total_hours
+                 FROM public.class_types
+                 WHERE class_type_code = ? AND is_active = TRUE",
+                [$classTypeId]
+            );
+            $type = $typeStmt->fetch();
+
+            if (!$type) {
+                return [];
             }
-            return $flatSubjects;
-        }
 
-        // Progression types get single placeholder with predefined total hours
-        if (in_array($classTypeId, $progressionTypes)) {
-            $progressionDurations = [
-                'GETC' => 564,
-                'BA2'  => 520,
-                'BA3'  => 472,
-                'BA4'  => 584,
-            ];
-            return [
-                ['id' => 'LP', 'name' => 'Learner Progression', 'duration' => $progressionDurations[$classTypeId] ?? 0]
-            ];
-        }
+            switch ($type['subject_selection_mode']) {
+                case 'progression':
+                    $subjects = [[
+                        'id'       => 'LP',
+                        'name'     => 'Learner Progression',
+                        'duration' => (int) ($type['progression_total_hours'] ?? 0),
+                    ]];
+                    break;
 
-        // Return subjects for the specified class type
-        return isset($allSubjects[$classTypeId]) ? $allSubjects[$classTypeId] : [];
+                case 'all_subjects':
+                    $subjects = self::getAllSubjectsFlattened();
+                    break;
+
+                default: // 'own'
+                    $subStmt = $db->query(
+                        "SELECT subject_code, subject_name, subject_duration
+                         FROM public.class_type_subjects
+                         WHERE class_type_id = ? AND is_active = TRUE
+                         ORDER BY display_order",
+                        [$type['class_type_id']]
+                    );
+                    $subjects = [];
+                    while ($row = $subStmt->fetch()) {
+                        $subjects[] = [
+                            'id'       => $row['subject_code'],
+                            'name'     => $row['subject_name'],
+                            'duration' => (int) $row['subject_duration'],
+                        ];
+                    }
+                    break;
+            }
+
+            set_transient($key, $subjects, self::CACHE_TTL);
+            return apply_filters('wecoza_classes_get_subjects', $subjects, $classTypeId);
+
+        } catch (\Exception $e) {
+            error_log('WeCoza ClassTypes: getClassSubjects error: ' . $e->getMessage());
+            return [];
+        }
     }
 
     /**
-     * Get class duration by subject ID
+     * Get duration for a subject code.
      *
-     * @param string $subjectId Subject ID
-     * @return int Duration in hours
+     * @param  string $subjectId
+     * @return int    Duration in hours (default 120)
      */
-    public static function getClassDuration($subjectId) {
-        $allSubjects = self::getClassSubjects();
-
-        // Flatten the array of subjects
-        $subjects = [];
-        foreach ($allSubjects as $typeSubjects) {
-            $subjects = array_merge($subjects, $typeSubjects);
+    public static function getClassDuration(string $subjectId): int {
+        $subjectId = sanitize_text_field($subjectId);
+        if ($subjectId === '' || strlen($subjectId) > 20) {
+            return 120;
         }
 
-        // Find the subject by ID
-        foreach ($subjects as $subject) {
-            if ($subject['id'] === $subjectId) {
-                return $subject['duration'];
+        try {
+            $db = DatabaseService::getInstance();
+            $stmt = $db->query(
+                "SELECT subject_duration
+                 FROM public.class_type_subjects
+                 WHERE subject_code = ? AND is_active = TRUE
+                 LIMIT 1",
+                [$subjectId]
+            );
+            $row = $stmt->fetch();
+            return $row ? (int) $row['subject_duration'] : 120;
+
+        } catch (\Exception $e) {
+            error_log('WeCoza ClassTypes: getClassDuration error: ' . $e->getMessage());
+            return 120;
+        }
+    }
+
+    /**
+     * Clear all class types/subjects transient caches.
+     */
+    public static function clearCache(): void {
+        delete_transient('wecoza_class_types');
+
+        try {
+            $db = DatabaseService::getInstance();
+            $stmt = $db->query("SELECT class_type_code FROM public.class_types");
+            while ($row = $stmt->fetch()) {
+                delete_transient('wecoza_class_subjects_' . $row['class_type_code']);
+            }
+        } catch (\Exception $e) {
+            // Fallback: clear known codes
+            foreach (['AET','REALLL','SOFT','GETC','BA2','BA3','BA4','WALK','HEXA','RUN'] as $code) {
+                delete_transient('wecoza_class_subjects_' . $code);
             }
         }
+    }
 
-        // Default duration if subject not found
-        return 120;
+    // ── private helpers ──────────────────────────────────────────
+
+    private static function getAllSubjectsGrouped(): array {
+        try {
+            $db = DatabaseService::getInstance();
+            $stmt = $db->query(
+                "SELECT ct.class_type_code, s.subject_code, s.subject_name, s.subject_duration
+                 FROM public.class_type_subjects s
+                 JOIN public.class_types ct ON s.class_type_id = ct.class_type_id
+                 WHERE s.is_active = TRUE AND ct.is_active = TRUE
+                 ORDER BY ct.display_order, s.display_order"
+            );
+
+            $grouped = [];
+            while ($row = $stmt->fetch()) {
+                $grouped[$row['class_type_code']][] = [
+                    'id'       => $row['subject_code'],
+                    'name'     => $row['subject_name'],
+                    'duration' => (int) $row['subject_duration'],
+                ];
+            }
+            return $grouped;
+
+        } catch (\Exception $e) {
+            error_log('WeCoza ClassTypes: getAllSubjectsGrouped error: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    private static function getAllSubjectsFlattened(): array {
+        try {
+            $db = DatabaseService::getInstance();
+            $stmt = $db->query(
+                "SELECT subject_code, subject_name, subject_duration
+                 FROM public.class_type_subjects
+                 WHERE is_active = TRUE
+                 ORDER BY display_order"
+            );
+
+            $subjects = [];
+            while ($row = $stmt->fetch()) {
+                $subjects[] = [
+                    'id'       => $row['subject_code'],
+                    'name'     => $row['subject_name'],
+                    'duration' => (int) $row['subject_duration'],
+                ];
+            }
+            return $subjects;
+
+        } catch (\Exception $e) {
+            error_log('WeCoza ClassTypes: getAllSubjectsFlattened error: ' . $e->getMessage());
+            return [];
+        }
     }
 }

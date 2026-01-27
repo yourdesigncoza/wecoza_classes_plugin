@@ -141,7 +141,7 @@ function form_textarea($name, $label, $attributes = [], $value = '', $required =
  * @return string HTML for the section divider
  */
 function section_divider($classes = '') {
-    $default_classes = 'border-top border-opacity-25 border-3 border-discovery my-5 mx-1';
+    $default_classes = 'border-top border-2 border-translucent my-5 mx-1';
     $all_classes = $classes ? $default_classes . ' ' . $classes : $default_classes;
     
     return "<div class=\"{$all_classes}\"></div>\n";

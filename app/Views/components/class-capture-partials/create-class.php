@@ -266,6 +266,7 @@
             <small class="text-muted">Based on class type</small>
          </div>
       </div>
+      <?php echo section_divider(); ?>
       <!-- Exception Dates -->
       <div class="mb-4">
          <h6 class="mb-2">Exception Dates</h6>
@@ -466,6 +467,57 @@
       </div>
 
       <?php echo section_divider(); ?>
+
+   <!-- ===== Section: Funding & Exam Details ===== -->
+   <?php echo section_header('Funding & Exam Details'); ?>
+   <div class="row">
+      <!-- SETA Funded -->
+      <div class="col-md-2">
+         <label for="seta_funded" class="form-label">SETA Funded? <span class="text-danger">*</span></label>
+         <select id="seta_funded" name="seta_funded" class="form-select form-select-sm" required>
+            <option value="">Select</option>
+            <?php foreach ($data['yes_no_options'] as $option): ?>
+            <option value="<?php echo $option['id']; ?>"><?php echo $option['name']; ?></option>
+            <?php endforeach; ?>
+         </select>
+         <div class="invalid-feedback">Please select if the class is SETA funded.</div>
+         <div class="valid-feedback">Looks good!</div>
+      </div>
+      <!-- SETA (conditionally displayed) -->
+      <div class="col-md-3 " id="seta_container" style="display: none;">
+         <label for="seta_id" class="form-label">SETA <span class="text-danger">*</span></label>
+         <select id="seta_id" name="seta_id" class="form-select form-select-sm">
+            <option value="">Select</option>
+            <?php foreach ($data['setas'] as $seta): ?>
+            <option value="<?php echo $seta['id']; ?>"><?php echo $seta['name']; ?></option>
+            <?php endforeach; ?>
+         </select>
+         <div class="invalid-feedback">Please select a SETA.</div>
+         <div class="valid-feedback">Looks good!</div>
+      </div>
+      <!-- Exam Class -->
+      <div class="col-md-2">
+         <label for="exam_class" class="form-label">Exam Class <span class="text-danger">*</span></label>
+         <select id="exam_class" name="exam_class" class="form-select form-select-sm" required>
+            <option value="">Select</option>
+            <?php foreach ($data['yes_no_options'] as $option): ?>
+            <option value="<?php echo $option['id']; ?>"><?php echo $option['name']; ?></option>
+            <?php endforeach; ?>
+         </select>
+         <div class="invalid-feedback">Please select if this is an exam class.</div>
+         <div class="valid-feedback">Looks good!</div>
+      </div>
+      <!-- Exam Type (conditionally displayed) -->
+      <div class="col-md-3 ">
+         <div id="exam_type_container" style="display: none;">
+            <label for="exam_type" class="form-label">Exam Type</label>
+            <input type="text" id="exam_type" name="exam_type" class="form-control form-control-sm" placeholder="Enter exam type">
+            <div class="invalid-feedback">Please provide the exam type.</div>
+            <div class="valid-feedback">Looks good!</div>
+         </div>
+      </div>
+   </div>
+   <?php echo section_divider(); ?>
       <!-- Schedule Statistics Section -->
       <!-- Hidden inputs to store schedule data in the format expected by the backend -->
       <div id="schedule-data-container">
@@ -573,55 +625,6 @@
       </div>
 
    <?php echo section_divider(); ?>
-   <!-- ===== Section: Funding & Exam Details ===== -->
-   <?php echo section_header('Funding & Exam Details'); ?>
-   <div class="row">
-      <!-- SETA Funded -->
-      <div class="col-md-2">
-         <label for="seta_funded" class="form-label">SETA Funded? <span class="text-danger">*</span></label>
-         <select id="seta_funded" name="seta_funded" class="form-select form-select-sm" required>
-            <option value="">Select</option>
-            <?php foreach ($data['yes_no_options'] as $option): ?>
-            <option value="<?php echo $option['id']; ?>"><?php echo $option['name']; ?></option>
-            <?php endforeach; ?>
-         </select>
-         <div class="invalid-feedback">Please select if the class is SETA funded.</div>
-         <div class="valid-feedback">Looks good!</div>
-      </div>
-      <!-- SETA (conditionally displayed) -->
-      <div class="col-md-3 " id="seta_container" style="display: none;">
-         <label for="seta_id" class="form-label">SETA <span class="text-danger">*</span></label>
-         <select id="seta_id" name="seta_id" class="form-select form-select-sm">
-            <option value="">Select</option>
-            <?php foreach ($data['setas'] as $seta): ?>
-            <option value="<?php echo $seta['id']; ?>"><?php echo $seta['name']; ?></option>
-            <?php endforeach; ?>
-         </select>
-         <div class="invalid-feedback">Please select a SETA.</div>
-         <div class="valid-feedback">Looks good!</div>
-      </div>
-      <!-- Exam Class -->
-      <div class="col-md-2">
-         <label for="exam_class" class="form-label">Exam Class <span class="text-danger">*</span></label>
-         <select id="exam_class" name="exam_class" class="form-select form-select-sm" required>
-            <option value="">Select</option>
-            <?php foreach ($data['yes_no_options'] as $option): ?>
-            <option value="<?php echo $option['id']; ?>"><?php echo $option['name']; ?></option>
-            <?php endforeach; ?>
-         </select>
-         <div class="invalid-feedback">Please select if this is an exam class.</div>
-         <div class="valid-feedback">Looks good!</div>
-      </div>
-      <!-- Exam Type (conditionally displayed) -->
-      <div class="col-md-3 ">
-         <div id="exam_type_container" style="display: none;">
-            <label for="exam_type" class="form-label">Exam Type</label>
-            <input type="text" id="exam_type" name="exam_type" class="form-control form-control-sm" placeholder="Enter exam type">
-            <div class="invalid-feedback">Please provide the exam type.</div>
-            <div class="valid-feedback">Looks good!</div>
-         </div>
-      </div>
-   </div>
    <!-- Class Learners Section -->
    <h6 class="mt-3 mb-1">Class Learners <span class="text-danger">*</span></h6>
    <p class="text-muted small mb-2">Select learners for this class and manage their status.</p>
@@ -761,7 +764,7 @@
          <div class="">
             <div class="form-label mb-2">Class Learners</div>
             <div id="class-learners-container" class="card-body card px-5">
-                <div class="alert alert-subtle-primary" id="no-learners-message" role="alert">No learners added to this class yet. Select learners from the list and click "Add Selected Learners</div>
+                <div class="alert alert-subtle-primary mb-0" id="no-learners-message" role="alert">No learners added to this class yet. Select learners from the list and click "Add Selected Learners</div>
                 <table class="table table-sm fs-9 d-none" id="class-learners-table">
                   <thead>
                      <tr>
