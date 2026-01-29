@@ -156,7 +156,7 @@ container.innerHTML = `<td>${escapeHtml(userData)}</td>`;  // Safe
 ## Database Integration
 
 ### External PostgreSQL Database
-- **Host**: DigitalOcean managed PostgreSQL cluster
+- **Host**: WeCoza PostgreSQL server (102.141.145.117)
 - **Connection**: Via `DatabaseService` singleton in `app/Services/Database/DatabaseService.php`
 - **Primary Table**: `classes` with 25+ fields including JSONB columns
 - **Schema File**: `schema/wecoza_db_schema_bu_jan_27.sql` for table structure
@@ -195,8 +195,8 @@ $subjects = apply_filters('wecoza_classes_get_subjects', [], 'AET');
 # Test PostgreSQL connection
 wp eval "echo (new WeCozaClasses\Services\Database\DatabaseService())->testConnection();"
 
-# Validate schema
-psql -h db-wecoza-3-do-user-17263152-0.m.db.ondigitalocean.com -p 25060 -U doadmin -d defaultdb -f schema/classes_schema.sql
+# Dump schema
+pg_dump -h 102.141.145.117 -p 5432 -U John -W -F p --schema-only -v -f schema/wecoza_db_schema_bu_[month]_[day].sql wecoza_db
 ```
 
 ## AJAX Endpoints

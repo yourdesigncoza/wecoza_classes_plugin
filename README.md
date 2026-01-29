@@ -15,7 +15,7 @@ The WeCoza Classes Plugin is a sophisticated **enterprise-level WordPress plugin
 
 ### **1. Database Layer (PostgreSQL)**
 ```
-External Database (DigitalOcean)
+External Database (PostgreSQL)
 ├── classes (primary entity with JSONB fields)
 ├── qa_visits, qa_metrics, qa_findings
 ├── clients, agents, sites, learners, users
